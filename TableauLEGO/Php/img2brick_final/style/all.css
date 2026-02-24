@@ -1,0 +1,29 @@
+:root {
+
+    /*------------------FONT SIZES------------------*/
+    --inter-title: clamp(15px, 2vw, 30px);
+    --home-title: clamp(20px, 7vw, 90px);
+    --small-title-poppins: clamp(10px, 3vw, 25px);
+    --regular-darker-text: clamp(10px, 2vw, 20px);
+
+    /*------------------COLORS------------------*/
+    --main-brown: #A26547;
+    --secondary-brown: #a87155;
+}
+
+/*------------------FONTS------------------*/
+    
+@font-face {
+    font-family: inter;
+    src: url("../font/Inter.ttf");
+}
+
+@font-face {
+    font-family: poppins;
+    src: url("../font/poppins/Poppins.otf");
+}
+
+@font-face {
+    font-family: darker-grotesque;
+    src: url("../font/darker_grotesque/DarkerGrotesque.ttf");
+}

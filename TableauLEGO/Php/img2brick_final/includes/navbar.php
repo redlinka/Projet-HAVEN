@@ -52,11 +52,28 @@ if($isLoggedIn){
   box-shadow: 0 0 0 2px #fff;
   pointer-events: none; 
 }
+
+#logo {
+    width: clamp(20px, 5vw, 40px);
+    height: clamp(20px, 5vw, 40px);
+    display: block;
+}
+.log-in, .sign-up {
+    color: var(--main-brown);
+    border: 0.15em solid var(--main-brown);
+    border-radius: 0.8em;
+    font: 500 clamp(6px, 2vw, 15px) poppins;
+}
+.sign-up {
+    background-color: var(--main-brown);
+    color: #FFFFFF;
+}
 </style>
 
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4" style="width: 100%; padding: 2vh 2% 2vh 2%;">
     <div class="container-fluid px-3">
-        <a class="navbar-brand fw-bold" href="index.php" data-i18n="brand.name">TableauLEGO</a>
+        <img src="assets/logo.svg" alt="our logo" id="logo" style="margin-right: 1em;">
+        <a class="navbar-brand fw-bold" style="text-align: center;" href="index.php">Bricksy</a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -90,12 +107,12 @@ if($isLoggedIn){
                         </a>
                     <?php endif; ?>
 
-                    <a href="logout.php" class="btn btn-outline-danger" data-i18n="nav.logout">Log Out</a>
+                    <a href="logout.php" class="btn btn-outline-danger log-in" data-i18n="nav.logout">Log Out</a>
 
                 <?php else: ?>
 
-                    <a href="connexion.php" class="btn btn-outline-primary" data-i18n="nav.login">Log In</a>
-                    <a href="creation.php" class="btn btn-primary" data-i18n="nav.signup">Sign Up</a>
+                    <a href="connexion.php" class="btn btn-outline-primary log-in" data-i18n="nav.login">Log In</a>
+                    <a href="creation.php" class="btn btn-primary sign-up" data-i18n="nav.signup">Sign Up</a>
 
                 <?php endif; ?>
 

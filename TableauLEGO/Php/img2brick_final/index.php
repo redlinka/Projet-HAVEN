@@ -154,6 +154,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload Image - TableauLEGO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./style/all.css">
     <style>
         /* Modern Drag & Drop Styling */
         #dropArea {
@@ -215,7 +216,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <div class="card shadow-sm border-0">
                 <div class="card-body p-4 p-md-5 text-center">
 
-                    <h2 class="fw-bold mb-3" data-i18n="index.title">Upload your image</h2>
+                    <h2 class="inter-title">Upload your image</h2>
                     <p class="text-muted mb-4" data-i18n="index.subtitle">Start your mosaic journey by selecting a photo.</p>
 
                     <?php if (!empty($errors)): ?>

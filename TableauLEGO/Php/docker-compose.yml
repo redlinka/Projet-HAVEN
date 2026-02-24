@@ -1,10 +1,15 @@
+version: "3.8"
+
 services:
   db:
     image: mysql:8.0
+    container_name: sae_mysql
     restart: always
     environment:
-      MYSQL_DATABASE: "sae_db"
-      MYSQL_ROOT_PASSWORD: "D3V@1mg2br1ck"
+      MYSQL_DATABASE: sae_db
+      MYSQL_ROOT_PASSWORD: D3V@1mg2br1ck
+      MYSQL_USER: dev
+      MYSQL_PASSWORD: dev
     ports:
       - "3306:3306"
     volumes:
@@ -14,10 +19,25 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: sae_php
+    restart: always
     ports:
       - "8080:80"
     volumes:
       - .:/var/www/html
+    depends_on:
+      - db
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: sae_phpmyadmin
+    restart: always
+    ports:
+      - "8082:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: D3V@1mg2br1ck
     depends_on:
       - db
 

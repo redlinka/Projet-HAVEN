@@ -1,6 +1,6 @@
-<footer style="text-align: center; padding: 20px; margin-top: 40px; border-top: 1px solid #ddd; color: #666;">
+<footer style="position: inline-block; text-align: center; background-color: var(--main-brown); width: 100%; padding: 1vh 0 0 0; bottom: 0;">
     <p>
-        <a href="https://github.com/redlinka/TableauLEGO/tree/dev/Php" target="_blank" rel="noopener noreferrer" style="color: #0366d6; text-decoration: none;" data-i18n="footer.github">
+        <a href="https://github.com/redlinka/TableauLEGO/tree/dev/Php" target="_blank" rel="noopener noreferrer" style="color: #FFFFFF; text-decoration: none; font: 500 clamp(8px, 1.5vw, 15px) inter, sans-serif;" data-i18n="footer.github">
             View on GitHub
         </a>
     </p>

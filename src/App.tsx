@@ -1,14 +1,13 @@
-import './App.css'
-import Puzzle from './comp/Puzzle'
+import "./App.css";
+import Puzzle from "./components/Puzzle";
+import Sidebar from "./layouts/Sidebar";
 
 function App() {
-
   return (
-    <div>
-      <Puzzle />
-
-    </div>
-  )
+    <main className="app">
+      <Sidebar />
+    </main>
+  );
 }
 
-export default App
+export default App;

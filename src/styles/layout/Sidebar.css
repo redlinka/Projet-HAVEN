@@ -1,0 +1,36 @@
+.sidebar {
+  height: 100%;
+  width: fit-content;
+  background-color: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+  color: var(--white);
+  border-right: 1px solid rgb(39, 39, 39);
+}
+
+.sidebar .top {
+  border: solid red;
+  display: flex;
+  flex-direction: column;
+}
+.sidebar .top button {
+  align-self: flex-end;
+}
+.sidebar .user {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-right: 10px;
+  background-color: #1f1f1f;
+}
+
+.sidebar .user .user-icon {
+  border-radius: 20px;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

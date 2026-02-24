@@ -1,11 +1,8 @@
-import './puzzle.css'
-import legoGame from '../assets/legogame.png'; 
+import "../styles/components/Puzzle.css";
+import legoGame from "/img/legogame.png";
 
 function PuzzleBoard() {
-
-
-
- return (
+  return (
     <div className="puzzle-board">
       <div className="puzzle-area">
         <img src={legoGame} alt="Puzzle" />
@@ -23,5 +20,4 @@ function PuzzleBoard() {
   );
 }
 
-
-export default PuzzleBoard
+export default PuzzleBoard;

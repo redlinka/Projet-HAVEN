@@ -6,6 +6,9 @@
     --small-title-poppins: clamp(10px, 3vw, 25px);
     --regular-darker-text: clamp(10px, 2vw, 20px);
 
+    --upload-title: clamp(15px, 5vw, 40px);
+    --upload-accepted: clamp(13px, 1.5vw, 20px);
+
     /*------------------COLORS------------------*/
     --main-brown: #A26547;
     --secondary-brown: #a87155;
@@ -15,7 +18,7 @@
     
 @font-face {
     font-family: inter;
-    src: url("../font/Inter.ttf");
+    src: url("../font/inter/Inter.ttf");
 }
 
 @font-face {
@@ -26,4 +29,13 @@
 @font-face {
     font-family: darker-grotesque;
     src: url("../font/darker_grotesque/DarkerGrotesque.ttf");
+}
+
+@font-face {
+    font-family: righteous;
+    src: url("../font/righteous/Righteous-Regular.ttf");
+}
+
+body {
+    overflow: hidden;
 }

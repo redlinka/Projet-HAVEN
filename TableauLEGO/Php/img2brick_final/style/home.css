@@ -98,6 +98,8 @@ main {
     padding: 12px 30px;
     border: 0.15em solid var(--main-brown);
     background-color: #FFFFFF;
+    color: var(--main-brown);
+    text-decoration: none;
     border-radius: 1em;
     transition: all 0.3s ease;
     display: flex;

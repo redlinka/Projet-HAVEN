@@ -58,8 +58,8 @@
     min-width: clamp(100px, 5vw, 150px);
     background-color: var(--main-brown);
     border: none;
-    transition: all 0.3s ease-in-out;
-    padding: 1em;
+    transition: all 0.2s ease-in-out;
+    padding: 0.7em;
     border-radius: 0.5em;
     color: #FFFFFF;
     text-decoration: none;

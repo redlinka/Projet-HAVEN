@@ -130,7 +130,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                         // Redirect to crop selection
                         addLog($cnx, "USER", "IMPORT", "image");
-                        header("Location: crop_selection.php");
+                        header("Location: crop_rescale.php");
                         exit;
                     } catch (PDOException $e) {
                         // Delete uploaded file on database failure
@@ -208,12 +208,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             <input type="file" id="imageUpload" name="image" accept="image/*" required style="display:none;">
 
-            <!-- <div class="d-grid">
-                <a href="#" type="submit" data-i18n="index.button" class="btn-continue">CONTINUE</a>
-                <img src="assets/white-arrow.svg">
-            </div> -->
             <div class="d-grid">
-                <button type="submit" class="btn btn-primary btn-lg" data-i18n="index.button">Continue</button>
+                <button type="submit" class="btn btn-primary btn-continue" data-i18n="index.button" style="background-color: var(--main-brown); border: none;">Continue</button>
             </div>
         </form>
     </div>
@@ -265,8 +261,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 'Click to change file';
             dropArea.classList.add('highlight');
             dropArea.innerHTML = `
-            <div class="upload-icon text-primary">&uarr;</div>
-            <h5 class="fw-bold text-primary" style="color:var(--main-brown);">${filename}</h5>
+            <div class="upload-icon" style="color:var(--main-brown);">&uarr;</div>
+            <h5 class="fw-bold" style="color:var(--main-brown);">${filename}</h5>
             <p class="text-muted small mb-0">${changeText}</p>
         `;
         }

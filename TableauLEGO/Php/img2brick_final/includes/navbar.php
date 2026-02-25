@@ -111,8 +111,7 @@ if($isLoggedIn){
 
                 <?php else: ?>
 
-                    <a href="connexion.php" class="btn btn-outline-primary log-in" data-i18n="nav.login">Log In</a>
-                    <a href="creation.php" class="btn btn-primary sign-up" data-i18n="nav.signup">Sign Up</a>
+                    <a href="auth.php" class="btn btn-outline-primary log-in">Sign in</a>
 
                 <?php endif; ?>
 

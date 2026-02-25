@@ -17,7 +17,7 @@ $height = $_SESSION['target_height'];
 $imgDir    = 'users/imgs/';
 $tilingDir = 'users/tilings/';
 $errors = [];
-$algos  = ['nearest', 'bilinear', 'bicubic']; // add the algos here
+$algos  = ['nearest', 'bilinear', 'bicubic'];
 $generatedImages = [];
 
 // Retrieve parent image file
@@ -30,7 +30,6 @@ $jarPath = realpath(__DIR__ . '/brain.jar');
 $sourcePath = __DIR__ . '/' . $imgDir . $sourceFile;
 $libDir = realpath(__DIR__ . '/lib');
 
-// Verification of the source file
 if (!$sourceFile || !file_exists($sourcePath)) {
     unset($_SESSION['step1_image_id']);
     header("Location: index.php");
@@ -42,7 +41,6 @@ if (!$jarPath || !file_exists($jarPath)) {
     exit;
 }
 
-// Detect Java executable
 $javaCmd = 'java';
 if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
     $preferredJava = 'C:\\Program Files\\Eclipse Adoptium\\jdk-25.0.1.8-hotspot\\bin\\java.exe';
@@ -50,26 +48,17 @@ if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
         $javaCmd = '"' . $preferredJava . '"';
     }
 }
-// Extra safety checks (helps pinpoint "chemin introuvable")
+
 if (empty($errors)) {
-    if (!file_exists($jarPath)) {
-        $errors[] = "File Error: file.jar not found at: " . $jarPath;
-    }
-    if (!file_exists($sourcePath)) {
-        $errors[] = "File Error: source image not found at: " . $sourcePath;
-    }
+    if (!file_exists($jarPath))    $errors[] = "File Error: brain.jar not found at: " . $jarPath;
+    if (!file_exists($sourcePath)) $errors[] = "File Error: source image not found at: " . $sourcePath;
 }
 
 if (empty($errors)) {
     foreach ($algos as $algo) {
-        // Define temporary output path
         $tempName = 'temp_' . $algo . '_' . $parentId;
         $destPath = __DIR__ . '/' . $imgDir . $tempName;
-
-        // Windows => PATH_SEPARATOR = ;
         $cp = $jarPath . PATH_SEPARATOR . $libDir . DIRECTORY_SEPARATOR . '*';
-
-        //$errors[] = "DEBUG CP=" . $cp; // debug
 
         $cmd = sprintf(
             '%s -cp %s fr.uge.univ_eiffel.ImageRescaler %s %s %d %d %s 2>&1',
@@ -94,7 +83,6 @@ if (empty($errors)) {
     }
 }
 
-// Process algorithm selection
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_validate($_POST['csrf'] ?? null)) {
         $errors[] = 'Invalid session.';
@@ -110,55 +98,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $isUpdate = false;
             $finalName = null;
 
-            // If a step2 image already exists, reuse its filename
             if ($existingId) {
-                // FIX: correct placeholders + fetch filename
                 $stmt = $cnx->prepare("SELECT path FROM IMAGE WHERE image_id = ? AND img_parent = ?");
                 $stmt->execute([$existingId, $parentId]);
                 $existingRow = $stmt->fetch(PDO::FETCH_ASSOC);
-
                 if ($existingRow && !empty($existingRow['path'])) {
-                    $isUpdate = true;
+                    $isUpdate  = true;
                     $finalName = $existingRow['path'];
                 }
             }
 
-            if (!$finalName) {
-                $finalName = bin2hex(random_bytes(16)) . '.png';
-            }
+            if (!$finalName) $finalName = bin2hex(random_bytes(16)) . '.png';
 
             $finalPath = __DIR__ . '/' . $imgDir . $finalName;
             $tempPath  = __DIR__ . '/' . $imgDir . $selectedFilenameRaw;
 
-            // Persist selection to storage
             if (rename($tempPath, $finalPath)) {
                 try {
                     if ($isUpdate) {
-                        // Update existing database record
                         $stmt = $cnx->prepare("UPDATE IMAGE SET filename = ?, created_at = NOW() WHERE image_id = ?");
                         $stmt->execute([$selectedAlgo, $existingId]);
-
-                        // Invalidate downstream steps
                         deleteDescendants($cnx, $existingId, $imgDir, $tilingDir, true);
                         unset($_SESSION['step3_image_id']);
                     } else {
-                        // Insert new database record (guest allowed)
-                        $stmt = $cnx->prepare("
-                            INSERT INTO IMAGE (user_id, filename, path, created_at, img_parent)
-                            VALUES (?, ?, ?, NOW(), ?)
-                        ");
+                        $stmt = $cnx->prepare("INSERT INTO IMAGE (user_id, filename, path, created_at, img_parent) VALUES (?, ?, ?, NOW(), ?)");
                         $userId = $_SESSION['userId'] ?? NULL;
                         $stmt->execute([$userId, $selectedAlgo, $finalName, $parentId]);
                         $_SESSION['step2_image_id'] = $cnx->lastInsertId();
                     }
 
-                    // Remove unused temporary files
                     foreach ($algos as $algo) {
                         $otherFile = 'temp_' . $algo . '_' . $parentId . '.png';
                         $otherPath = __DIR__ . '/' . $imgDir . $otherFile;
-                        if (file_exists($otherPath)) {
-                            unlink($otherPath);
-                        }
+                        if (file_exists($otherPath)) unlink($otherPath);
                     }
 
                     csrf_rotate();
@@ -166,7 +138,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     header("Location: filter_selection.php");
                     exit;
                 } catch (PDOException $e) {
-                    // Rollback file on database error
                     if (!$isUpdate && file_exists($finalPath)) unlink($finalPath);
                     $errors[] = "Database Error. Operation rolled back.";
                 }
@@ -179,120 +150,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <title><?= htmlspecialchars(tr('downscale.page_title', 'Step 2b: Compare')) ?></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose Interpolation — Bricksy</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .pixelated {
-            image-rendering: pixelated;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            cursor: zoom-in;
-        }
+    <link href="style/downscale.css" rel="stylesheet">
+    <link href="style/all.css" rel="stylesheet">
 
-        .algo-card {
-            transition: transform 0.2s;
-            border: 2px solid transparent;
-            cursor: pointer;
-        }
-
-        .algo-card:hover {
-            transform: translateY(-5px);
-            border-color: #0d6efd;
-        }
-
-        .preview-box {
-            background-color: #212529;
-            aspect-ratio: 1 / 1;
-            width: 100%;
-            height: auto;
-            padding: 0;
-            overflow: hidden;
-            position: relative;
-        }
-
-        #imgModal {
-            display: none;
-            position: fixed;
-            z-index: 1050;
-            padding-top: 50px;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.9);
-        }
-
-        .modal-content {
-            margin: auto;
-            display: block;
-            width: 80%;
-            max-width: 800px;
-            image-rendering: pixelated;
-        }
-
-        .close {
-            position: absolute;
-            top: 15px;
-            right: 35px;
-            color: #f1f1f1;
-            font-size: 40px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-    </style>
 </head>
 
 <body>
 
     <?php include("./includes/navbar.php"); ?>
 
-    <div class="container bg-light py-5">
-        <h2 class="text-center mb-4" data-i18n="downscale.title">Choose your favorite Result</h2>
+    <div class="page-wrapper">
+
+        <p class="downscale-title">Choose Your Interpolation</p>
 
         <?php if (!empty($errors)): ?>
-            <div class="alert alert-danger">
-                <ul><?php foreach ($errors as $e) echo "<li>" . htmlspecialchars($e) . "</li>"; ?></ul>
+            <div class="error-banner">
+                <ul>
+                    <?php foreach ($errors as $e): ?>
+                        <li><?= htmlspecialchars($e) ?></li>
+                    <?php endforeach; ?>
+                </ul>
             </div>
         <?php endif; ?>
 
         <form method="POST" id="selectionForm">
             <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_get()) ?>">
             <input type="hidden" name="selected_algo" id="selectedAlgoInput">
-
-            <div class="row g-4">
-                <?php foreach ($algos as $algo): ?>
-                    <?php if (isset($generatedImages[$algo])): ?>
-                        <div class="col-md-4">
-                            <div class="card h-100 shadow-sm algo-card">
-                                <div class="card-header text-center fw-bold text-uppercase">
-                                    <?= htmlspecialchars($algo) ?>
-                                </div>
-                                <div class="card-body preview-box">
-                                    <img src="<?= htmlspecialchars($imgDir . $generatedImages[$algo]) ?>"
-                                        class="pixelated"
-                                        onclick="event.stopPropagation(); openModal(this.src)" alt="">
-                                </div>
-                                <div class="card-footer text-center">
-                                    <button type="button" class="btn btn-outline-primary w-100" data-i18n="downscale.select" onclick="selectAlgo('<?= htmlspecialchars($algo) ?>')">Select This</button>
-                                </div>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            </div>
         </form>
 
-        <div class="text-center mt-5">
-            <a href="dimensions_selection.php" class="btn btn-outline-secondary" data-i18n="downscale.back">Back</a>
+        <div class="cards-row">
+            <?php foreach ($algos as $algo): ?>
+                <?php if (isset($generatedImages[$algo])): ?>
+
+                    <div class="algo-card">
+                        <div class="card-header-custom"><?= htmlspecialchars($algo) ?></div>
+
+                        <div class="preview-box">
+                            <img src="<?= htmlspecialchars($imgDir . $generatedImages[$algo]) ?>"
+                                alt="<?= htmlspecialchars($algo) ?>"
+                                onclick="event.stopPropagation(); openModal(this.src)">
+                            <span class="zoom-hint">🔍 zoom</span>
+                        </div>
+
+                        <div class="card-footer-custom">
+                            <button type="button" class="btn-select"
+                                onclick="selectAlgo('<?= htmlspecialchars($algo) ?>')">
+                                Select this
+                            </button>
+                        </div>
+                    </div>
+
+                <?php endif; ?>
+            <?php endforeach; ?>
         </div>
+
+        <div class="page-footer">
+            <a href="crop_selection.php" class="btn-back">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12" />
+                    <polyline points="12 19 5 12 12 5" />
+                </svg>
+                Back
+            </a>
+            <span class="output-info">Output: <?= (int)$width ?> x <?= (int)$height ?> studs</span>
+        </div>
+
     </div>
 
     <div id="imgModal">
@@ -316,14 +250,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         function closeModal() {
             document.getElementById("imgModal").style.display = "none";
         }
+
         window.onclick = function(event) {
             if (event.target === document.getElementById("imgModal")) {
                 closeModal();
             }
         }
-    </script>
 
-    <?php include("./includes/footer.php"); ?>
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
 </body>
 
 </html>

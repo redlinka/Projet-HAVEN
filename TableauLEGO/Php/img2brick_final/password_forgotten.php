@@ -97,6 +97,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title><?= htmlspecialchars(tr('password_forgotten.page_title', 'Password Recovery')) ?></title>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="style/password_forgotten.css" rel="stylesheet">
+    <link href="style/all.css" rel="stylesheet">
     <style>
         .icon-box { font-size: 3rem; margin-bottom: 1rem; }
         .text-danger-custom { color: #dc3545; }
@@ -138,7 +140,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <?php else: ?>
                 <div class="card shadow-sm border-0">
                     <div class="card-body p-4">
-                        <h2 class="text-center fw-bold mb-4" data-i18n="password_forgotten.form_title">Password Recovery</h2>
+                        <h2 class="text-center fw-bold mb-4 password-recovery-title" data-i18n="password_forgotten.form_title">Password Recovery</h2>
                         <p class="text-muted text-center small mb-4" data-i18n="password_forgotten.form_hint">Enter your email to receive a reset link.</p>
 
                         <?php if (!empty($errors)): ?>
@@ -151,10 +153,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </div>
                         <?php endif; ?>
 
-                        <form method="POST" action="">
+                        <form method="POST" action="" class="password-form">
                             <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_get(), ENT_QUOTES, 'UTF-8') ?>">
 
-                            <div class="mb-3">
+                            <div class="mb-3 email">
                                 <label for="email" class="form-label" data-i18n="password_forgotten.email_label">Email Address</label>
                                 <input type="email" class="form-control" id="email" name="email"
                                        placeholder="name@example.com" data-i18n-attr="placeholder:password_forgotten.email_placeholder" required>
@@ -169,11 +171,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </div>
 
                             <div class="d-grid mb-3">
-                                <button type="submit" class="btn btn-primary btn-lg" data-i18n="password_forgotten.submit">Send Recovery Link</button>
+                                <button type="submit" class="btn btn-primary btn-lg send-button" data-i18n="password_forgotten.submit">Send Recovery Link</button>
                             </div>
 
                             <div class="text-center">
-                                <a href="connexion.php" class="text-decoration-none" data-i18n="password_forgotten.back_login">Back to Login</a>
+                                <a href="connexion.php" class="text-decoration-none back-login" data-i18n="password_forgotten.back_login">Back to Login</a>
                             </div>
                         </form>
                     </div>

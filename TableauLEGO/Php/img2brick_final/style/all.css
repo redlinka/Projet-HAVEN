@@ -12,6 +12,9 @@
     --crop-title: clamp(15px, 3vw, 28px);
     --crop-small-title: clamp(0.7rem, 1.5vw, 1.3rem);
 
+    --downscale-title: clamp(1rem, 3vw, 2rem);
+
+
     /*------------------COLORS------------------*/
     --main-brown: #A26547;
     --secondary-brown: #a87155;

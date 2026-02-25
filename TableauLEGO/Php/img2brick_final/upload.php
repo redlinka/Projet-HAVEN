@@ -208,9 +208,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             <input type="file" id="imageUpload" name="image" accept="image/*" required style="display:none;">
 
-            <div class="d-grid">
+            <!-- <div class="d-grid">
                 <a href="#" type="submit" data-i18n="index.button" class="btn-continue">CONTINUE</a>
                 <img src="assets/white-arrow.svg">
+            </div> -->
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-lg" data-i18n="index.button">Continue</button>
             </div>
         </form>
     </div>
@@ -263,7 +266,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             dropArea.classList.add('highlight');
             dropArea.innerHTML = `
             <div class="upload-icon text-primary">&uarr;</div>
-            <h5 class="fw-bold text-primary">${filename}</h5>
+            <h5 class="fw-bold text-primary" style="color:var(--main-brown);">${filename}</h5>
             <p class="text-muted small mb-0">${changeText}</p>
         `;
         }

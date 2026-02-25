@@ -9,9 +9,13 @@
     --upload-title: clamp(15px, 5vw, 40px);
     --upload-accepted: clamp(13px, 1.5vw, 20px);
 
+    --crop-title: clamp(15px, 3vw, 28px);
+    --crop-small-title: clamp(0.7rem, 1.5vw, 1.3rem);
+
     /*------------------COLORS------------------*/
     --main-brown: #A26547;
     --secondary-brown: #a87155;
+    --bg-brown: #f4ede3;
 }
 
 /*------------------FONTS------------------*/

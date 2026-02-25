@@ -171,7 +171,7 @@ try {
 <body>
 
     <?php include("./includes/navbar.php"); ?>
-
+    <h1>CROP & RESCALE YOUR IMAGE</h1>
     <div class="container bg-light py-5">
 
         <?php if (!empty($errors)): ?>

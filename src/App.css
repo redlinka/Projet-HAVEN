@@ -1,8 +1,15 @@
 .app {
   height: 100vh;
-  background: linear-gradient(
-    #463300 -20%,
-    rgba(0, 0, 0, 0.63) 31%,
-    var(--black)
-  );
+  position: relative;
+  display: flex;
+}
+
+.bg {
+  position: absolute;
+  left: 0px;
+  right: 0px;
+  height: 480px;
+  opacity: 0.6;
+  background: linear-gradient(to bottom, #463300, transparent);
+  z-index: -1;
 }

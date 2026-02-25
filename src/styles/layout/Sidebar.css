@@ -1,3 +1,8 @@
+:root {
+  --pad-icon: 3px;
+  --gap-user: 5px;
+}
+
 .sidebar {
   height: 100%;
   width: fit-content;
@@ -6,31 +11,96 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 20px;
+  padding: 10px;
   color: var(--white);
   border-right: 1px solid rgb(39, 39, 39);
 }
 
 .sidebar .top {
-  border: solid red;
   display: flex;
   flex-direction: column;
+  flex: 1;
 }
-.sidebar .top button {
-  align-self: flex-end;
+
+.sidebar .top .menu-button {
+  display: flex;
+  justify-content: center;
+  height: 40px;
 }
+
+.sidebar .top .menu-button button .square-menu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 10px;
+  background-color: var(--yellow);
+  border-radius: 20px;
+}
+.sidebar .top .menu-button button .square-menu .squares {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 2px;
+  height: 100%;
+  width: 100%;
+}
+
+.sidebar .top .menu-button button .square-menu .squares div {
+  background-color: var(--black);
+  border-radius: 2px;
+}
+
+.sidebar .top nav {
+  margin-top: 2rem;
+}
+
+.sidebar .top nav ul li {
+  width: 100%;
+  cursor: pointer;
+  border-radius: 10px;
+  padding: 10px;
+  overflow-x: hidden;
+}
+.sidebar .top nav ul li:hover {
+  background-color: rgb(56, 56, 56);
+}
+
+.sidebar .top nav ul li div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow-x: hidden;
+  width: fit-content;
+}
+.sidebar .top nav ul li div p {
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 .sidebar .user {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding-right: 10px;
+  padding: 10px;
+  padding-left: calc(20px - var(--pad-icon) - var(--gap-user));
+  gap: var(--gap-user);
   background-color: #1f1f1f;
+  border-radius: 5px;
+  overflow-x: hidden;
+  width: fit-content;
+}
+
+.sidebar .user p {
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .sidebar .user .user-icon {
   border-radius: 20px;
-  padding: 5px;
+  padding: var(--pad-icon);
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 2px solid var(--gray);
 }

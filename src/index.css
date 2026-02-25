@@ -1,11 +1,15 @@
+@font-face {
+  font-family: "Inter";
+  src: url("/public/font/inter/Inter-VariableFont.ttf") format("truetype");
+}
+
 :root {
   --yellow: #f8d820;
   --black: #000000;
   --gray: #5e606a;
   --white: #eeeef0;
 
-  --title-font: "Arial", sans-serif;
-  --text-font: "Arial", sans-serif;
+  --text-font: "Inter", sans-serif;
 }
 
 * {
@@ -13,6 +17,7 @@
   padding: 0;
   box-sizing: border-box;
   overflow: hidden;
+  transition: all 0.3s ease-in;
 }
 
 body {

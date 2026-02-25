@@ -1,0 +1,18 @@
+.game-container-main {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  height: 100%;
+  color: var(--white);
+  gap: 10px;
+}
+.game-container-main .top {
+  font-size: 0.8rem;
+}
+.game-container-main .game-view {
+  max-height: 100%;
+  border-radius: 10px;
+}
+.game-container-main .description p {
+  color: var(--gray);
+}

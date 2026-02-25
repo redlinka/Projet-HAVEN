@@ -143,6 +143,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <title>Create Account - Img2Brick</title>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="style/sign-up-in.css" rel="stylesheet">
+    <link href="style/all.css" rel="stylesheet">
     <style>
         .valid-req {
             color: #198754;
@@ -177,8 +179,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <?php include("./includes/navbar.php"); ?>
 
     <div class="container bg-light py-5">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
+        <div class="center-page">
+            <div class="left-center">
+                <img src="assets/guy.svg" alt="an image of a standing lego man">
+            </div>
+            <div class="col-md-6 col-lg-5 right-center">
 
                 <div class="card shadow-sm border-0">
                     <div class="card-body p-4">

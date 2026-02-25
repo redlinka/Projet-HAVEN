@@ -1,0 +1,19 @@
+.center-page {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    width: fit-content;
+    align-items: center;
+    gap: 10vw;
+}
+.left-center {
+    min-width: 45%;
+}
+.left-center img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+.right-center {
+    min-width: 50%;
+}

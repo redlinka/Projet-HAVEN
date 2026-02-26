@@ -153,15 +153,96 @@ html, body {
     to   { opacity: 1; transform: translateY(0); }
 }
 
-.error-banner {
-    background: #fff5f5;
-    border: 1px solid #fecaca;
+.error-toast {
+    position: fixed;
+    top: clamp(12px, 2vh, 24px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: #fff;
+    border: 1.5px solid #fecaca;
+    border-left: 4px solid #dc3545;
     border-radius: var(--r-sm);
-    padding: 10px 14px;
-    margin-bottom: 16px;
-    font-size: var(--fs-sm);
+    box-shadow: 0 4px 24px rgba(0,0,0,.13);
+    padding: 12px 16px 12px 12px;
+    max-width: min(92vw, 420px);
+    width: max-content;
+    animation: toastIn .25s ease, toastOut .4s ease 3s forwards;
 }
-.error-banner li { color: #c0392b; padding-left: 14px; list-style: disc; }
+
+@keyframes toastIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes toastOut {
+    from { opacity: 1; transform: translateX(-50%) translateY(0); }
+    to   { opacity: 0; transform: translateX(-50%) translateY(-10px); pointer-events: none; }
+}
+
+.error-toast-icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    background: #dc3545;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    margin-top: 1px;
+}
+
+.error-toast ul {
+    flex: 1;
+    list-style: disc;
+    padding-left: 14px;
+    margin: 0;
+}
+
+.error-toast li {
+    color: #c0392b;
+    font-size: var(--fs-xs);
+    line-height: 1.5;
+}
+
+.error-toast-close {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    margin-top: -2px;
+    transition: color .15s;
+}
+.error-toast-close:hover { color: #dc3545; }
+
+/* Mobile — pleine largeur en bas */
+@media (max-width: 480px) {
+    .error-toast {
+        top: auto;
+        bottom: clamp(12px, 2vh, 20px);
+        left: clamp(12px, 4vw, 20px);
+        right: clamp(12px, 4vw, 20px);
+        transform: none;
+        max-width: 100%;
+        width: auto;
+        animation: toastInMobile .25s ease, toastOut .4s ease 3s forwards;
+    }
+
+    @keyframes toastInMobile {
+        from { opacity: 0; transform: translateY(10px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+}
 
 .field { margin-bottom: clamp(8px, 1.2vh, 14px); }
 

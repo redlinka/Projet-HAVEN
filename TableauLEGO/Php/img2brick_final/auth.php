@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-        /* ════════════════════════════════
+            /* ════════════════════════════════
            SIGN IN
         ════════════════════════════════ */
         } elseif ($formType === 'signin') {
@@ -168,6 +168,7 @@ $csrfToken = htmlspecialchars(csrf_get(), ENT_QUOTES, 'UTF-8');
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -183,243 +184,294 @@ $csrfToken = htmlspecialchars(csrf_get(), ENT_QUOTES, 'UTF-8');
     <link href="style/auth.css" rel="stylesheet">
     <link href="style/all.css" rel="stylesheet">
 </head>
+
 <body>
 
-<?php include("./includes/navbar.php"); ?>
+    <?php include("./includes/navbar.php"); ?>
 
-<div class="auth-page">
-    <main class="auth-main">
-        <div class="auth-visual">
-            <img src="assets/guy.svg" alt="Bricksy mascot — a Lego figure">
-        </div>
+    <div class="auth-page">
+        <main class="auth-main">
+            <div class="auth-visual">
+                <img src="assets/guy.svg" alt="Bricksy mascot — a Lego figure">
+            </div>
 
-        <div class="auth-card">
+            <div class="auth-card">
 
-            <p class="auth-title">Create your account</p>
+                <p class="auth-title">Create your account</p>
 
-            <!-- Tab switcher -->
-            <div class="tab-switcher" role="tablist">
-                <button class="tab-btn <?= $activeTab === 'signup' ? 'active' : '' ?>"
+                <!-- Tab switcher -->
+                <div class="tab-switcher" role="tablist">
+                    <button class="tab-btn <?= $activeTab === 'signup' ? 'active' : '' ?>"
                         id="tab-signup" role="tab"
                         onclick="switchTab('signup')">Sign Up</button>
-                <button class="tab-btn <?= $activeTab === 'signin' ? 'active' : '' ?>"
+                    <button class="tab-btn <?= $activeTab === 'signin' ? 'active' : '' ?>"
                         id="tab-signin" role="tab"
                         onclick="switchTab('signin')">Log In</button>
-            </div>
+                </div>
 
-            <!-- Error banner (shared) -->
-            <?php if (!empty($errors)): ?>
-            <div class="error-banner">
-                <ul>
-                    <?php foreach ($errors as $err): ?>
-                        <li><?= $err ?></li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-            <?php endif; ?>
+                <!-- Error banner (shared) -->
+                <?php if (!empty($errors)): ?>
+                    <div class="error-toast" id="error-toast">
+                        <div class="error-toast-icon">!</div>
+                        <ul>
+                            <?php foreach ($errors as $err): ?>
+                                <li><?= $err ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                        <button class="error-toast-close" onclick="dismissToast()">×</button>
+                    </div>
+                <?php endif; ?>
 
-            <!-- ════════════════════════════
+                <!-- ════════════════════════════
                  SIGN UP PANEL
             ════════════════════════════ -->
-            <div class="form-panel <?= $activeTab === 'signup' ? 'active' : '' ?>" id="panel-signup" role="tabpanel">
-                <form method="POST" id="signup-form" novalidate>
-                    <input type="hidden" name="csrf"      value="<?= $csrfToken ?>">
-                    <input type="hidden" name="form_type" value="signup">
+                <div class="form-panel <?= $activeTab === 'signup' ? 'active' : '' ?>" id="panel-signup" role="tabpanel">
+                    <form method="POST" id="signup-form" novalidate>
+                        <input type="hidden" name="csrf" value="<?= $csrfToken ?>">
+                        <input type="hidden" name="form_type" value="signup">
 
-                    <div class="field">
-                        <label for="su-username">Username</label>
-                        <input type="text" id="su-username" name="username"
-                               placeholder="Enter your username"
-                               minlength="8"
-                               value="<?= htmlspecialchars($_POST['username'] ?? '') ?>"
-                               autocomplete="username" required>
-                    </div>
-
-                    <div class="field">
-                        <label for="su-email">Email</label>
-                        <input type="email" id="su-email" name="email"
-                               placeholder="Enter your email"
-                               value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
-                               autocomplete="email" required>
-                    </div>
-
-                    <div class="field">
-                        <label for="su-password">Password <span>( 12 characters )</span></label>
-                        <input type="password" id="su-password" name="password"
-                               placeholder="Enter your password"
-                               autocomplete="new-password" required>
-                    </div>
-
-                    <div class="field">
-                        <label for="su-confirm">Confirm Password</label>
-                        <input type="password" id="su-confirm" name="confirm-password"
-                               placeholder="Repeat your password"
-                               autocomplete="new-password" required>
-                        <div class="pw-match-msg" id="pw-match-msg"></div>
-                    </div>
-
-                    <!-- Password requirements -->
-                    <div class="pw-requirements" id="pw-requirements">
-                        <h6>Password must contain:</h6>
-                        <div class="req-item invalid" id="req-letter">Lowercase letter</div>
-                        <div class="req-item invalid" id="req-capital">Uppercase letter</div>
-                        <div class="req-item invalid" id="req-number">Number</div>
-                        <div class="req-item invalid" id="req-special">Special character</div>
-                        <div class="req-item invalid" id="req-length">Min 12 characters</div>
-                    </div>
-
-                    <!-- Turnstile captcha -->
-                    <div class="captcha-wrap">
-                        <div class="cf-turnstile"
-                             data-sitekey="<?= $_ENV['CLOUDFLARE_TURNSTILE_PUBLIC'] ?>"
-                             data-theme="light"
-                             data-size="flexible"
-                             data-callback="onSignupSuccess">
+                        <div class="field">
+                            <label for="su-username">Username</label>
+                            <input type="text" id="su-username" name="username"
+                                placeholder="Enter your username"
+                                minlength="8"
+                                value="<?= htmlspecialchars($_POST['username'] ?? '') ?>"
+                                autocomplete="username" required>
                         </div>
-                    </div>
 
-                    <button type="submit" class="btn-submit" id="su-submit" disabled>
-                        Get Started
-                    </button>
-                </form>
-            </div>
+                        <div class="field">
+                            <label for="su-email">Email</label>
+                            <input type="email" id="su-email" name="email"
+                                placeholder="Enter your email"
+                                value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
+                                autocomplete="email" required>
+                        </div>
 
-            <!-- ════════════════════════════
+                        <div class="field">
+                            <label for="su-password">Password <span>( 12 characters )</span></label>
+                            <input type="password" id="su-password" name="password"
+                                placeholder="Enter your password"
+                                autocomplete="new-password" required>
+                        </div>
+
+                        <div class="field">
+                            <label for="su-confirm">Confirm Password</label>
+                            <input type="password" id="su-confirm" name="confirm-password"
+                                placeholder="Repeat your password"
+                                autocomplete="new-password" required>
+                            <div class="pw-match-msg" id="pw-match-msg"></div>
+                        </div>
+
+                        <!-- Password requirements -->
+                        <div class="pw-requirements" id="pw-requirements">
+                            <h6>Password must contain:</h6>
+                            <div class="req-item invalid" id="req-letter">Lowercase letter</div>
+                            <div class="req-item invalid" id="req-capital">Uppercase letter</div>
+                            <div class="req-item invalid" id="req-number">Number</div>
+                            <div class="req-item invalid" id="req-special">Special character</div>
+                            <div class="req-item invalid" id="req-length">Min 12 characters</div>
+                        </div>
+
+                        <!-- Turnstile captcha -->
+                        <div class="captcha-wrap">
+                            <div class="cf-turnstile"
+                                data-sitekey="<?= $_ENV['CLOUDFLARE_TURNSTILE_PUBLIC'] ?>"
+                                data-theme="light"
+                                data-size="flexible"
+                                data-callback="onSignupSuccess">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-submit" id="su-submit">
+                            Get Started
+                        </button>
+                    </form>
+                </div>
+
+                <!-- ════════════════════════════
                  SIGN IN PANEL
             ════════════════════════════ -->
-            <div class="form-panel <?= $activeTab === 'signin' ? 'active' : '' ?>" id="panel-signin" role="tabpanel">
-                <form method="POST" id="signin-form" novalidate>
-                    <input type="hidden" name="csrf"      value="<?= $csrfToken ?>">
-                    <input type="hidden" name="form_type" value="signin">
+                <div class="form-panel <?= $activeTab === 'signin' ? 'active' : '' ?>" id="panel-signin" role="tabpanel">
+                    <form method="POST" id="signin-form" novalidate>
+                        <input type="hidden" name="csrf" value="<?= $csrfToken ?>">
+                        <input type="hidden" name="form_type" value="signin">
 
-                    <div class="field">
-                        <label for="si-userid">Email</label>
-                        <input type="text" id="si-userid" name="userid"
-                               placeholder="Enter your email"
-                               autocomplete="username" required>
-                    </div>
-
-                    <div class="field">
-                        <label for="si-password">Password <span>( 12 characters )</span></label>
-                        <input type="password" id="si-password" name="password"
-                               placeholder="Enter your password"
-                               autocomplete="current-password" required>
-                        <a href="password_forgotten.php" class="forgot-link">Forgot password ? <strong>click here</strong></a>
-                    </div>
-
-                    <!-- Turnstile captcha -->
-                    <div class="captcha-wrap">
-                        <div class="cf-turnstile"
-                             data-sitekey="<?= $_ENV['CLOUDFLARE_TURNSTILE_PUBLIC'] ?>"
-                             data-theme="light"
-                             data-size="flexible"
-                             data-callback="onSigninSuccess">
+                        <div class="field">
+                            <label for="si-userid">Email</label>
+                            <input type="text" id="si-userid" name="userid"
+                                placeholder="Enter your email"
+                                autocomplete="username" required>
                         </div>
-                    </div>
 
-                    <button type="submit" class="btn-submit" id="si-submit">
-                        Get Started
-                    </button>
-                </form>
-            </div>
+                        <div class="field">
+                            <label for="si-password">Password <span>( 12 characters )</span></label>
+                            <input type="password" id="si-password" name="password"
+                                placeholder="Enter your password"
+                                autocomplete="current-password" required>
+                            <a href="password_forgotten.php" class="forgot-link">Forgot password ? <strong>click here</strong></a>
+                        </div>
 
-        </div><!-- /auth-card -->
-    </main>
-</div>
+                        <!-- Turnstile captcha -->
+                        <div class="captcha-wrap">
+                            <div class="cf-turnstile"
+                                data-sitekey="<?= $_ENV['CLOUDFLARE_TURNSTILE_PUBLIC'] ?>"
+                                data-theme="light"
+                                data-size="flexible"
+                                data-callback="onSigninSuccess">
+                            </div>
+                        </div>
 
-<script>
-    /* ══════════════════════════════════════════
-       TAB SWITCHING
-    ══════════════════════════════════════════ */
-    function switchTab(tab) {
-        const panels  = document.querySelectorAll('.form-panel');
-        const tabBtns = document.querySelectorAll('.tab-btn');
+                        <button type="submit" class="btn-submit" id="si-submit">
+                            Get Started
+                        </button>
+                    </form>
+                </div>
 
-        panels.forEach(p => p.classList.remove('active', 'entering'));
-        tabBtns.forEach(b => b.classList.remove('active'));
+            </div><!-- /auth-card -->
+        </main>
+    </div>
 
-        const target = document.getElementById('panel-' + tab);
-        target.classList.add('active', 'entering');
-        document.getElementById('tab-' + tab).classList.add('active');
-    }
-
-    /* ══════════════════════════════════════════
-       CAPTCHA CALLBACKS
-    ══════════════════════════════════════════ */
-    let signupCaptcha = false;
-    let signinCaptcha = false;
-
-    window.onSignupSuccess = () => { signupCaptcha = true;  validateSignup(); };
-    window.onSigninSuccess = () => { signinCaptcha = true; };
-
-    /* ══════════════════════════════════════════
-       SIGN UP — REAL-TIME VALIDATION
-    ══════════════════════════════════════════ */
-    const suPassword = document.getElementById('su-password');
-    const suConfirm  = document.getElementById('su-confirm');
-    const suUsername = document.getElementById('su-username');
-    const suEmail    = document.getElementById('su-email');
-    const suSubmit   = document.getElementById('su-submit');
-    const pwMatchMsg = document.getElementById('pw-match-msg');
-
-    const reqLetter  = document.getElementById('req-letter');
-    const reqCapital = document.getElementById('req-capital');
-    const reqNumber  = document.getElementById('req-number');
-    const reqSpecial = document.getElementById('req-special');
-    const reqLength  = document.getElementById('req-length');
-
-    function updateReq(el, ok, label) {
-        el.classList.toggle('success', ok);
-        el.classList.toggle('invalid', !ok);
-        el.textContent = (ok ? '✓ ' : '✗ ') + label;
-    }
-
-    function validateSignup() {
-        const pw  = suPassword.value;
-        const cf  = suConfirm.value;
-        const usr = suUsername.value.trim();
-
-        // Requirements
-        updateReq(reqLetter,  /[a-z]/.test(pw),                      'Lowercase letter');
-        updateReq(reqCapital, /[A-Z]/.test(pw),                      'Uppercase letter');
-        updateReq(reqNumber,  /[0-9]/.test(pw),                      'Number');
-        updateReq(reqSpecial, /[!@#$%^&*(),.?":{}|<>]/.test(pw),    'Special character');
-        updateReq(reqLength,  pw.length >= 12,                        'Min 12 characters');
-
-        // Confirm match
-        if (cf) {
-            if (pw === cf) {
-                pwMatchMsg.textContent = 'Passwords match';
-                pwMatchMsg.className   = 'pw-match-msg ok';
-            } else {
-                pwMatchMsg.textContent = 'Passwords do not match';
-                pwMatchMsg.className   = 'pw-match-msg err';
+    <script>
+        function dismissToast() {
+            const t = document.getElementById('error-toast');
+            if (t) {
+                t.style.opacity = '0';
+                t.style.transition = 'opacity .3s';
+                setTimeout(() => t.remove(), 300);
             }
-        } else {
-            pwMatchMsg.textContent = '';
-            pwMatchMsg.className   = 'pw-match-msg';
         }
 
-        // Enable submit
-        const allReqOk = /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /[0-9]/.test(pw)
-                      && /[!@#$%^&*(),.?":{}|<>]/.test(pw) && pw.length >= 12;
+        const toast = document.getElementById('error-toast');
+        if (toast) setTimeout(() => toast.remove(), 3400);
 
-        suSubmit.disabled = !(usr.length >= 8 && suEmail.value && pw && cf === pw && allReqOk && signupCaptcha);
-    }
-
-    suPassword.addEventListener('input', validateSignup);
-    suConfirm.addEventListener('input',  validateSignup);
-    suUsername.addEventListener('input', validateSignup);
-    suEmail.addEventListener('input',    validateSignup);
-
-    /* ══════════════════════════════════════════
-       INIT — restore correct tab on page load
-       (in case of POST error redirect)
+        /* ══════════════════════════════════════════
+       TAB SWITCHING
     ══════════════════════════════════════════ */
-    (function init() {
-        const active = '<?= $activeTab ?>';
-        if (active) switchTab(active);
-    })();
-</script>
+        function switchTab(tab) {
+            const panels = document.querySelectorAll('.form-panel');
+            const tabBtns = document.querySelectorAll('.tab-btn');
+
+            panels.forEach(p => p.classList.remove('active', 'entering'));
+            tabBtns.forEach(b => b.classList.remove('active'));
+
+            const target = document.getElementById('panel-' + tab);
+            target.classList.add('active', 'entering');
+            document.getElementById('tab-' + tab).classList.add('active');
+        }
+
+        /* ══════════════════════════════════════════
+           CAPTCHA CALLBACKS
+        ══════════════════════════════════════════ */
+        let signupCaptcha = false;
+        let signinCaptcha = false;
+
+        window.onSignupSuccess = () => {
+            signupCaptcha = true;
+            validateSignup();
+        };
+        window.onSigninSuccess = () => {
+            signinCaptcha = true;
+        };
+
+        /* ══════════════════════════════════════════
+           SIGN UP — REAL-TIME VALIDATION
+        ══════════════════════════════════════════ */
+        const suPassword = document.getElementById('su-password');
+        const suConfirm = document.getElementById('su-confirm');
+        const suUsername = document.getElementById('su-username');
+        const suEmail = document.getElementById('su-email');
+        const suSubmit = document.getElementById('su-submit');
+        const pwMatchMsg = document.getElementById('pw-match-msg');
+
+        const reqLetter = document.getElementById('req-letter');
+        const reqCapital = document.getElementById('req-capital');
+        const reqNumber = document.getElementById('req-number');
+        const reqSpecial = document.getElementById('req-special');
+        const reqLength = document.getElementById('req-length');
+
+        function updateReq(el, ok, label) {
+            el.classList.toggle('success', ok);
+            el.classList.toggle('invalid', !ok);
+            el.textContent = (ok ? '✓ ' : '✗ ') + label;
+        }
+
+        // function validateSignup() {
+        //     const pw = suPassword.value;
+        //     const cf = suConfirm.value;
+        //     const usr = suUsername.value.trim();
+
+        //     // Requirements
+        //     updateReq(reqLetter, /[a-z]/.test(pw), 'Lowercase letter');
+        //     updateReq(reqCapital, /[A-Z]/.test(pw), 'Uppercase letter');
+        //     updateReq(reqNumber, /[0-9]/.test(pw), 'Number');
+        //     updateReq(reqSpecial, /[!@#$%^&*(),.?":{}|<>]/.test(pw), 'Special character');
+        //     updateReq(reqLength, pw.length >= 12, 'Min 12 characters');
+
+        //     // Confirm match
+        //     if (cf) {
+        //         if (pw === cf) {
+        //             pwMatchMsg.textContent = 'Passwords match';
+        //             pwMatchMsg.className = 'pw-match-msg ok';
+        //         } else {
+        //             pwMatchMsg.textContent = 'Passwords do not match';
+        //             pwMatchMsg.className = 'pw-match-msg err';
+        //         }
+        //     } else {
+        //         pwMatchMsg.textContent = '';
+        //         pwMatchMsg.className = 'pw-match-msg';
+        //     }
+
+        //     // Enable submit
+        //     const allReqOk = /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /[0-9]/.test(pw) &&
+        //         /[!@#$%^&*(),.?":{}|<>]/.test(pw) && pw.length >= 12;
+
+        //     suSubmit.disabled = !(usr.length >= 8 && suEmail.value && pw && cf === pw && allReqOk && signupCaptcha);
+        // }
+        function validateSignup() {
+            const pw = suPassword.value;
+            const cf = suConfirm.value;
+            const usr = suUsername.value.trim();
+
+            updateReq(reqLetter, /[a-z]/.test(pw), 'Lowercase letter');
+            updateReq(reqCapital, /[A-Z]/.test(pw), 'Uppercase letter');
+            updateReq(reqNumber, /[0-9]/.test(pw), 'Number');
+            updateReq(reqSpecial, /[!@#$%^&*(),.?":{}|<>]/.test(pw), 'Special character');
+            updateReq(reqLength, pw.length >= 12, 'Min 12 characters');
+
+            if (cf) {
+                if (pw === cf) {
+                    pwMatchMsg.textContent = 'Passwords match';
+                    pwMatchMsg.className = 'pw-match-msg ok';
+                } else {
+                    pwMatchMsg.textContent = 'Passwords do not match';
+                    pwMatchMsg.className = 'pw-match-msg err';
+                }
+            } else {
+                pwMatchMsg.textContent = '';
+                pwMatchMsg.className = 'pw-match-msg';
+            }
+
+            const allReqOk = /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /[0-9]/.test(pw) &&
+                /[!@#$%^&*(),.?":{}|<>]/.test(pw) && pw.length >= 12;
+
+            // Captcha retiré de la condition JS — validé uniquement côté serveur
+            // suSubmit.disabled = !(usr.length >= 8 && suEmail.value && pw && cf === pw && allReqOk);
+        }
+
+        suPassword.addEventListener('input', validateSignup);
+        suConfirm.addEventListener('input', validateSignup);
+        suUsername.addEventListener('input', validateSignup);
+        suEmail.addEventListener('input', validateSignup);
+
+        /* ══════════════════════════════════════════
+           INIT — restore correct tab on page load
+           (in case of POST error redirect)
+        ══════════════════════════════════════════ */
+        (function init() {
+            const active = '<?= $activeTab ?>';
+            if (active) switchTab(active);
+        })();
+    </script>
 </body>
+
 </html>

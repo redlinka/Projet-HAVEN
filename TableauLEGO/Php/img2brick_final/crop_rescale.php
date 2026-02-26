@@ -138,7 +138,7 @@ try {
 
     <div class="page-wrapper">
 
-        <p class="page-title">CROP AND RESCALE YOUR IMAGE</p>
+        <p class="page-title">Crop and rescale your image</p>
 
         <?php if (!empty($errors)): ?>
             <div class="error-banner">

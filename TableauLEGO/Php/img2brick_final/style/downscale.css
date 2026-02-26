@@ -1,5 +1,6 @@
 .downscale-title {
-    font: 400 var(--downscale-title) inter, sans-serif;
+    flex-shrink: 0;
+    font: 500 var(--downscale-title) darker-grotesque, sans-serif;
     color: var(--main-brown);
     letter-spacing: 0.1em;
     text-align: center;

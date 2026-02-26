@@ -4,7 +4,7 @@
     include("./config/cnx.php");
 
     if (!isset($_SESSION['userId']) || !isset($_SESSION['username'])) {
-        header("Location: connexion.php");
+        header("Location: auth.php");
         exit;
     }
     $navUsername = $_SESSION['username'];

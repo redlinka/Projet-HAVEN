@@ -119,7 +119,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <h2 class="fw-bold mb-3" data-i18n="password_forgotten.success_title">Check your inbox</h2>
                         <p class="text-muted mb-4" data-i18n="password_forgotten.success_text">If an account exists for that email, we have sent a password reset link. It may take a few minutes to arrive.</p>
                         <div class="d-grid">
-                            <a href="connexion.php" class="btn btn-outline-secondary" data-i18n="password_forgotten.back_login">Back to Login</a>
+                            <a href="auth.php" class="btn btn-outline-secondary" data-i18n="password_forgotten.back_login">Back to Login</a>
                         </div>
                     </div>
                 </div>
@@ -175,7 +175,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </div>
 
                             <div class="text-center">
-                                <a href="connexion.php" class="text-decoration-none back-login" data-i18n="password_forgotten.back_login">Back to Login</a>
+                                <a href="auth.php" class="text-decoration-none back-login" data-i18n="password_forgotten.back_login">Back to Login</a>
                             </div>
                         </form>
                     </div>

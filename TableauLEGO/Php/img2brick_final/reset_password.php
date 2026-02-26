@@ -144,7 +144,7 @@ if ($viewState === 'form' && $_SERVER["REQUEST_METHOD"] === "POST") {
                             <h2 class="fw-bold mb-3" data-i18n="reset_password.success_title">Password Updated!</h2>
                             <p class="text-muted mb-4" data-i18n="reset_password.success_text">Your password has been securely reset. You can now log in with your new credentials.</p>
                             <div class="d-grid">
-                                <a href="connexion.php" class="btn btn-primary btn-lg" data-i18n="reset_password.login_now">Log In Now</a>
+                                <a href="auth.php" class="btn btn-primary btn-lg" data-i18n="reset_password.login_now">Log In Now</a>
                             </div>
                         </div>
                     </div>

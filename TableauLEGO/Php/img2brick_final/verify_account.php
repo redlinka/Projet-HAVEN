@@ -97,14 +97,14 @@ if (!isset($_GET['token'])) {
                     <div class="icon-box text-success-custom">OK</div>
                     <h2 class="fw-bold mb-3" data-i18n="verify_account.success_title">Verified!</h2>
                     <p class="text-muted mb-4"><?= htmlspecialchars($message) ?></p>
-                    <a href="connexion.php" class="btn btn-primary btn-lg w-100" data-i18n="verify_account.login_now">Log In Now</a>
+                    <a href="auth.php" class="btn btn-primary btn-lg w-100" data-i18n="verify_account.login_now">Log In Now</a>
 
                 <?php elseif ($status === 'error'): ?>
                     <div class="icon-box text-danger-custom">X</div>
                     <h2 class="fw-bold mb-3" data-i18n="verify_account.error_title">Verification Failed</h2>
                     <p class="text-muted mb-4"><?= htmlspecialchars($message) ?></p>
                     <div class="d-grid gap-2">
-                        <a href="creation.php" class="btn btn-outline-secondary" data-i18n="verify_account.back_signup">Back to Sign Up</a>
+                        <a href="auth.php" class="btn btn-outline-secondary" data-i18n="verify_account.back_signup">Back to Sign Up</a>
                         <a href="index.php" class="btn btn-link text-decoration-none" data-i18n="verify_account.go_home">Go Home</a>
                     </div>
 

@@ -6,7 +6,7 @@ require_once __DIR__ . '/includes/i18n.php';
 
 $_SESSION['redirect_after_login'] = 'my_orders.php';
 if (!isset($_SESSION['userId'])) {
-    header("Location: connexion.php");
+    header("Location: auth.php");
     exit();
 }
 

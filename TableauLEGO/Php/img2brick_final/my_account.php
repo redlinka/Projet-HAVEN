@@ -6,7 +6,7 @@ require_once __DIR__ . '/includes/i18n.php';
 
 // Redirect to login if user is not authenticated
 if (!isset($_SESSION['userId'])) {
-    header("Location: connexion.php");
+    header("Location: auth.php");
     exit;
 }
 if ($_SESSION['username'] == '4DM1N1STRAT0R_4ND_4LM16HTY') {

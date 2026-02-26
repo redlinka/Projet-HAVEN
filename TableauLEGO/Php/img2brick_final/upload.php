@@ -214,7 +214,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         </form>
     </div>
 
-    <?php include("./includes/footer.php"); ?>
 
     <script>
         const dropArea = document.getElementById("dropArea");

@@ -48,16 +48,6 @@ html, body {
     margin: 0 auto;
 }
 
-.page-title {
-    flex-shrink: 0;
-    text-align: center;
-    font-weight: 600;
-    font-size: var(--fs-xs);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--main-brown);
-}
-
 .error-banner {
     flex-shrink: 0;
     background: #fff5f5;

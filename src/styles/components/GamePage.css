@@ -1,41 +1,20 @@
-.game-page {
-  flex: 1;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.game-page > .top {
-  width: 100%;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--white);
-  font-weight: bold;
-  font-size: 1.3rem;
-}
-.game-page .top span {
-  color: var(--yellow);
-}
-
-.game-page .game-container {
-  flex: 1;
+.game-container {
   display: flex;
   padding: 20px;
   gap: 20px;
+  flex: 1;
 }
 
-.game-page .game-container .game-container-left,
-.game-page .game-container .game-container-right {
+.game-container .game-container-left,
+.game-container .game-container-right {
   background-color: rgba(219, 231, 255, 0.15);
   border: 1px solid #5e606a;
   border-radius: 10px;
 }
 
-.game-page .game-container .game-container-left {
+.game-container .game-container-left {
   flex: 3;
 }
-.game-page .game-container .game-container-right {
+.game-container .game-container-right {
   flex: 1;
 }

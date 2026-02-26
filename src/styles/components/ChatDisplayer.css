@@ -1,0 +1,53 @@
+.chat-message-displayer {
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 10px;
+  flex: 1;
+  color: var(--white);
+}
+
+.chat-container {
+  width: 100%;
+}
+
+.message {
+  width: 100%;
+  min-height: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.received {
+  align-items: start;
+}
+
+.send {
+  align-items: end;
+}
+
+.message p:nth-child(1) {
+  color: var(--yellow);
+  font-size: 0.8rem;
+}
+
+.message p:nth-child(2) {
+  max-width: 300px;
+}
+
+.message p:nth-child(3) {
+  font-size: 0.7rem;
+  padding: 0;
+  color: gray;
+}
+.message p:nth-child(3) button {
+  color: white;
+  font-weight: bold;
+  font-size: 0.7rem;
+  transition: all 0.2s ease-in;
+}
+
+.message p:nth-child(3) button:hover {
+  color: gray;
+}

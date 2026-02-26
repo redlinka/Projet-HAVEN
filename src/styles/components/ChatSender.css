@@ -1,0 +1,25 @@
+.sender-form {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+}
+.sender-form input[type="text"] {
+  color: var(--white);
+  width: 100%;
+  padding: 10px;
+  border: none;
+  background-color: transparent;
+  border-radius: 5px;
+  border: 1px solid var(--gray);
+}
+
+.sender-form button[type="submit"] {
+  width: 50px;
+  height: 40px;
+  background-color: var(--yellow);
+  border-radius: 5px;
+  color: vvar(--black);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

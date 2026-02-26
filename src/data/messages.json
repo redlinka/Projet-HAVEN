@@ -1,0 +1,32 @@
+[
+    {
+        "kind": "received_message",
+        "sender": "helder",
+        "content": "coucou",
+        "date": "2026-05-16"
+    },
+    {
+        "kind": "sent_message",
+        "sender": "moi",
+        "content": "Salut Helder 😊",
+        "date": "2026-05-16T10:00:00.0000"
+    },
+    {
+        "kind": "received_message",
+        "sender": "helder",
+        "content": "Ça va ?",
+        "date": "2026-05-16"
+    },
+    {
+        "kind": "sent_message",
+        "sender": "moi",
+        "content": "Oui tranquille, et toi ?",
+        "date": "2026-05-16"
+    },
+    {
+        "kind": "received_message",
+        "sender": "helder",
+        "content": "Oui nickel ! On se capte plus tard.",
+        "date": "2026-05-16"
+    }
+]

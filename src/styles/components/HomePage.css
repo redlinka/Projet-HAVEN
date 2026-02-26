@@ -1,0 +1,41 @@
+.home-container {
+  flex: 1;
+  padding: 10px 6rem;
+}
+.home-container .new-game {
+  height: 60%;
+  border-radius: 10px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.home-container .new-game img {
+  width: 100%;
+  margin-top: 10rem;
+}
+.home-container .new-game .new {
+  border-radius: 10px;
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  background-color: var(--yellow);
+  padding: 10px;
+  color: var(--black);
+  font-weight: bold;
+}
+
+.home-container .games-list h2 {
+  color: var(--white);
+  margin: 10px 0;
+}
+.home-container .games-list .games {
+  display: flex;
+  gap: 20px;
+}
+.home-container .games-list .games .game {
+  max-height: 150px;
+  border-radius: 10px;
+  cursor: pointer;
+}

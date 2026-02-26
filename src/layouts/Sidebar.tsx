@@ -20,8 +20,6 @@ export default function Sidebar({
     <div
       className="sidebar"
       style={isOpen ? { maxWidth: "200px" } : { maxWidth: "75px" }}
-      onMouseEnter={() => setIsOpen(true)}
-      onMouseLeave={() => setIsOpen(false)}
     >
       <div className="top">
         <div

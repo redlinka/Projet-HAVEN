@@ -6,7 +6,7 @@
     --small-title-poppins: clamp(10px, 3vw, 25px);
     --regular-darker-text: clamp(10px, 2vw, 20px);
 
-    --upload-title: clamp(15px, 5vw, 40px);
+    --upload-title: clamp(25px, 5vw, 40px);
     --upload-accepted: clamp(13px, 1.5vw, 20px);
 
     --crop-title: clamp(15px, 3vw, 28px);

@@ -48,7 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!preg_match('/[!@#$%^&*(),.?":{}|<>]/', $password))       $errors[] = 'Password must contain at least one special character.';
 
             if (empty($errors)) {
-                $password_hashed = password_hash($password, $_ENV['ALGO']);
+                $algo = constant($_ENV['ALGO']) ?? PASSWORD_DEFAULT;
+                $password_hashed = password_hash($password, $algo);
 
                 try {
                     $stmt = $cnx->prepare("SELECT COUNT(*) FROM USER WHERE email = ?");

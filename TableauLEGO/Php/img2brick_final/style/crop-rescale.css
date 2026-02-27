@@ -42,11 +42,11 @@ body {
     flex-direction: column;
     padding: var(--gap) clamp(12px, 2vw, 24px);
     gap: var(--gap);
-    overflow: hidden;
+    height: fit-content;
     width: 100%;
     max-width: 1300px;
     margin: 0 auto;
-    margin-bottom: 5%;
+    margin-bottom: 3%;
 }
 
 .page-title {
@@ -91,7 +91,6 @@ body {
     gap: var(--gap);
     padding: var(--pad-y) var(--pad-x);
     border-right: 1px solid var(--border);
-    overflow: hidden;
     gap: clamp(10px, 4vh, 30px);
 }
 

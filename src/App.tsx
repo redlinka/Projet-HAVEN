@@ -1,6 +1,6 @@
 import "./App.css";
-import PuzzleGame from "./components/Puzzle";
-import Brick from "./components/Bricks";
+import PuzzleGame1 from "./components/Puzzle/Puzzle";
+import PuzzleGame2 from "./components/Puzzle/PuzzleGame";
 import Sidebar from "./layouts/Sidebar";
 import GamePage from "./components/GamePage";
 import HomePage from "./components/HomePage";
@@ -11,14 +11,14 @@ function App() {
   const [selectedGame, setSelectedGame] = useState(-1); // -1 = Home page
   const games = [
     {
-      game: <PuzzleGame />,
+      game: <PuzzleGame1 />,
       description: "lorem ipsum",
       title: "PuzzleGame",
       icon: <Puzzle color="#5e606a" />,
       img: "/img/LegoPuzzle.png",
     },
     {
-      game: <Brick />,
+      game: <PuzzleGame2 />,
       description: "lorem ipsum",
       title: "Brick",
       icon: <ToyBrick color="#5e606a" />,
@@ -35,8 +35,8 @@ function App() {
       />
 
       <div className="app-content">
-        <div className="top" onClick={() => setSelectedGame(-1)}>
-          <h1>
+        <div className="top">
+          <h1 onClick={() => setSelectedGame(-1)}>
             Haven <span>Games</span>
           </h1>
         </div>

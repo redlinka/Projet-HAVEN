@@ -1,4 +1,4 @@
-import "../styles/components/Puzzle.css";
+import "../../styles/components/Puzzle/Puzzle.css";
 import legoGame from "/img/legogame.png";
 
 function PuzzleBoard() {

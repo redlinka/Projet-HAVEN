@@ -1,7 +1,7 @@
 import React, { type ReactNode } from "react";
 import "../styles/components/GamePage.css";
 import GameContainer from "./GameContainer";
-import Chatter from "./Chatter";
+import Chatter from "./Chat/Chatter";
 
 export default function GamePage({
   gameSelected,

@@ -1,0 +1,112 @@
+.difficulty-screen {
+  background-image: url("/img/bg.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.difficulty-panel {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(6px);
+  padding: 60px 80px;
+  border-radius: 30px;
+  text-align: center;
+}
+
+.difficulty-title {
+  background: linear-gradient(180deg, #b30000, #830000);
+  color: white;
+  padding: 18px 50px;
+  border-radius: 40px;
+  font-weight: bold;
+  font-size: 22px;
+  margin-bottom: 60px;
+  letter-spacing: 2px;
+}
+
+.difficulty-container {
+  display: flex;
+  gap: 40px;
+}
+
+.difficulty-card {
+  cursor: pointer;
+  text-align: center;
+  width: 100%;
+}
+
+/* ============================= */
+/* LEGO HEAD */
+/* ============================= */
+
+.lego-circle {
+  width: 100%;
+  aspect-ratio: 1/1;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+  transition: filter 0.2s ease;
+  padding: 30px;
+}
+
+.lego-circle img {
+  width: 100%;
+  min-width: 50px;
+  aspect-ratio: 1/1;
+}
+
+/* Hover propre : juste luminositÃ© */
+.lego-circle:hover {
+  filter: brightness(1.15);
+}
+
+/* ============================= */
+
+.difficulty-card h2 {
+  margin: 10px 0;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.difficulty-card p {
+  margin: 4px 0;
+  font-weight: 600;
+}
+
+.difficulty-card span {
+  display: block;
+  margin-top: 8px;
+  font-weight: bold;
+}
+
+/* Couleurs originales */
+
+.easy .lego-circle {
+  background-color: #28a745;
+}
+.easy h2 {
+  color: #1f7a34;
+}
+
+.medium .lego-circle {
+  background-color: #d4a017;
+}
+.medium h2 {
+  color: #8b6508;
+}
+
+.hard .lego-circle {
+  background-color: #c40000;
+}
+.hard h2 {
+  color: #7a0000;
+}

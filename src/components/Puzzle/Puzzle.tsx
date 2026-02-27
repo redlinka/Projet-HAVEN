@@ -1,9 +1,10 @@
 import "../../styles/components/Puzzle/Puzzle.css";
 import legoGame from "/img/legogame.png";
 
+// =============== Remove this component =================
 function PuzzleBoard() {
   return (
-    <div className="puzzle-board">
+    <div className="puzzle-game">
       <div className="puzzle-area">
         <img src={legoGame} alt="Puzzle" />
       </div>

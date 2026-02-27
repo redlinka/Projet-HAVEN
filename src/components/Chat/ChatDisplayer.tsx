@@ -1,4 +1,4 @@
-import "../styles/components/ChatDisplayer.css";
+import "../../styles/components/Chat/ChatDisplayer.css";
 
 export interface Message {
   kind: string;

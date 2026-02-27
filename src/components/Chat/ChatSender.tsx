@@ -1,6 +1,6 @@
 import { useState, type SyntheticEvent } from "react";
 import { Send } from "lucide-react";
-import "../styles/components/ChatSender.css";
+import "../../styles/components/Chat/ChatSender.css";
 
 export default function ChatSender(props: {
   onMessageEntered: (messageSend: string) => void;

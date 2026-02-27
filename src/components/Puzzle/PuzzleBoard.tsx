@@ -70,7 +70,7 @@ export default function PuzzleBoard({
 
   return (
     <div className="puzzle-board">
-      <canvas ref={canvasRef} />
+      <canvas id="cnv" ref={canvasRef} />
     </div>
   );
 }

@@ -11,7 +11,7 @@
     --r-sm:      clamp(5px, 0.6vw, 9px);
     --gap:       clamp(5px,  1.2vh, 16px);
     --pad-x:     clamp(12px, 2vw,   28px);
-    --pad-y:     clamp(8px,  1.4vh,  22px);
+    --pad-y:     clamp(8px,  1.5vh,  28px);
     --fs-xs:     clamp(0.58rem, 1vw,  0.7rem);
     --fs-sm:     clamp(0.66rem, 1.1vw, 0.8rem);
     --fs-base:   clamp(0.74rem, 1.3vw, 0.9rem);

@@ -217,8 +217,8 @@ $total    = $subtotal + $shipping;
                     <span class="btn-order disabled" data-i18n="cart.order">Place Order</span>
                 <?php endif; ?>
 
-                <a href="index.php" class="btn-back-cart" data-i18n="cart.back">
-                    ← Back to start
+                <a href="upload.php" class="btn-back-cart">
+                    Add new item
                 </a>
 
             </div>

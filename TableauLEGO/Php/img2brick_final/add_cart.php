@@ -64,7 +64,20 @@ try {
         $stmt = $cnx->prepare("SELECT pavage_id, pavage_txt FROM TILLING WHERE image_id = ? LIMIT 1");
         $stmt->execute([$imageId]);
         $tiling = $stmt->fetch(PDO::FETCH_ASSOC);
-        $tilingId = (int)$tiling['pavage_id'];
+
+        // Si ReactionRestock n'a pas inséré dans TILLING, on le fait manuellement
+        if (!$tiling) {
+            $txtName = basename($_SESSION['pavage_txt'] ?? '');
+            if (empty($txtName)) {
+                header("Location: tiling_selection.php?error=missing_files");
+                exit;
+            }
+            $stmt = $cnx->prepare("INSERT INTO TILLING (image_id, pavage_txt) VALUES (?, ?)");
+            $stmt->execute([$imageId, $txtName]);
+            $tilingId = (int)$cnx->lastInsertId();
+        } else {
+            $tilingId = (int)$tiling['pavage_id'];
+        }
 
         // Add to cart (contain)
         $stmt = $cnx->prepare("INSERT INTO contain (order_id, pavage_id) VALUES (?, ?)");

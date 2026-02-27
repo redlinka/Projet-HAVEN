@@ -4,11 +4,10 @@
 :root {
     --bg:       #f4ede3;
     --card:     #ffffff;
-    --brown:    #8B5E3C;
     --brown-dk: #6f4a2e;
     --brown-lt: #c4956a;
     --text:     #2b1f14;
-    --muted:    #9a8a7a;
+    --muted:    #9c734a;
     --border:   #e0d5c8;
     --prev-bg:  #ede7de;
     --danger:   #c0392b;
@@ -19,7 +18,7 @@
     --gap:      clamp(8px, 1.4vw, 18px);
     --pad-x:    clamp(12px, 2vw, 28px);
     --pad-y:    clamp(8px, 1.4vh, 20px);
-    --fs-xs:    clamp(0.58rem, 1vw,   0.7rem);
+    --fs-xs:    clamp(0.6rem, 1.3vw, 0.9rem);
     --fs-sm:    clamp(0.66rem, 1.1vw, 0.8rem);
     --fs-base:  clamp(0.74rem, 1.3vw, 0.9rem);
     --fs-lg:    clamp(0.9rem,  1.6vw, 1.1rem);
@@ -55,6 +54,7 @@ html, body {
     width: 100%;
     max-width: 1400px;
     margin: 0 auto;
+    margin-bottom: 5%;
 }
 
 /* ═══════════════════════════════════════════
@@ -62,12 +62,10 @@ html, body {
 ═══════════════════════════════════════════ */
 .page-title {
     flex-shrink: 0;
+    font: 500 var(--downscale-title) darker-grotesque, sans-serif;
+    color: var(--main-brown);
+    letter-spacing: 0.1em;
     text-align: center;
-    font-weight: 600;
-    font-size: var(--fs-title);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--brown);
 }
 
 /* ═══════════════════════════════════════════
@@ -242,7 +240,7 @@ html, body {
     font-weight: 600;
 }
 .sum-row.total span { color: var(--text); font-weight: 600; }
-.sum-row.total strong { color: var(--brown); }
+.sum-row.total strong { color: var(--main-brown); }
 
 .sum-divider {
     height: 1px;
@@ -263,7 +261,7 @@ html, body {
     display: block;
     width: 100%;
     padding: clamp(10px, 1.4vh, 14px);
-    background: var(--brown);
+    background: var(--main-brown);
     border: none;
     border-radius: var(--r-sm);
     font-family: 'DM Sans', sans-serif;
@@ -279,7 +277,7 @@ html, body {
 }
 .btn-order:hover { background: var(--brown-dk); transform: translateY(-1px); color: #fff; }
 .btn-order:disabled, .btn-order.disabled {
-    opacity: .45;
+    background-color: #9e6e3e90;
     cursor: not-allowed;
     transform: none;
     pointer-events: none;
@@ -293,10 +291,12 @@ html, body {
     color: var(--muted);
     text-decoration: none;
     letter-spacing: 0.06em;
-    transition: color .15s;
     padding: 4px 0;
+    transition: all 0.2s ease-in-out;
 }
-.btn-back-cart:hover { color: var(--brown); }
+.btn-back-cart:hover { 
+    color: #462b0e;
+}
 
 /* ═══════════════════════════════════════════
    RESPONSIVE — tablet ≤ 760px: stack

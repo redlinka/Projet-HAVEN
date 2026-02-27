@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import testBrique from "/bricks/img1.txt";
 import PuzzleBoard from "./PuzzleBoard";
+import DifficultySelect from "./DifficultySelect";
 import "../../styles/components/Puzzle/PuzzleGame.css";
 
 export interface Brick {
@@ -14,18 +15,37 @@ export interface Brick {
 }
 
 export default function PuzzleGame() {
-  const [mod, setMod] = useState({ height: 32, width: 32 });
+  const [mod, setMod] = useState({ width: 0, height: 0 });
   const [bricks, setBricks] = useState<Brick[]>([]);
   const [board, setBoard] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (mod.width === 0 || mod.height === 0) return;
+
     const load = async () => {
-      const data = await readFile(testBrique);
-      setBricks(data);
-      setBoard(initPuzzleBoard(mod.width, mod.height));
+      setLoading(true);
+      try {
+        const data = await readFile(testBrique);
+        setBricks(data);
+        setBoard(initPuzzleBoard(mod.width, mod.height));
+      } catch (err) {
+        console.error("Erreur chargement puzzle:", err);
+      } finally {
+        setLoading(false);
+      }
     };
+
     load();
-  }, []);
+  }, [mod]); 
+
+  if (mod.width === 0 || mod.height === 0) {
+    return <DifficultySelect setMod={setMod} />;
+  }
+
+  if (loading) {
+    return <div className="puzzle-game">Loading...</div>;
+  }
 
   return (
     <div className="puzzle-game">
@@ -34,16 +54,12 @@ export default function PuzzleGame() {
   );
 }
 
-// Generates an empty puzzle grid of given width and height
+// Generates an empty puzzle grid
 function initPuzzleBoard(width: number, height: number) {
-  const puzzleTab: string[] = [];
-  for (let i = 0; i < height * width; i++) {
-    puzzleTab.push("");
-  }
-  return puzzleTab;
+  return Array(width * height).fill("");
 }
 
-// Reads the brick data from a text file and returns an array of Brick
+// Reads the brick data
 async function readFile(filePath: string): Promise<Brick[]> {
   const response = await fetch(filePath);
   const text = await response.text();

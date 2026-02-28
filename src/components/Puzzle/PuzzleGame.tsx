@@ -29,18 +29,14 @@ const initAllBricks = (brickArray: Brick[], boardSize: number): ReactNode[] => {
   ));
 };
 
-// Get a random int between [min,max[
-const randint = (min: number, max: number) => {
-  return Math.floor(Math.random() * (max - min) + min);
-};
-
-const shuffleArray = (array: ReactNode[]) => {
+const shuffleArray = (array: Brick[]) => {
+  const newArray = [...array];
   for (let i = array.length - 1; i > 0; i--) {
     const randomIndex = Math.floor(Math.random() * (i + 1));
-    [array[i], array[randomIndex]] = [array[randomIndex], array[i]];
+    [newArray[i], newArray[randomIndex]] = [newArray[randomIndex], newArray[i]];
   }
 
-  return array;
+  return newArray;
 };
 
 /* ------------------ File readers ------------------ */
@@ -138,18 +134,14 @@ export default function PuzzleGame() {
   const [loading, setLoading] = useState(false);
 
   // ---------- Game logic state -------------
-  const [answerBoard, setAnwserBoard] = useState<string[]>([]);
-  const [bricks, setBricks] = useState<ReactNode[]>([]);
+  const [allBricks, setAllBricks] = useState<Brick[]>([]);
+  const [currentBrick, setCurrentBrick] = useState<Brick | null>(null);
+  const [boardBricks, setBoardBricks] = useState<Brick[]>([]);
+  const [answerBoard, setAnswerBoard] = useState<string[]>([]);
   const [board, setBoard] = useState<string[]>([]);
   const [score, setScore] = useState(0);
 
   // ---------- Game functions ---------------
-  const getRandomBrick = () => {
-    const newBricks = [...bricks];
-    const brick = newBricks.pop();
-    setBricks(newBricks);
-    return brick;
-  };
 
   useEffect(() => {
     if (!mod.cols || !mod.rows) return;
@@ -163,8 +155,10 @@ export default function PuzzleGame() {
           readImageFile(testBriqueAns),
         ]);
 
-        setBricks(shuffleArray(initAllBricks(brickData, mod.cols)));
-        setAnwserBoard(answerData);
+        const shuffled = shuffleArray(brickData);
+        setAllBricks(shuffled.slice(1));
+        setCurrentBrick(shuffled[0] || null);
+        setAnswerBoard(answerData);
         setBoard(initPuzzleBoard(mod.cols, mod.rows));
       } catch (err) {
         console.error("Error loading game:", err);
@@ -194,12 +188,12 @@ export default function PuzzleGame() {
 
       <div className="infos-area">
         <div className="piece-random">
-          {bricks.length > 0 && getRandomBrick()}
+          {currentBrick && <Brick b={currentBrick} boardSize={mod.cols} />}
         </div>
 
         <div className="infos-game">
           <p>Score: {score}</p>
-          <p>Pièces manquantes : {bricks.length}</p>
+          <p>Pièces manquantes : {allBricks.length}</p>
         </div>
       </div>
     </div>

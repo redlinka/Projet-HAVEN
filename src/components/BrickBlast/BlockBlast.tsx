@@ -1,6 +1,6 @@
 import {Canvas} from "@react-three/fiber"
 import {Suspense} from "react";
-import {CameraController, Grid} from "./GameElements.tsx";
+import {Background, BlockHolder, CameraController, Grid, Score} from "./SceneElements.tsx";
 
 
 export const BlockScene = () => {
@@ -9,7 +9,10 @@ export const BlockScene = () => {
             <Canvas camera={{ fov: 80, near: 0.1, far: 1000, position: [60, 75, 15]}}>
                 <CameraController />
                 <Suspense fallback={null}>
+                    <Score />
                     <Grid />
+                    <BlockHolder />
+                    <Background />
                 </Suspense>
             </Canvas>
         </div>

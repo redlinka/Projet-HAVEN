@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.7",
     "legra": "^0.3.0",
     "lucide-react": "^0.575.0",
     "react": "^19.2.0",

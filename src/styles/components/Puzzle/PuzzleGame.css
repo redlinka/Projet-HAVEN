@@ -12,3 +12,41 @@
   padding: 20px;
   box-sizing: border-box;
 }
+
+.puzzle-area {
+  height: 100%;
+}
+.puzzle-area img {
+  display: block;
+  height: 100%;
+}
+
+.infos-area {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 20px;
+}
+
+.piece-random {
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 10px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.infos-game {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.infos-game p {
+  background-color: #830000;
+  color: white;
+  padding: 10px;
+  border-radius: 20px;
+  font-weight: bold;
+  text-align: center;
+}

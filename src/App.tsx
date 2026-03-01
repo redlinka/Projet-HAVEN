@@ -1,5 +1,5 @@
 import "./App.css";
-import PuzzleGame1 from "./components/Puzzle/Puzzle";
+import PuzzleGame1 from "./components/Puzzle/PuzzleGame";
 import PuzzleGame2 from "./components/Puzzle/PuzzleGame";
 import Sidebar from "./layouts/Sidebar";
 import GamePage from "./components/GamePage";

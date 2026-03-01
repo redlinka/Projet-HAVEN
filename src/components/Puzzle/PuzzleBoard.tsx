@@ -1,12 +1,15 @@
 import { useEffect, useRef } from "react";
+import Legra from "legra";
 import "../../styles/components/Puzzle/PuzzleBoard.css";
 
 export default function PuzzleBoard({
   cols,
   rows,
+  board,
 }: {
   cols: number;
   rows: number;
+  board: string[];
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -31,6 +34,8 @@ export default function PuzzleBoard({
     ctx.clearRect(0, 0, size, size);
 
     drawGridLines(ctx, size);
+
+    drawBricks(ctx, size);
   }
 
   function drawGridLines(ctx: CanvasRenderingContext2D, size: number) {
@@ -59,6 +64,27 @@ export default function PuzzleBoard({
     ctx.closePath();
   }
 
+  function drawBricks(ctx: CanvasRenderingContext2D, size: number) {
+    if (!board) return;
+
+    const cellSize = size / Math.max(gridCols, gridRows);
+    const legra = new Legra(ctx, cellSize);
+
+    ctx.beginPath();
+
+    for (let i = 0; i <= gridRows; i++) {
+      for (let j = 0; j <= gridCols; j++) {
+        const index = j * gridCols + i;
+        if (board[index] !== "") {
+          legra.rectangle(i, j, 1, 1, {
+            filled: true,
+            color: `#${board[index]}`,
+          });
+        }
+      }
+    }
+  }
+
   useEffect(() => {
     drawGrid();
 
@@ -66,7 +92,7 @@ export default function PuzzleBoard({
     window.addEventListener("resize", handleResize);
 
     return () => window.removeEventListener("resize", handleResize);
-  }, [gridCols, gridRows]);
+  }, [gridCols, gridRows, board]);
 
   return (
     <div className="puzzle-board">

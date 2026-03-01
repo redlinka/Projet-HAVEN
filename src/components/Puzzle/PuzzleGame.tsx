@@ -1,19 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import testBrique from "/bricks/img1.txt";
 import testBriqueAns from "/bricks/img1ans.txt";
+
 import PuzzleBoard from "./PuzzleBoard";
 import DifficultySelect from "./DifficultySelect";
 import Brick from "./Brick";
+
 import "../../styles/components/Puzzle/PuzzleGame.css";
+
+// ---------------- Types ---------------------
 
 export interface Brick {
   id: number;
   w: number;
   h: number;
   color: string;
-  x: number;
-  y: number;
-  fixed: boolean;
 }
 
 /* ------------------ Utils ------------------ */
@@ -29,6 +30,52 @@ const shuffleArray = (array: Brick[]) => {
     [newArray[i], newArray[randomIndex]] = [newArray[randomIndex], newArray[i]];
   }
   return newArray;
+};
+
+const calculScore = (userArray: string[], answerArray: string[]) => {
+  var res = 0;
+  for (var i = 0; i < userArray.length; i++) {
+    if (userArray[i] === answerArray[i]) {
+      res += 1;
+    }
+  }
+  return res;
+};
+
+const addBrick = (
+  array: string[],
+  boardSize: number,
+  pos: { x: number; y: number },
+  brick: Brick | null,
+) => {
+  if (!brick) return;
+
+  const newBoard = [...array];
+
+  for (let y = 0; y < brick.h; y++) {
+    for (let x = 0; x < brick.w; x++) {
+      const targetX = pos.x + x;
+      const targetY = pos.y + y;
+
+      if (
+        targetX < 0 ||
+        targetX >= boardSize ||
+        targetY < 0 ||
+        targetY >= boardSize
+      ) {
+        return null;
+      }
+
+      const index = targetY * boardSize + targetX;
+      if (newBoard[index] !== "") {
+        return null;
+      }
+
+      newBoard[index] = brick.color;
+    }
+  }
+
+  return newBoard;
 };
 
 /* ------------------ File readers ------------------ */
@@ -49,14 +96,10 @@ async function readBrickFile(filePath: string): Promise<Brick[]> {
         id: index,
         w: parseInt(w),
         h: parseInt(h),
-        color: `#${colorHex}`,
-        x: parseInt(x),
-        y: parseInt(y),
-        fixed: false,
+        color: `${colorHex}`,
       });
     }
   });
-
   return bricksArray;
 }
 
@@ -76,94 +119,123 @@ async function readImageFile(filePath: string): Promise<string[]> {
   return hexaArray;
 }
 
-/* ------------------ Game logic ------------------ */
-
-const calculScore = (userArray: string[], answerArray: string[]) => {
-  let res = 0;
-  for (let i = 0; i < userArray.length; i++) {
-    if (userArray[i] === answerArray[i]) res += 1;
-  }
-  return res;
-};
-
 /* ------------------ Component ------------------ */
 
 export default function PuzzleGame() {
+  // =============== State ==============
   const [mod, setMod] = useState({ cols: 0, rows: 0 });
   const [loading, setLoading] = useState(false);
 
   const [allBricks, setAllBricks] = useState<Brick[]>([]);
   const [currentBrick, setCurrentBrick] = useState<Brick | null>(null);
-  const [answerBoard, setAnswerBoard] = useState<string[]>([]);
+
   const [board, setBoard] = useState<string[]>([]);
+  const [answerBoard, setAnswerBoard] = useState<string[]>([]);
   const [score, setScore] = useState(0);
 
-  // --- Drag (refs pour éviter stale closures) ---
+  // ============== Drag State ===========
+  const [activeBrick, setActiveBrick] = useState<Brick | null>(null);
   const draggingBrickRef = useRef<Brick | null>(null);
   const modRef = useRef({ cols: 0, rows: 0 });
+
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const [isOnBoard, setIsOnBoard] = useState(false);
-  const [snapCell, setSnapCell] = useState<{ i: number; j: number } | null>(null);
-
-  useEffect(() => { modRef.current = mod; }, [mod]);
-
-  /* ------------------ Drag listeners ------------------ */
+  const [snapCell, setSnapCell] = useState<{ i: number; j: number } | null>(
+    null,
+  );
 
   useEffect(() => {
+    modRef.current = mod;
+  }, [mod]);
+
+  /* =========== Drag listeners =========== */
+
+  useEffect(() => {
+    const getBoardInfos = () => {
+      const canvas = document.getElementById("cnv");
+      if (!canvas) return null;
+
+      const rect = canvas.getBoundingClientRect();
+      const BS = rect.width / modRef.current.cols;
+
+      return { rect, BS };
+    };
     const onMouseMove = (e: MouseEvent) => {
-      if (!draggingBrickRef.current) return;
+      const brick = draggingBrickRef.current;
+      if (!brick) return;
 
       const pos = { x: e.clientX, y: e.clientY };
       setDragPos({ ...pos });
 
-      const boardCanvas = document.getElementById("cnv");
-      if (!boardCanvas) return;
+      const boardInfo = getBoardInfos();
+      if (!boardInfo) return;
 
-      const rect = boardCanvas.getBoundingClientRect();
-      const BS = rect.width / modRef.current.cols;
+      const { rect, BS } = boardInfo;
+
+      const brickWidthPx = brick.w * BS;
+      const brickHeightPx = brick.h * BS;
+
+      const topLeftX = e.clientX - rect.left - brickWidthPx / 2;
+      const topLeftY = e.clientY - rect.top - brickHeightPx / 2;
+
+      const i = Math.round(topLeftX / BS);
+      const j = Math.round(topLeftY / BS);
 
       const inside =
-        pos.x > rect.left &&
-        pos.x < rect.right &&
-        pos.y > rect.top &&
-        pos.y < rect.bottom;
+        i >= 0 &&
+        i + brick.w <= modRef.current.cols &&
+        j >= 0 &&
+        j + brick.h <= modRef.current.rows;
 
-      if (inside) {
-        const i = Math.floor((pos.x - rect.left) / BS);
-        const j = Math.floor((pos.y - rect.top) / BS);
-        console.log(`ON BOARD — cellule (${i}, ${j})`);
-        setIsOnBoard(true);
-        setSnapCell({ i, j });
-      } else {
+      if (!inside) {
         setIsOnBoard(false);
         setSnapCell(null);
+        return;
       }
+
+      setIsOnBoard(true);
+      setSnapCell({ i, j });
     };
 
     const onMouseUp = (e: MouseEvent) => {
-      if (!draggingBrickRef.current) return;
+      const currentBrickToPlace = draggingBrickRef.current;
+      if (!currentBrickToPlace) return;
 
-      const pos = { x: e.clientX, y: e.clientY };
-      const boardCanvas = document.getElementById("cnv");
+      const boardInfo = getBoardInfos();
+      if (boardInfo) {
+        const { rect, BS } = boardInfo;
+        const topLeftX =
+          e.clientX - rect.left - (currentBrickToPlace.w * BS) / 2;
+        const topLeftY =
+          e.clientY - rect.top - (currentBrickToPlace.h * BS) / 2;
 
-      if (boardCanvas) {
-        const rect = boardCanvas.getBoundingClientRect();
-        const BS = rect.width / modRef.current.cols;
-        const inside =
-          pos.x > rect.left &&
-          pos.x < rect.right &&
-          pos.y > rect.top &&
-          pos.y < rect.bottom;
+        const i = Math.round(topLeftX / BS);
+        const j = Math.round(topLeftY / BS);
 
-        if (inside) {
-          const i = Math.floor((pos.x - rect.left) / BS);
-          const j = Math.floor((pos.y - rect.top) / BS);
-          console.log(`POSÉ en (${i}, ${j})`);
-          // TODO: logique de placement
-        }
+        setBoard((prevBoard) => {
+          const updatedBoard = addBrick(
+            prevBoard,
+            modRef.current.cols,
+            { x: i, y: j },
+            currentBrickToPlace,
+          );
+
+          if (updatedBoard) {
+            setAllBricks((prevBricks) => {
+              const next = prevBricks.slice(1);
+              setCurrentBrick(next[0] ?? null);
+              return next;
+            });
+
+            return updatedBoard;
+          }
+
+          return prevBoard;
+        });
       }
 
       draggingBrickRef.current = null;
+      setActiveBrick(null);
       setDragPos(null);
       setIsOnBoard(false);
       setSnapCell(null);
@@ -176,13 +248,14 @@ export default function PuzzleGame() {
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
     };
-  }, []); // [] — les handlers lisent modRef, pas de stale closure
+  }, []);
 
   const handleGrab = (brick: Brick) => {
     draggingBrickRef.current = brick;
+    setActiveBrick(brick);
   };
 
-  /* ------------------ Game loading ------------------ */
+  /* =========== Game loading =========== */
 
   useEffect(() => {
     if (!mod.cols || !mod.rows) return;
@@ -196,8 +269,9 @@ export default function PuzzleGame() {
         ]);
 
         const shuffled = shuffleArray(brickData);
+
         setAllBricks(shuffled.slice(1));
-        setCurrentBrick(shuffled[0] || null);
+        setCurrentBrick(shuffled[0] ?? null);
         setAnswerBoard(answerData);
         setBoard(initPuzzleBoard(mod.cols, mod.rows));
       } catch (err) {
@@ -211,20 +285,23 @@ export default function PuzzleGame() {
   }, [mod]);
 
   useEffect(() => {
-    setScore(calculScore(board, answerBoard));
-  }, [board]);
+    if (board.length > 0 && answerBoard.length > 0) {
+      const newScore = calculScore(board, answerBoard);
+      setScore(newScore);
+    }
+  }, [board, answerBoard]);
 
-  /* ------------------ Render ------------------ */
+  /* =========== Render =========== */
 
   if (!mod.cols || !mod.rows) return <DifficultySelect setMod={setMod} />;
   if (loading) return <div className="puzzle-game">Loading...</div>;
 
   return (
     <div className="puzzle-game">
-      <PuzzleBoard rows={mod.rows} cols={mod.cols} />
+      <PuzzleBoard rows={mod.rows} cols={mod.cols} board={board} />
 
-      {/* Brique flottante pendant le drag */}
-      {draggingBrickRef.current && dragPos && (
+      {/* Floating brick */}
+      {activeBrick && dragPos && (
         <div
           style={{
             position: "fixed",
@@ -240,16 +317,15 @@ export default function PuzzleGame() {
             transition: "filter 0.1s",
           }}
         >
-          <Brick b={draggingBrickRef.current} boardSize={mod.cols} />
+          <Brick b={activeBrick} boardSize={mod.cols} />
         </div>
       )}
 
       <div className="infos-area">
         <div className="piece-random">
-          {/* Brique en zone d'attente — fantôme quand on la drag */}
           {currentBrick && (
             <div style={{ opacity: draggingBrickRef.current ? 0.3 : 1 }}>
-              <Brick b={currentBrick} boardSize={mod.cols} onGrab={handleGrab} />
+              <Brick b={currentBrick} boardSize={32} onGrab={handleGrab} />
             </div>
           )}
         </div>

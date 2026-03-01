@@ -1,10 +1,8 @@
 .lego-brick {
-  position: absolute;
   cursor: grab;
 }
 
-
-canvas{
-    user-select: none;
+canvas {
+  user-select: none;
   -webkit-user-drag: none;
 }

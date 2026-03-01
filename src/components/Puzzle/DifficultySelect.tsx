@@ -3,7 +3,7 @@ import "../../styles/components/Puzzle/DifficultySelect.css";
 export default function DifficultySelect({
   setMod,
 }: {
-  setMod: (mod: { width: number; height: number }) => void;
+  setMod: (mod: { cols: number; rows: number }) => void;
 }) {
   return (
     <div className="difficulty-screen">
@@ -13,7 +13,7 @@ export default function DifficultySelect({
         <div className="difficulty-container">
           <div
             className="difficulty-card easy"
-            onClick={() => setMod({ width: 16, height: 16 })}
+            onClick={() => setMod({ cols: 16, rows: 16 })}
           >
             <div className="lego-circle">
               <img src="/img/legohead/easy.svg" alt="easy" />
@@ -26,7 +26,7 @@ export default function DifficultySelect({
 
           <div
             className="difficulty-card medium"
-            onClick={() => setMod({ width: 32, height: 32 })}
+            onClick={() => setMod({ cols: 32, rows: 32 })}
           >
             <div className="lego-circle">
               <img src="/img/legohead/medium.svg" alt="medium" />
@@ -39,7 +39,7 @@ export default function DifficultySelect({
 
           <div
             className="difficulty-card hard"
-            onClick={() => setMod({ width: 64, height: 64 })}
+            onClick={() => setMod({ cols: 64, rows: 64 })}
           >
             <div className="lego-circle">
               <img src="/img/legohead/hard.svg" alt="hard" />

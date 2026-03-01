@@ -2,16 +2,16 @@ import { useEffect, useRef } from "react";
 import "../../styles/components/Puzzle/PuzzleBoard.css";
 
 export default function PuzzleBoard({
-  width,
-  height,
+  cols,
+  rows,
 }: {
-  width: number;
-  height: number;
+  cols: number;
+  rows: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const gridCols = width;
-  const gridRows = height;
+  const gridCols = cols;
+  const gridRows = rows;
 
   function drawGrid() {
     const canvas = canvasRef.current;
@@ -36,8 +36,8 @@ export default function PuzzleBoard({
   function drawGridLines(ctx: CanvasRenderingContext2D, size: number) {
     const cellSize = size / Math.max(gridCols, gridRows);
 
-    ctx.strokeStyle = "#515151";
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 0.5;
 
     ctx.beginPath();
 

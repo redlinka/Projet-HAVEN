@@ -4,162 +4,284 @@ global $cnx;
 include("./config/cnx.php");
 require_once __DIR__ . '/includes/i18n.php';
 
-// Verify session prerequisites
-if (!isset($_SESSION['step3_image_id'])) {
-    header("Location: index.php");
-    exit;
-}
+// ── Prerequisites ──────────────────────────────────────────────────────────
+if (!isset($_SESSION['step3_image_id'])) { header("Location: index.php"); exit; }
 
-$parentId = $_SESSION['step3_image_id'];
+$parentId  = $_SESSION['step3_image_id'];
 $_SESSION['redirect_after_login'] = 'tiling_selection.php';
 $imgFolder    = 'users/imgs/';
 $tilingFolder = 'users/tilings/';
-$errors       = [];
-$previewImage = null;
+$errors = [];
 
-if (isset($_GET['error'])) {
-    if ($_GET['error'] === 'missing_files') {
-        $errors[] = tr('errors.cart_missing_files', 'Required processing files are missing. Please regenerate the preview.');
-    }
+if (isset($_GET['error']) && $_GET['error'] === 'missing_files') {
+    $errors[] = tr('errors.cart_missing_files', 'Required processing files are missing. Please regenerate the previews.');
 }
 
-// Retrieve source image filename
+// ── Source image ───────────────────────────────────────────────────────────
 $stmt = $cnx->prepare("SELECT path FROM IMAGE WHERE image_id = ?");
 $stmt->execute([$parentId]);
 $sourceFile = $stmt->fetchColumn();
 
-// Process generation request
+// ── Preset definitions ─────────────────────────────────────────────────────
+$PRESETS = [
+    'high_detail' => [
+        'name'        => 'High Detail',
+        'description' => 'Maximum precision using fine adaptive quadtree blocks. Best for portraits and complex images.',
+        'method'      => 'quadtree',
+        'mode'        => 'relax',
+        'threshold'   => 1000,
+        'quality'     => 92,
+        'badge'       => 'Best Quality',
+        'badge_class' => 'premium',
+        'algo_label'  => 'Quadtree · T=1k',
+    ],
+    'balanced' => [
+        'name'        => 'Balanced',
+        'description' => 'The sweet spot between detail and affordability. Recommended for most images and budgets.',
+        'method'      => 'quadtree',
+        'mode'        => 'relax',
+        'threshold'   => 2000,
+        'quality'     => 70,
+        'badge'       => 'Recommended',
+        'badge_class' => 'recommended',
+        'algo_label'  => 'Quadtree · T=2k',
+    ],
+    'classic_brick' => [
+        'name'        => 'Classic Brick',
+        'description' => 'Uses iconic 2×4 LEGO bricks for a recognisable blocky mosaic feel.',
+        'method'      => 'tile',
+        'mode'        => 'relax',
+        'tileWidth'   => 2,
+        'tileHeight'  => 4,
+        'threshold'   => 2000,
+        'quality'     => 60,
+        'badge'       => 'Classic',
+        'badge_class' => 'classic',
+        'algo_label'  => 'Tile 2×4',
+    ],
+    'minimal_price' => [
+        'name'        => 'Minimal Price',
+        'description' => 'Large abstract colour blocks keep the brick count (and cost) very low.',
+        'method'      => 'quadtree',
+        'mode'        => 'relax',
+        'threshold'   => 100000,
+        'quality'     => 35,
+        'badge'       => 'Best Price',
+        'badge_class' => 'economy',
+        'algo_label'  => 'Quadtree · T=100k',
+    ],
+    'pixel_perfect' => [
+        'name'        => 'Pixel Perfect',
+        'description' => 'One 1×1 stud per pixel — the highest fidelity possible. Premium price, stunning result.',
+        'method'      => '1x1',
+        'mode'        => 'strict',
+        'quality'     => 100,
+        'badge'       => 'Premium',
+        'badge_class' => 'premium',
+        'algo_label'  => '1×1 · Strict',
+    ],
+];
+
+// ── Helper: run one TileAndDraw command ────────────────────────────────────
+function runPreset(string $key, array $preset, string $sourceFile, int $parentId, $cnx): array {
+    global $imgFolder, $tilingFolder;
+
+    // Return cached result if PNG still exists
+    if (isset($_SESSION['tilings_generated'][$key])) {
+        $s = $_SESSION['tilings_generated'][$key];
+        if (!($s['failed'] ?? false) && file_exists(__DIR__ . '/' . $imgFolder . $s['png'])) {
+            return $s;
+        }
+    }
+
+    $baseName      = 'preset_' . $key . '_' . $parentId;
+    $finalPngName  = $baseName;
+    $finalTxtName  = $baseName . '.txt';
+    $inputPath     = __DIR__ . '/' . $imgFolder    . $sourceFile;
+    $outputPngPath = __DIR__ . '/' . $imgFolder    . $finalPngName;
+    $outputTxtPath = __DIR__ . '/' . $tilingFolder . $finalTxtName;
+    $jarPath       = __DIR__ . '/brain.jar';
+    $exePath       = __DIR__ . '/C_tiler';
+
+    $javaCmd = 'java';
+    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+        $javaCmd = '"C:\\Program Files\\Eclipse Adoptium\\jdk-25.0.1.8-hotspot\\bin\\java.exe"';
+    }
+
+    $cmdArgs = [];
+    switch ($preset['method']) {
+        case 'quadtree': $cmdArgs[] = $preset['threshold']; break;
+        case 'tile':     $cmdArgs[] = $preset['tileWidth']; $cmdArgs[] = $preset['tileHeight']; $cmdArgs[] = $preset['threshold']; break;
+        default: break; // 1x1 — no extra args
+    }
+
+    $cmd = sprintf(
+        '%s -cp %s fr.uge.univ_eiffel.TileAndDraw %s %s %s %s %s %s %s 2>&1',
+        $javaCmd,
+        escapeshellarg($jarPath),
+        escapeshellarg($inputPath),
+        escapeshellarg($outputPngPath),
+        escapeshellarg($outputTxtPath),
+        escapeshellarg($exePath),
+        escapeshellarg($preset['method']),
+        escapeshellarg($preset['mode']),
+        implode(' ', array_map('escapeshellarg', $cmdArgs))
+    );
+
+    $output = [];
+    $rc     = 0;
+    exec($cmd, $output, $rc);
+    error_log("[Preset $key] rc=$rc cmd=$cmd");
+
+    if ($rc !== 0 || !file_exists($outputPngPath . '.png')) {
+        return ['failed' => true, 'preset_key' => $key];
+    }
+
+    // Save / update IMAGE row
+    $existingId = $_SESSION['tilings_generated'][$key]['image_id'] ?? null;
+    try {
+        if ($existingId) {
+            $cnx->prepare("UPDATE IMAGE SET status='LEGO' WHERE image_id=?")->execute([$existingId]);
+            $imageId = $existingId;
+        } else {
+            $userId = $_SESSION['userId'] ?? null;
+            $cnx->prepare("INSERT INTO IMAGE (user_id, filename, path, status, img_parent) VALUES (?, ?, ?, 'LEGO', ?)")
+                ->execute([$userId, 'Preset ' . $key, $finalPngName . '.png', $parentId]);
+            $imageId = (int)$cnx->lastInsertId();
+        }
+    } catch (PDOException $e) {
+        error_log("DB error preset $key: " . $e->getMessage());
+        return ['failed' => true, 'preset_key' => $key];
+    }
+
+    addLog($cnx, "USER", "GENERATE", "preset_$key");
+
+    return [
+        'failed'    => false,
+        'preset_key'=> $key,
+        'image_id'  => $imageId,
+        'png'       => $finalPngName . '.png',
+        'txt_name'  => $finalTxtName,
+        'txt_path'  => __DIR__ . '/' . $tilingFolder . $finalTxtName,
+    ];
+}
+
+// ── POST actions ───────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!csrf_validate($_POST['csrf'] ?? null)) {
         $errors[] = 'Invalid session.';
     } else {
-        $method    = $_POST['method']    ?? 'quadtree';
-        $mode      = $_POST['mode']      ?? 'relax';
-        $threshold = (int)($_POST['threshold'] ?? 2000);
 
-        $ALLOWED_TILES = [
-            [1,1],[1,2],[1,3],[1,4],[1,5],[1,6],[1,8],[1,10],[1,12],
-            [2,2],[2,3],[2,4],[2,6],[2,8],[2,10],[2,12],[2,14],[2,16],
-            [3,3],[4,4],[4,6],[4,8],[4,10],[4,12],
-            [6,6],[6,8],[6,10],[6,12],[6,14],[6,16],[6,24],
-            [8,8],[8,11],[8,16],[16,16]
-        ];
+        $action = $_POST['action'] ?? '';
 
-        $tileSize = $_POST['tileSize'] ?? null;
+        // GENERATE ALL
+        if ($action === 'generate') {
+            if (!isset($_SESSION['tilings_generated'])) $_SESSION['tilings_generated'] = [];
+            foreach ($PRESETS as $key => $preset) {
+                $_SESSION['tilings_generated'][$key] = runPreset($key, $preset, $sourceFile, $parentId, $cnx);
+            }
+            header("Location: tiling_selection.php");
+            exit;
+        }
 
-        if ($method === 'tile') {
-            if (!$tileSize || !preg_match('/^\d+x\d+$/', $tileSize)) {
-                $errors[] = "Invalid tile size.";
+        // ADD SELECTED TO CART — insertion directe multi-pavages
+        if ($action === 'add_to_cart') {
+            $selected = $_POST['selected_presets'] ?? [];
+            if (empty($selected)) {
+                $errors[] = 'Please select at least one tiling.';
             } else {
-                [$tileWidth, $tileHeight] = array_map('intval', explode('x', $tileSize));
-                $isAllowed = false;
-                foreach ($ALLOWED_TILES as [$w, $h]) {
-                    if ($w === $tileWidth && $h === $tileHeight) { $isAllowed = true; break; }
+                $cartItems = [];
+                foreach ($selected as $key) {
+                    $t = $_SESSION['tilings_generated'][$key] ?? null;
+                    if ($t && !($t['failed'] ?? true)) {
+                        $cartItems[] = $t;
+                    }
                 }
-                if (!$isAllowed) $errors[] = "Tile size not allowed.";
-            }
-        }
 
-        $cmdArgs = [];
-        switch ($method) {
-            case '1x1':      break;
-            case 'quadtree': $cmdArgs[] = $threshold; break;
-            case 'tile':     $cmdArgs[] = $tileWidth; $cmdArgs[] = $tileHeight; $cmdArgs[] = $threshold; break;
-        }
-
-        $existingId = $_SESSION['step4_image_id'] ?? null;
-        $isUpdate   = false;
-        $baseName   = null;
-
-        if ($existingId) {
-            $stmt = $cnx->prepare("SELECT path FROM IMAGE WHERE image_id = ? AND img_parent = ?");
-            $stmt->execute([$existingId, $parentId]);
-            $existingRow = $stmt->fetch();
-            if ($existingRow) {
-                $isUpdate = true;
-                $baseName = pathinfo($existingRow['path'], PATHINFO_FILENAME);
-            }
-        }
-
-        if (!$baseName) $baseName = bin2hex(random_bytes(16));
-
-        $finalPngName  = $baseName;
-        $finalTxtName  = $baseName . '.txt';
-        $inputPath     = __DIR__ . '/' . $imgFolder    . $sourceFile;
-        $outputPngPath = __DIR__ . '/' . $imgFolder    . $finalPngName;
-        $outputTxtPath = __DIR__ . '/' . $tilingFolder . $finalTxtName;
-        $jarPath       = __DIR__ . '/brain.jar';
-        $exePath       = __DIR__ . '/C_tiler';
-        $catalogPath   = __DIR__ . '/catalog.txt';
-
-        $javaCmd = 'java';
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            $javaCmd = '"C:\\Program Files\\Eclipse Adoptium\\jdk-25.0.1.8-hotspot\\bin\\java.exe"';
-            $exePath = __DIR__ . '/C_tiler';
-        }
-
-        $cmd = sprintf(
-            '%s -cp %s fr.uge.univ_eiffel.TileAndDraw %s %s %s %s %s %s %s 2>&1',
-            $javaCmd,
-            escapeshellarg($jarPath),
-            escapeshellarg($inputPath),
-            escapeshellarg($outputPngPath),
-            escapeshellarg($outputTxtPath),
-            escapeshellarg($exePath),
-            escapeshellarg($method),
-            escapeshellarg($mode),
-            implode(' ', array_map('escapeshellarg', $cmdArgs))
-        );
-
-        $output = [];
-        $returnCode = 0;
-        exec($cmd, $output, $returnCode);
-
-        if (!empty($output)) { foreach ($output as $o) error_log("Java/C Output: " . $o); }
-        else error_log("Java/C Output: (no output captured)");
-        error_log("Return Code: "        . $returnCode);
-        error_log("Command: "            . $cmd);
-        error_log("PNG exists: "         . (file_exists($outputPngPath) ? 'YES' : 'NO') . " - " . $outputPngPath);
-        error_log("TXT exists: "         . (file_exists($outputTxtPath) ? 'YES' : 'NO') . " - " . $outputTxtPath);
-        error_log("Catalog exists: "     . (file_exists($catalogPath)   ? 'YES' : 'NO') . " - " . $catalogPath);
-        error_log("C_tiler exists: "     . (file_exists($exePath)       ? 'YES' : 'NO') . " - " . $exePath);
-        error_log("C_tiler executable: " . (is_executable($exePath)     ? 'YES' : 'NO'));
-
-        if ($returnCode === 0) {
-            try {
-                if ($isUpdate) {
-                    $stmt = $cnx->prepare("UPDATE IMAGE SET status = 'LEGO' WHERE image_id = ?");
-                    $stmt->execute([$existingId]);
+                if (empty($cartItems)) {
+                    $errors[] = 'Selected tilings are not available. Please regenerate.';
                 } else {
-                    $stmt = $cnx->prepare("INSERT INTO IMAGE (user_id, filename, path, status, img_parent) VALUES (?, ?, ?, 'LEGO', ?)");
-                    $userId = $_SESSION['userId'] ?? NULL;
-                    $stmt->execute([$userId, 'Image Tilled', $finalPngName . ".png", $parentId]);
-                    $_SESSION['step4_image_id'] = $cnx->lastInsertId();
+                    $userId = (int)($_SESSION['userId'] ?? 0);
+                    if (!$userId) { header("Location: auth.php"); exit; }
+
+                    try {
+                        $cnx->beginTransaction();
+
+                        // 1. Find or create the draft ORDER_BILL for this user
+                        $stmt = $cnx->prepare("SELECT order_id FROM ORDER_BILL WHERE user_id = ? AND created_at IS NULL LIMIT 1");
+                        $stmt->execute([$userId]);
+                        $orderId = $stmt->fetchColumn();
+
+                        if (!$orderId) {
+                            $cnx->prepare("INSERT INTO ORDER_BILL (user_id) VALUES (?)")->execute([$userId]);
+                            $orderId = (int)$cnx->lastInsertId();
+                        }
+
+                        // 2. For each selected preset, insert into TILLING + contain
+                        foreach ($cartItems as $item) {
+                            $imageId  = (int)$item['image_id'];
+                            $txtName  = $item['txt_name'];  // e.g. "preset_balanced_42.txt"
+
+                            // Check if this image_id already has a TILLING row
+                            $stmt = $cnx->prepare("SELECT pavage_id FROM TILLING WHERE image_id = ? LIMIT 1");
+                            $stmt->execute([$imageId]);
+                            $pavageId = $stmt->fetchColumn();
+
+                            if (!$pavageId) {
+                                // Insert new TILLING row
+                                $cnx->prepare("INSERT INTO TILLING (image_id, pavage_txt) VALUES (?, ?)")
+                                    ->execute([$imageId, $txtName]);
+                                $pavageId = (int)$cnx->lastInsertId();
+                            }
+
+                            // Check if already in the draft order (avoid duplicates)
+                            $stmt = $cnx->prepare("SELECT 1 FROM contain WHERE order_id = ? AND pavage_id = ?");
+                            $stmt->execute([$orderId, $pavageId]);
+                            if (!$stmt->fetchColumn()) {
+                                $cnx->prepare("INSERT INTO contain (order_id, pavage_id) VALUES (?, ?)")
+                                    ->execute([$orderId, $pavageId]);
+                            }
+                        }
+
+                        $cnx->commit();
+
+                        // Update legacy session vars with last inserted item (for compatibility)
+                        $last = end($cartItems);
+                        $_SESSION['step4_image_id']   = (int)$last['image_id'];
+                        $_SESSION['pavage_txt']        = $last['txt_path'];
+                        $_SESSION['pavage_txt_name']   = $last['txt_name'];
+
+                        addLog($cnx, "USER", "ADD", "cart_multi");
+                        header("Location: cart.php");
+                        exit;
+
+                    } catch (PDOException $e) {
+                        if ($cnx->inTransaction()) $cnx->rollBack();
+                        error_log("Cart multi-insert error: " . $e->getMessage());
+                        $errors[] = 'An error occurred while adding items to your cart. Please try again.';
+                    }
                 }
-
-                $legoImageId             = (int)$_SESSION['step4_image_id'];
-                $txtContent              = file_get_contents($outputTxtPath);
-                $pavageFile              = __DIR__ . "/users/tilings/" . $finalTxtName;
-                $_SESSION['pavage_txt_name'] = $finalTxtName;
-                $_SESSION['pavage_txt']      = $pavageFile;
-
-                $previewImage = $imgFolder . $finalPngName . ".png" . '?t=' . time();
-                addLog($cnx, "USER", "GENERATE", "pavage");
-            } catch (PDOException $e) {
-                $errors[] = "A database error occurred. Please try again later.";
             }
-        } else {
-            $errors[] = "An error occurred during image processing. Please try again.";
+        }
+
+        // REGENERATE (clear cache)
+        if ($action === 'regenerate') {
+            unset($_SESSION['tilings_generated']);
+            header("Location: tiling_selection.php");
+            exit;
         }
     }
-} else {
-    if (isset($_SESSION['step4_image_id'])) {
-        $stmt = $cnx->prepare("SELECT path FROM IMAGE WHERE image_id = ?");
-        $stmt->execute([$_SESSION['step4_image_id']]);
-        $existingFile = $stmt->fetchColumn();
-        if ($existingFile) $previewImage = $imgFolder . $existingFile . '?t=' . time();
-        $finalTxtName = $_SESSION['pavage_txt_name'];
+}
+
+// ── Load stats for display ─────────────────────────────────────────────────
+$generated  = $_SESSION['tilings_generated'] ?? null;
+$statsCache = [];
+if ($generated) {
+    foreach ($generated as $key => $t) {
+        if (!($t['failed'] ?? true) && isset($t['txt_name'])) {
+            $statsCache[$key] = getTilingStats($t['txt_name']);
+        }
     }
 }
 ?>
@@ -168,267 +290,278 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generate LEGO Tiling — Bricksy</title>
-
+    <title>Choose Your Tiling — Bricksy</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style/tiling.css">
+    <link rel="stylesheet" href="style/tiling_selection.css">
     <link rel="stylesheet" href="style/all.css">
 </head>
 <body>
 
 <?php include("./includes/navbar.php"); ?>
 
+<!-- ═══ LOADING OVERLAY (cosmetic animation while server runs) ═══ -->
+<div class="page-loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <p class="loading-title">Generating your tilings…</p>
+    <div class="loading-steps" id="loadingSteps">
+        <?php foreach ($PRESETS as $key => $preset): ?>
+        <div class="loading-step" id="lstep-<?= $key ?>">
+            <span class="step-dot"></span>
+            <?= htmlspecialchars($preset['name']) ?>
+        </div>
+        <?php endforeach; ?>
+    </div>
+</div>
+
+<!-- ═══ ZOOM MODAL ═══ -->
+<div class="zoom-modal" id="zoomModal" onclick="closeZoom()">
+    <button class="zoom-close" onclick="closeZoom()">✕</button>
+    <img id="zoomImg" src="" alt="Tiling zoom">
+</div>
+
 <div class="page-wrapper">
 
-    <p class="page-title">Tiling Optimization</p>
-
-    <?php if (!empty($errors)): ?>
-    <div class="error-banner">
-        <ul>
-            <?php foreach ($errors as $e): ?>
-                <li><?= htmlspecialchars($e) ?></li>
-            <?php endforeach; ?>
-        </ul>
-    </div>
-    <?php endif; ?>
-
-    <div class="card">
-        <div class="card-body">
-
-            <!-- ══ LEFT: PREVIEW ══ -->
-            <div class="panel-preview">
-                <div class="preview-wrapper">
-                    <?php if ($previewImage): ?>
-                        <img src="<?= htmlspecialchars($previewImage) ?>"
-                             class="lego-img"
-                             onclick="openModal(this.src)"
-                             alt="LEGO tiling preview">
-                    <?php else: ?>
-                        <div class="preview-placeholder">
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-                                <polyline points="21 15 16 10 5 21"/>
-                            </svg>
-                            Preview will appear here
-                        </div>
-                    <?php endif; ?>
-                </div>
-
-                <?php if ($previewImage && isset($finalTxtName)): ?>
-                <div class="stats-badge">
-                    <strong><?= number_format(getTilingStats($finalTxtName)['price'] / 100, 2, '.', ' ') ?>€</strong>
-                    <span class="stats-sep">·</span>
-                    <span><?= getTilingStats($finalTxtName)['quality'] ?>% quality</span>
-                </div>
-                <?php endif; ?>
+    <!-- ── TOP BAR ── -->
+    <div class="top-bar">
+        <div class="top-bar-left">
+            <?php if ($sourceFile): ?>
+            <img src="<?= htmlspecialchars($imgFolder . $sourceFile) ?>" class="source-thumb" alt="Source">
+            <?php endif; ?>
+            <div class="top-bar-title">
+                <p class="page-title">Choose Your Tiling</p>
+                <p class="page-subtitle">
+                    <?= $generated
+                        ? count(array_filter($generated, fn($t) => !($t['failed'] ?? true))) . ' / ' . count($PRESETS) . ' presets generated'
+                        : 'Generate 5 styles and pick your favourite' ?>
+                </p>
             </div>
-
-            <!-- ══ RIGHT: CONTROLS ══ -->
-            <div class="panel-controls">
-                <form method="POST" id="tilingForm">
-                    <input type="hidden" name="csrf"      value="<?= htmlspecialchars(csrf_get()) ?>">
-                    <input type="hidden" name="threshold" id="thresholdInput" value="2000">
-
-                    <div class="controls-scroll">
-
-                        <!-- 1. Method -->
-                        <div>
-                            <p class="section-label">1. Method</p>
-                            <select id="algorithmSelect" name="method" class="ctrl-select"
-                                    onchange="toggleAlgorithmParams()">
-                                <option value="1x1">1×1 — No extra args</option>
-                                <option value="quadtree" selected>Quadtree — Threshold</option>
-                                <option value="tile">Tile — Width, Height, Threshold</option>
-                            </select>
-                        </div>
-
-                        <!-- 2. Dynamic params -->
-                        <div id="algoParams"></div>
-
-                        <!-- 3. Mode -->
-                        <div>
-                            <p class="section-label">Mode</p>
-                            <select name="mode" class="ctrl-select">
-                                <option value="relax">Relax</option>
-                                <option value="strict">Strict</option>
-                            </select>
-                        </div>
-
-                        <!-- Generate button (inside scroll area so it's always reachable) -->
-                        <button type="submit" class="btn-generate">
-                            <?= $previewImage ? 'Regenerate Preview' : 'Generate Preview' ?>
-                        </button>
-
-                    </div><!-- /controls-scroll -->
-                </form>
-            </div><!-- /panel-controls -->
-
-        </div><!-- /card-body -->
-
-        <!-- ══ FOOTER ══ -->
-        <div class="card-footer">
+        </div>
+        <div class="top-bar-actions">
             <a href="filter_selection.php" class="btn btn-ghost">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
                 </svg>
                 Back
             </a>
-
-            <?php if ($previewImage): ?>
-                <a href="add_cart.php" class="btn btn-success">
-                    Add to basket
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            <?php if ($generated): ?>
+            <form method="POST" style="display:inline;">
+                <input type="hidden" name="csrf"   value="<?= htmlspecialchars(csrf_get()) ?>">
+                <input type="hidden" name="action" value="regenerate">
+                <button type="submit" class="btn btn-ghost">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
                     </svg>
-                </a>
-            <?php else: ?>
-                <span class="btn btn-disabled">Add to basket</span>
+                    Regenerate
+                </button>
+            </form>
             <?php endif; ?>
         </div>
+    </div>
 
-    </div><!-- /card -->
+    <!-- ── ERRORS ── -->
+    <?php if (!empty($errors)): ?>
+    <div class="error-banner">
+        <ul><?php foreach ($errors as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?></ul>
+    </div>
+    <?php endif; ?>
+
+    <!-- ═══════════════════════════════
+         STATE A — AUTO-GENERATE ON LOAD
+    ═══════════════════════════════ -->
+    <?php if (!$generated): ?>
+
+    <!-- Hidden form auto-submitted on DOMContentLoaded -->
+    <form method="POST" id="autoGenerateForm" style="display:none;">
+        <input type="hidden" name="csrf"   value="<?= htmlspecialchars(csrf_get()) ?>">
+        <input type="hidden" name="action" value="generate">
+    </form>
+
+    <!-- ═══════════════════════════════
+         STATE B — GRID OF CARDS
+    ═══════════════════════════════ -->
+    <?php else: ?>
+
+    <form method="POST" id="cartForm">
+        <input type="hidden" name="csrf"   value="<?= htmlspecialchars(csrf_get()) ?>">
+        <input type="hidden" name="action" value="add_to_cart">
+
+        <div class="presets-grid">
+        <?php foreach ($PRESETS as $key => $preset):
+            $t       = $generated[$key] ?? ['failed' => true];
+            $failed  = $t['failed'] ?? true;
+            $stats   = $statsCache[$key] ?? null;
+            $price   = $stats ? number_format((float)$stats['price'] / 100, 2, '.', ' ') . ' €' : null;
+            $quality = $stats['quality'] ?? $preset['quality'];
+            $pngPath = !$failed ? __DIR__ . '/' . $imgFolder . $t['png'] : null;
+            $pngSrc  = ($pngPath && file_exists($pngPath))
+                       ? $imgFolder . $t['png'] . '?t=' . filemtime($pngPath)
+                       : null;
+        ?>
+        <div class="preset-card <?= $failed ? 'failed' : '' ?> <?= $key === 'balanced' && !$failed ? 'selected' : '' ?>"
+             id="card-<?= $key ?>"
+             onclick="<?= !$failed ? "toggleCard('$key')" : '' ?>">
+
+            <!-- Checkbox (only if not failed) -->
+            <?php if (!$failed): ?>
+            <div class="card-checkbox-wrap" onclick="event.stopPropagation()">
+                <input type="checkbox"
+                       class="card-checkbox"
+                       name="selected_presets[]"
+                       value="<?= $key ?>"
+                       id="chk-<?= $key ?>"
+                       <?= $key === 'balanced' ? 'checked' : '' ?>
+                       onchange="syncCard('<?= $key ?>')">
+            </div>
+            <?php endif; ?>
+
+            <!-- Badge -->
+            <span class="card-badge <?= htmlspecialchars($preset['badge_class']) ?>">
+                <?= htmlspecialchars($preset['badge']) ?>
+            </span>
+
+            <!-- Preview image -->
+            <div class="card-preview">
+                <?php if ($pngSrc): ?>
+                <img src="<?= htmlspecialchars($pngSrc) ?>"
+                     alt="<?= htmlspecialchars($preset['name']) ?>"
+                     onclick="event.stopPropagation(); openZoom('<?= htmlspecialchars($pngSrc) ?>')">
+                <?php else: ?>
+                <div class="card-preview-placeholder">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <?= $failed ? 'Generation failed' : 'Loading…' ?>
+                </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Card info -->
+            <div class="card-info">
+                <p class="card-name"><?= htmlspecialchars($preset['name']) ?></p>
+                <p class="card-desc"><?= htmlspecialchars($preset['description']) ?></p>
+
+                <span class="card-algo-tag">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+                    </svg>
+                    <?= htmlspecialchars($preset['algo_label']) ?>
+                </span>
+
+                <div class="quality-row">
+                    <span class="quality-label">Quality</span>
+                    <div class="quality-bar">
+                        <div class="quality-fill" style="width:<?= $quality ?>%"></div>
+                    </div>
+                    <span class="quality-label"><?= $quality ?>%</span>
+                </div>
+
+                <?php if (!$failed && $price): ?>
+                    <p class="card-price"><?= $price ?></p>
+                <?php elseif ($failed): ?>
+                    <p class="card-price computing">Unavailable</p>
+                <?php else: ?>
+                    <p class="card-price computing">Computing…</p>
+                <?php endif; ?>
+            </div>
+
+        </div><!-- /preset-card -->
+        <?php endforeach; ?>
+        </div><!-- /presets-grid -->
+
+        <!-- ── PAGE FOOTER ── -->
+        <div class="page-footer">
+            <p class="selection-info" id="selInfo">
+                <strong id="selCount">1</strong> tiling selected
+            </p>
+            <button type="submit" class="btn btn-success" id="addToCartBtn">
+                Add to basket
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <path d="M16 10a4 4 0 0 1-8 0"/>
+                </svg>
+            </button>
+        </div>
+
+    </form>
+    <?php endif; ?>
+
 </div><!-- /page-wrapper -->
 
-<!-- Modal — original structure preserved -->
-<div id="imgModal" onclick="closeModal()">
-    <span class="close">&times;</span>
-    <img class="modal-content" id="modalImg" alt="">
-</div>
-
 <script>
-    const thresholdInput = document.getElementById('thresholdInput');
-
-    /* ── These are set inside toggleAlgorithmParams when needed ── */
-    let presetBtns = [];
-    let customDiv  = null;
-    let customNum  = null;
-
-    /* ── Original function — untouched ── */
-    function toggleAlgorithmParams() {
-        const algo      = document.getElementById('algorithmSelect').value;
-        const container = document.getElementById('algoParams');
-        container.innerHTML = '';
-
-        if (algo === 'quadtree') {
-            container.innerHTML = `
-                <p class="section-label">2. Budget / Precision</p>
-                <div class="preset-group">
-                    <button type="button" class="preset-btn" onclick="setThreshold(1000, this)">
-                        <strong data-i18n="tiling.preset_high">High Detail</strong>
-                        <small data-i18n="tiling.preset_high_hint">Threshold: 1,000</small>
-                    </button>
-                    <button type="button" class="preset-btn active" onclick="setThreshold(2000, this)">
-                        <strong data-i18n="tiling.preset_balanced">Balanced</strong>
-                        <small data-i18n="tiling.preset_balanced_hint">Threshold: 2,000 (Recommended)</small>
-                    </button>
-                    <button type="button" class="preset-btn" onclick="setThreshold(100000, this)">
-                        <strong data-i18n="tiling.preset_minimal">Minimal Price</strong>
-                        <small data-i18n="tiling.preset_minimal_hint">Threshold: 100,000 (Abstract)</small>
-                    </button>
-                    <button type="button" class="preset-btn" id="customBtn" onclick="enableCustom()">
-                        <strong data-i18n="tiling.preset_custom">Custom Value</strong>
-                        <small data-i18n="tiling.preset_custom_hint">Enter manually…</small>
-                    </button>
-                </div>
-                <div class="custom-input-row" id="customInputDiv">
-                    <input type="number" id="customNumber" placeholder="e.g. 5000"
-                           data-i18n-attr="placeholder:tiling.custom_placeholder">
-                    <button class="btn-set" type="button" onclick="applyCustom()"
-                            data-i18n="tiling.custom_set">Set</button>
-                </div>
-            `;
-
-            presetBtns = container.querySelectorAll('.preset-btn');
-            customDiv  = document.getElementById('customInputDiv');
-            customNum  = document.getElementById('customNumber');
-            customNum.addEventListener('input', (e) => { thresholdInput.value = e.target.value; });
-
-        } else if (algo === 'tile') {
-            container.innerHTML = `
-                <p class="section-label">2. Tile Size</p>
-                <select name="tileSize" class="ctrl-select" required>
-                    <option value="">— Choose a tile size —</option>
-                    <optgroup label="1×">
-                        <option value="1x1">1 × 1</option><option value="1x2">1 × 2</option>
-                        <option value="1x3">1 × 3</option><option value="1x4">1 × 4</option>
-                        <option value="1x5">1 × 5</option><option value="1x6">1 × 6</option>
-                        <option value="1x8">1 × 8</option><option value="1x10">1 × 10</option>
-                        <option value="1x12">1 × 12</option>
-                    </optgroup>
-                    <optgroup label="2×">
-                        <option value="2x2">2 × 2</option><option value="2x3">2 × 3</option>
-                        <option value="2x4">2 × 4</option><option value="2x6">2 × 6</option>
-                        <option value="2x8">2 × 8</option><option value="2x10">2 × 10</option>
-                        <option value="2x12">2 × 12</option><option value="2x14">2 × 14</option>
-                        <option value="2x16">2 × 16</option>
-                    </optgroup>
-                    <optgroup label="3×"><option value="3x3">3 × 3</option></optgroup>
-                    <optgroup label="4×">
-                        <option value="4x4">4 × 4</option><option value="4x6">4 × 6</option>
-                        <option value="4x8">4 × 8</option><option value="4x10">4 × 10</option>
-                        <option value="4x12">4 × 12</option>
-                    </optgroup>
-                    <optgroup label="6×">
-                        <option value="6x6">6 × 6</option><option value="6x8">6 × 8</option>
-                        <option value="6x10">6 × 10</option><option value="6x12">6 × 12</option>
-                        <option value="6x14">6 × 14</option><option value="6x16">6 × 16</option>
-                        <option value="6x24">6 × 24</option>
-                    </optgroup>
-                    <optgroup label="8×">
-                        <option value="8x8">8 × 8</option><option value="8x11">8 × 11</option>
-                        <option value="8x16">8 × 16</option>
-                    </optgroup>
-                    <optgroup label="16×"><option value="16x16">16 × 16</option></optgroup>
-                </select>
-
-                <div class="tile-threshold-row">
-                    <p class="section-label" style="margin-top: var(--gap);">Threshold</p>
-                    <input type="number" name="threshold" value="2000" min="1">
-                </div>
-            `;
+// ── Loading overlay (cosmetic step animation) ──
+function showLoading() {
+    document.getElementById('loadingOverlay').classList.add('visible');
+    const steps = <?= json_encode(array_keys($PRESETS)) ?>;
+    let i = 0;
+    (function nextStep() {
+        if (i > 0) {
+            const prev = document.getElementById('lstep-' + steps[i - 1]);
+            if (prev) { prev.classList.remove('active'); prev.classList.add('done'); }
         }
-    }
-
-    /* ── Original helper functions — untouched ── */
-    function setThreshold(val, btn) {
-        thresholdInput.value = val;
-        customDiv.classList.remove('show');
-        presetBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-    }
-
-    function enableCustom() {
-        presetBtns.forEach(b => b.classList.remove('active'));
-        document.getElementById('customBtn').classList.add('active');
-        customDiv.classList.add('show');
-        customNum.focus();
-    }
-
-    function applyCustom() {
-        const val = customNum.value;
-        if (val && val > 0) {
-            thresholdInput.value = val;
-        } else {
-            alert(window.I18N?.t?.('tiling.valid_number', 'Please enter a valid number') ?? 'Please enter a valid number');
+        if (i < steps.length) {
+            const cur = document.getElementById('lstep-' + steps[i]);
+            if (cur) cur.classList.add('active');
+            i++;
+            setTimeout(nextStep, 1600);
         }
+    })();
+}
+
+// ── Card toggle ──
+function toggleCard(key) {
+    const chk = document.getElementById('chk-' + key);
+    if (!chk) return;
+    chk.checked = !chk.checked;
+    document.getElementById('card-' + key).classList.toggle('selected', chk.checked);
+    updateCount();
+}
+
+function syncCard(key) {
+    const chk = document.getElementById('chk-' + key);
+    document.getElementById('card-' + key).classList.toggle('selected', chk.checked);
+    updateCount();
+}
+
+function updateCount() {
+    const n   = document.querySelectorAll('.card-checkbox:checked').length;
+    const cnt = document.getElementById('selCount');
+    if (cnt) cnt.textContent = n;
+    const inf = document.getElementById('selInfo');
+    if (inf) inf.innerHTML = '<strong>' + n + '</strong> tiling' + (n !== 1 ? 's' : '') + ' selected';
+    const btn = document.getElementById('addToCartBtn');
+    if (btn) {
+        btn.disabled  = (n === 0);
+        btn.className = n > 0 ? 'btn btn-success' : 'btn btn-disabled';
     }
+}
 
-    function openModal(src) {
-        document.getElementById("imgModal").style.display = "block";
-        document.getElementById("modalImg").src = src;
+// ── Zoom modal ──
+function openZoom(src) {
+    document.getElementById('zoomImg').src = src;
+    document.getElementById('zoomModal').classList.add('open');
+}
+function closeZoom() {
+    document.getElementById('zoomModal').classList.remove('open');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeZoom(); });
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateCount();
+
+    // Auto-trigger generation if not yet done
+    const autoForm = document.getElementById('autoGenerateForm');
+    if (autoForm) {
+        showLoading();
+        // Small delay so the overlay renders before the blocking POST
+        setTimeout(() => autoForm.submit(), 120);
     }
-
-    function closeModal() {
-        document.getElementById("imgModal").style.display = "none";
-    }
-
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-
-    /* ── Init ── */
-    document.addEventListener('DOMContentLoaded', toggleAlgorithmParams);
+});
 </script>
 
 </body>

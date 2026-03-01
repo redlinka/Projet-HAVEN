@@ -12,8 +12,6 @@ if (!isset($_SESSION['userId'])) {
 $userId = (int)$_SESSION['userId'];
 $errors = [];
 
-$totalPrice = isset($_SESSION['moneyea']) ? (float)$_SESSION['moneyea'] : 49.99;
-
 $isLocal = in_array($_SERVER['SERVER_NAME'] ?? '', ['localhost', '127.0.0.1'], true)
     || str_starts_with($_SERVER['HTTP_HOST'] ?? '', 'localhost')
     || str_starts_with($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1');
@@ -49,6 +47,30 @@ $fillZip     = $defaultAddr['postal_code'] ?? '';
 $fillCity    = $defaultAddr['city']        ?? '';
 $fillCountry = $defaultAddr['country']     ?? 'France';
 
+// ── Calcul du total ──
+$stmt = $cnx->prepare("
+    SELECT t.pavage_txt
+    FROM contain c
+    JOIN TILLING t ON t.pavage_id = c.pavage_id
+    WHERE c.order_id = :oid
+");
+$stmt->execute(['oid' => $cartOrderId]);
+$rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
+if (empty($rows)) { header("Location: cart.php?error=empty_cart"); exit; }
+
+$total = 0.0;
+foreach ($rows as $txt) {
+    $stats = getTilingStats($txt);
+    if (isset($stats['price'])) $total += (float)$stats['price'] / 100;
+}
+
+$totalPrice = $total;
+$livraison  = $total * 0.10;
+$totaux     = $livraison + $totalPrice;
+
+// ────────────────────────────────────────────────────────────────
+//  POST — validation du formulaire puis création ordre PayPal
+// ────────────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_order'])) {
 
     if (!csrf_validate($_POST['csrf'] ?? '')) {
@@ -85,76 +107,163 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_order'])) {
             $errors[] = "Please fill in all contact and shipping fields.";
     }
 
-    if (empty($errors)) {
-        $cardNum = str_replace(' ', '', $_POST['card_number'] ?? '');
-        $cardCvc = trim($_POST['card_cvc'] ?? '');
-        if ($cardNum !== '4242424242424242' || $cardCvc !== '123')
-            $errors[] = "Payment Declined: Invalid Test Card Credentials.";
-    }
-
+    // ── Si tout est valide → sauvegarder adresse + infos, puis créer ordre PayPal ──
     if (empty($errors)) {
         try {
             $cnx->beginTransaction();
 
-            // Désactive les triggers ADDRESS pour les opérations légitimes de checkout
             $cnx->exec("SET @disable_triggers = 1");
 
-            // Crée l'adresse figée liée à cette commande (snapshot de livraison)
+            // Adresse snapshot pour cette commande
             $stmt = $cnx->prepare("INSERT INTO ADDRESS (street, postal_code, city, country, user_id, is_default) VALUES (?, ?, ?, ?, ?, 0)");
             $stmt->execute([$street, $zip, $city, $country, $userId]);
             $orderAddressId = (int)$cnx->lastInsertId();
 
-            // Met à jour l'adresse par défaut de l'utilisateur
+            // Adresse par défaut mise à jour
             $cnx->prepare("UPDATE ADDRESS SET is_default = 0 WHERE user_id = ? AND is_default = 1")->execute([$userId]);
             $cnx->prepare("INSERT INTO ADDRESS (street, postal_code, city, country, user_id, is_default) VALUES (?, ?, ?, ?, ?, 1)")
                 ->execute([$street, $zip, $city, $country, $userId]);
 
-            // Réactive les triggers
             $cnx->exec("SET @disable_triggers = 0");
 
-            // Met à jour les infos utilisateur
+            // Mise à jour infos user
             $cnx->prepare("UPDATE USER SET first_name = ?, last_name = ?, phone = ? WHERE user_id = ?")
                 ->execute([$fName, $lName, $phone, $userId]);
 
-            // Valide la commande (created_at = maintenant)
-            $cnx->prepare("UPDATE ORDER_BILL SET created_at = NOW(), address_id = ? WHERE order_id = ?")
+            // Lier l'adresse à la commande (sans valider encore — created_at reste NULL jusqu'au retour PayPal)
+            $cnx->prepare("UPDATE ORDER_BILL SET address_id = ? WHERE order_id = ?")
                 ->execute([$orderAddressId, $cartOrderId]);
 
             $cnx->commit();
 
-            $_SESSION['last_order_id'] = $cartOrderId;
-            addLog($cnx, "USER", "CONFIRM", "order");
-            header("Location: order_completed.php?order_id=" . $cartOrderId);
-            exit;
+            // ── Stocker les infos en session pour paypal_return.php ──
+            $_SESSION['pending_order_id']      = $cartOrderId;
+            $_SESSION['pending_order_address'] = $orderAddressId;
+
+            // ── Créer l'ordre PayPal via API ──
+            $paypalOrderId = createPayPalOrder($totaux);
+
+            if (!$paypalOrderId) {
+                $errors[] = "Unable to connect to PayPal. Please try again.";
+            } else {
+                $_SESSION['paypal_order_id'] = $paypalOrderId;
+
+                // Récupérer le lien d'approbation PayPal
+                $approvalUrl = getPayPalApprovalUrl($paypalOrderId);
+                if ($approvalUrl) {
+                    addLog($cnx, "USER", "PAYPAL_INIT", "order");
+                    header("Location: " . $approvalUrl);
+                    exit;
+                } else {
+                    $errors[] = "Unable to get PayPal approval URL. Please try again.";
+                }
+            }
 
         } catch (Exception $e) {
-            // Réactive toujours les triggers même en cas d'erreur
             try { $cnx->exec("SET @disable_triggers = 0"); } catch (Exception $ignored) {}
-            $cnx->rollBack();
+            if ($cnx->inTransaction()) $cnx->rollBack();
             $errors[] = "An error occurred while processing your order. Please try again.";
         }
     }
 }
 
-$stmt = $cnx->prepare("
-    SELECT t.pavage_txt
-    FROM contain c
-    JOIN TILLING t ON t.pavage_id = c.pavage_id
-    WHERE c.order_id = :oid
-");
-$stmt->execute(['oid' => $cartOrderId]);
-$rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
-if (empty($rows)) { header("Location: cart.php?error=empty_cart"); exit; }
+// ────────────────────────────────────────────────────────────────
+//  Fonctions PayPal Sandbox
+// ────────────────────────────────────────────────────────────────
 
-$total = 0.0;
-foreach ($rows as $txt) {
-    $stats = getTilingStats($txt);
-    if (isset($stats['price'])) $total += (float)$stats['price'] / 100;
+/**
+ * Obtenir un access token PayPal Sandbox
+ */
+function getPayPalAccessToken(): ?string {
+    $clientId     = $_ENV['PAYPAL_CLIENT_ID']     ?? getenv('PAYPAL_CLIENT_ID');
+    $clientSecret = $_ENV['PAYPAL_CLIENT_SECRET']  ?? getenv('PAYPAL_CLIENT_SECRET');
+
+    $ch = curl_init('https://api-m.sandbox.paypal.com/v1/oauth2/token');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_USERPWD        => "$clientId:$clientSecret",
+        CURLOPT_POSTFIELDS     => 'grant_type=client_credentials',
+        CURLOPT_HTTPHEADER     => ['Accept: application/json', 'Accept-Language: en_US'],
+    ]);
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    $data = json_decode($response, true);
+    return $data['access_token'] ?? null;
 }
 
-$totalPrice = $total;
-$livraison  = $total * 0.10;
-$totaux     = $livraison + $totalPrice;
+/**
+ * Créer un ordre PayPal et retourner son ID
+ */
+function createPayPalOrder(float $amount): ?string {
+    $token = getPayPalAccessToken();
+    if (!$token) return null;
+
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $baseUrl  = $protocol . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+
+    $payload = [
+        'intent' => 'CAPTURE',
+        'purchase_units' => [[
+            'amount' => [
+                'currency_code' => 'EUR',
+                'value'         => number_format($amount, 2, '.', ''),
+            ],
+            'description' => 'Bricksy LEGO Mosaic Order',
+        ]],
+        'application_context' => [
+            'brand_name'          => 'Bricksy',
+            'landing_page'        => 'NO_PREFERENCE',
+            'user_action'         => 'PAY_NOW',
+            'return_url'          => $baseUrl . '/img2brick_final/paypal_return.php',
+            'cancel_url'          => $baseUrl . '/img2brick_final/paypal_cancel.php',
+        ],
+    ];
+
+    $ch = curl_init('https://api-m.sandbox.paypal.com/v2/checkout/orders');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_HTTPHEADER     => [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $token,
+        ],
+        CURLOPT_POSTFIELDS => json_encode($payload),
+    ]);
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    $data = json_decode($response, true);
+    return $data['id'] ?? null;
+}
+
+/**
+ * Récupérer le lien d'approbation PayPal (redirect user vers PayPal)
+ */
+function getPayPalApprovalUrl(string $paypalOrderId): ?string {
+    $token = getPayPalAccessToken();
+    if (!$token) return null;
+
+    $ch = curl_init("https://api-m.sandbox.paypal.com/v2/checkout/orders/$paypalOrderId");
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER     => [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $token,
+        ],
+    ]);
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    $data = json_decode($response, true);
+    foreach ($data['links'] ?? [] as $link) {
+        if ($link['rel'] === 'approve') {
+            return $link['href'];
+        }
+    }
+    return null;
+}
 
 function money($v) { return number_format((float)$v, 2, '.', ' ') . ' EUR'; }
 ?>
@@ -180,6 +289,13 @@ function money($v) { return number_format((float)$v, 2, '.', ' ') . ' EUR'; }
 <input type="hidden" name="csrf" value="<?= csrf_get() ?>">
 
 <div class="page-wrapper">
+
+    <!-- ── PayPal cancelled banner ── -->
+    <?php if (isset($_GET['paypal']) && $_GET['paypal'] === 'cancelled'): ?>
+    <div style="grid-column:1/-1;background:var(--warning-bg);border:1px solid var(--warning-brd);color:var(--warning-txt);padding:clamp(8px,1.2vh,12px) var(--pad-x);border-radius:var(--r-sm);font-size:var(--fs-sm);">
+        ⚠️ You cancelled the PayPal payment. Your cart is still intact — you can try again.
+    </div>
+    <?php endif; ?>
 
     <!-- ── Error banner ── -->
     <?php if (!empty($errors)): ?>
@@ -261,51 +377,20 @@ function money($v) { return number_format((float)$v, 2, '.', ' ') . ' EUR'; }
             </div>
         </div>
 
-        <!-- 3. Payment — placeholder PayPal Sandbox -->
+        <!-- 3. Payment — PayPal Sandbox -->
         <div class="section-card">
             <div class="section-head">
                 <span class="step-num">3</span>
                 Payment
             </div>
             <div class="section-body">
-
-                <!-- ════════════════════════════════════════════════════════
-                     PAYPAL SANDBOX — À INTÉGRER ICI
-                     Remplacer le bloc .payment-placeholder ci-dessous
-                     par le bouton PayPal Sandbox et son script SDK :
-
-                     <div id="paypal-button-container"></div>
-                     <script src="https://www.paypal.com/sdk/js?client-id=YOUR_CLIENT_ID&currency=EUR"></script>
-                     <script>
-                         paypal.Buttons({ ... }).render('#paypal-button-container');
-                     </script>
-
-                     Les champs card_number et card_cvc en POST peuvent
-                     être retirés une fois PayPal intégré.
-                ════════════════════════════════════════════════════════ -->
-
-                <div class="payment-placeholder">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-                        <line x1="1" y1="10" x2="23" y2="10"/>
-                    </svg>
-                    <p>Payment integration coming soon</p>
-                    <span style="font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;">PayPal Sandbox will appear here</span>
+                <div class="paypal-info">
+                    <img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_111x69.jpg"
+                         alt="PayPal" style="height:40px; margin-bottom:10px; display:block;">
+                    <p style="font-size:0.85rem; color:#555; margin:0;">
+                        After confirming, you will be securely redirected to PayPal Sandbox to complete your payment.
+                    </p>
                 </div>
-
-                <!-- Champs temporaires conservés pour le flux actuel — à retirer après intégration PayPal -->
-                <div class="fields-grid" style="margin-top: var(--gap); opacity: .55; pointer-events: none;">
-                    <div class="field">
-                        <label>Card number <em style="font-size:.6rem;">(temp)</em></label>
-                        <input type="text" name="card_number" value="4242 4242 4242 4242" readonly>
-                    </div>
-                    <div class="field">
-                        <label>CVC <em style="font-size:.6rem;">(temp)</em></label>
-                        <input type="text" name="card_cvc" value="123" readonly>
-                    </div>
-                </div>
-
             </div>
         </div>
 
@@ -346,7 +431,13 @@ function money($v) { return number_format((float)$v, 2, '.', ' ') . ' EUR'; }
 
             <div class="summary-footer">
                 <button type="submit" name="confirm_order" class="btn-confirm">
-                    Confirm — <?= money($totaux) ?>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                         style="margin-right:6px;vertical-align:middle;">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                        <line x1="1" y1="10" x2="23" y2="10"/>
+                    </svg>
+                    Pay with PayPal — <?= money($totaux) ?>
                 </button>
                 <a href="cart.php" class="btn-back">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none"

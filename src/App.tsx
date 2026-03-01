@@ -1,26 +1,26 @@
 import "./App.css";
-import PuzzleGame1 from "./components/Puzzle/PuzzleGame";
-import PuzzleGame2 from "./components/Puzzle/PuzzleGame";
+import PuzzleGame from "./components/Puzzle/PuzzleGame";
 import Sidebar from "./layouts/Sidebar";
 import GamePage from "./components/GamePage";
 import HomePage from "./components/HomePage";
 import { ToyBrick, Puzzle } from "lucide-react";
 import { useState } from "react";
+import BlockScene from "./components/BrickBlast/BlockBlast";
 
 function App() {
   const [selectedGame, setSelectedGame] = useState(-1); // -1 = Home page
   const games = [
     {
-      game: <PuzzleGame1 />,
+      game: <PuzzleGame />,
       description: "lorem ipsum",
       title: "PuzzleGame",
       icon: <Puzzle color="#5e606a" />,
       img: "/img/LegoPuzzle.png",
     },
     {
-      game: <PuzzleGame2 />,
+      game: <BlockScene />,
       description: "lorem ipsum",
-      title: "Brick",
+      title: "Brick Blast",
       icon: <ToyBrick color="#5e606a" />,
       img: "/img/BrickBlast.png",
     },

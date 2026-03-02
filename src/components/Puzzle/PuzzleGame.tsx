@@ -89,13 +89,14 @@ async function readBrickFile(filePath: string): Promise<Brick[]> {
   lines.forEach((line, index) => {
     if (!line.trim()) return;
     if (index !== 0) {
-      const [sizeColor, x, y] = line.split(",");
+      const [sizeColor, x, y, rota] = line.split(",");
       const [size, colorHex] = sizeColor.split("/");
       const [w, h] = size.split("-");
+      const rotaInt = parseInt(rota);
       bricksArray.push({
         id: index,
-        w: parseInt(w),
-        h: parseInt(h),
+        w: parseInt(rotaInt ? h : w),
+        h: parseInt(rotaInt ? w : h),
         color: `${colorHex.toLocaleUpperCase()}`,
       });
     }

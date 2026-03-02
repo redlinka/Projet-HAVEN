@@ -96,7 +96,7 @@ async function readBrickFile(filePath: string): Promise<Brick[]> {
         id: index,
         w: parseInt(w),
         h: parseInt(h),
-        color: `${colorHex}`,
+        color: `${colorHex.toLocaleUpperCase()}`,
       });
     }
   });
@@ -112,7 +112,7 @@ async function readImageFile(filePath: string): Promise<string[]> {
   lines.forEach((line, index) => {
     if (!line.trim()) return;
     if (index !== 0) {
-      hexaArray = hexaArray.concat(line.trim().split(" "));
+      hexaArray = hexaArray.concat(line.toLocaleUpperCase().trim().split(" "));
     }
   });
 

@@ -1,12 +1,16 @@
 import "./App.css";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
-import PuzzleGame from "./components/Puzzle/PuzzleGame";
+import { ToyBrick, Puzzle } from "lucide-react";
+
 import Sidebar from "./layouts/Sidebar";
+
+// Pages
 import GamePage from "./components/GamePage";
 import HomePage from "./components/HomePage";
-import { ToyBrick, Puzzle } from "lucide-react";
-import { useState } from "react";
+
+// Games
 import BlockScene from "./components/BrickBlast/BlockBlast";
+import PuzzleGame from "./components/Puzzle/PuzzleGame";
 
 function App() {
   const games = [

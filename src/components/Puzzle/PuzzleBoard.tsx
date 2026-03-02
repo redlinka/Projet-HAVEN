@@ -11,13 +11,12 @@ export default function PuzzleBoard({
   rows: number;
   board: string[];
 }) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const gridCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const brickCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const sizeRef = useRef<number>(0);
 
-  const gridCols = cols;
-  const gridRows = rows;
-
-  function drawGrid() {
-    const canvas = canvasRef.current;
+  function setupCanvas() {
+    const canvas = gridCanvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
@@ -31,15 +30,22 @@ export default function PuzzleBoard({
     canvas.width = size;
     canvas.height = size;
 
-    ctx.clearRect(0, 0, size, size);
+    const brickCanvas = brickCanvasRef.current;
+    if (brickCanvas) {
+      brickCanvas.width = size;
+      brickCanvas.height = size;
+    }
+
+    sizeRef.current = size;
+
+    // const legra = new Legra(ctx, size / Math.max(cols, rows));
+    // legra.rectangle(0, 0, size, size, { filled: true, color: "#ffffff2f" });
 
     drawGridLines(ctx, size);
-
-    drawBricks(ctx, size);
   }
 
   function drawGridLines(ctx: CanvasRenderingContext2D, size: number) {
-    const cellSize = size / Math.max(gridCols, gridRows);
+    const cellSize = size / Math.max(cols, rows);
 
     ctx.strokeStyle = "#000000";
     ctx.lineWidth = 0.5;
@@ -47,34 +53,39 @@ export default function PuzzleBoard({
     ctx.beginPath();
 
     // Vertical lines
-    for (let i = 0; i <= gridCols; i++) {
+    for (let i = 0; i <= cols; i++) {
       const x = i * cellSize;
       ctx.moveTo(x, 0);
-      ctx.lineTo(x, gridRows * cellSize);
+      ctx.lineTo(x, rows * cellSize);
     }
 
     // Horizontal lines
-    for (let i = 0; i <= gridRows; i++) {
+    for (let i = 0; i <= rows; i++) {
       const y = i * cellSize;
       ctx.moveTo(0, y);
-      ctx.lineTo(gridCols * cellSize, y);
+      ctx.lineTo(cols * cellSize, y);
     }
 
     ctx.stroke();
     ctx.closePath();
   }
 
-  function drawBricks(ctx: CanvasRenderingContext2D, size: number) {
-    if (!board) return;
+  function drawBricks() {
+    const canvas = brickCanvasRef.current;
+    if (!canvas) return;
 
-    const cellSize = size / Math.max(gridCols, gridRows);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const size = sizeRef.current;
+    const cellSize = size / Math.max(cols, rows);
     const legra = new Legra(ctx, cellSize);
 
-    ctx.beginPath();
+    ctx.clearRect(0, 0, size, size);
 
-    for (let i = 0; i <= gridRows; i++) {
-      for (let j = 0; j <= gridCols; j++) {
-        const index = j * gridCols + i;
+    for (let j = 0; j < rows; j++) {
+      for (let i = 0; i < cols; i++) {
+        const index = j * cols + i;
         if (board[index] !== "") {
           legra.rectangle(i, j, 1, 1, {
             filled: true,
@@ -86,17 +97,22 @@ export default function PuzzleBoard({
   }
 
   useEffect(() => {
-    drawGrid();
+    setupCanvas();
 
-    const handleResize = () => drawGrid();
+    const handleResize = () => setupCanvas();
     window.addEventListener("resize", handleResize);
 
     return () => window.removeEventListener("resize", handleResize);
-  }, [gridCols, gridRows, board]);
+  }, [cols, rows]);
+
+  useEffect(() => {
+    drawBricks();
+  }, [board]);
 
   return (
     <div className="puzzle-board">
-      <canvas id="cnv" ref={canvasRef} />
+      <canvas id="cnv" ref={gridCanvasRef} className="grid-layer" />
+      <canvas ref={brickCanvasRef} className="brick-layer" />
     </div>
   );
 }

@@ -6,9 +6,12 @@
   border: 10px solid rgb(102, 58, 7);
   box-shadow: 0 0 20px rgb(56, 56, 56);
   aspect-ratio: 1/1;
+  position: relative;
 }
 
-.puzzle-board > canvas {
-  width: 100%;
-  height: 100%;
+.grid-layer,
+.brick-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
 }

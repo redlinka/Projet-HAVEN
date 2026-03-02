@@ -8,6 +8,7 @@ import DifficultySelect from "./DifficultySelect";
 import Brick from "./Brick";
 
 import "../../styles/components/Puzzle/PuzzleGame.css";
+import EndingScreen from "./EndingScreen";
 
 // ---------------- Types ---------------------
 
@@ -79,6 +80,37 @@ const addBrick = (
   return newBoard;
 };
 
+const checkPlacementValid = (
+  board: string[],
+  cols: number,
+  brick: Brick
+): boolean => {
+  for (let i = 0; i < board.length; i++) {
+    if (i % cols + brick.w > cols) continue;
+
+    let fits = true;
+
+    for (let row = 0; row < brick.h; row++) {
+      for (let col = 0; col < brick.w; col++) {
+        const idx = i + col + row * cols;
+
+        if (
+          idx >= board.length || 
+          board[idx] !== ""
+        ) {
+          fits = false;
+          break;
+        }
+      }
+      if (!fits) break;
+    }
+
+    if (fits) return true;
+  }
+
+  return false;
+};
+
 /* ------------------ File readers ------------------ */
 
 async function readBrickFile(filePath: string): Promise<Brick[]> {
@@ -134,6 +166,7 @@ export default function PuzzleGame() {
   const [board, setBoard] = useState<string[]>([]);
   const [answerBoard, setAnswerBoard] = useState<string[]>([]);
   const [score, setScore] = useState(0);
+  
 
   // ============== Sounds ==============
   const [playGameMusic, { stop }] = useSound("/sounds/Puzzle/bg.mp3", {
@@ -155,13 +188,17 @@ export default function PuzzleGame() {
 
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const [isOnBoard, setIsOnBoard] = useState(false);
-  const [snapCell, setSnapCell] = useState<{ i: number; j: number } | null>(
-    null,
-  );
+  const [snapCell, setSnapCell] = useState<{ i: number; j: number } | null>(null);
+  const [endGame, setEndGame] = useState<boolean>(false);
+  const [nbPieces, setNbPieces] = useState<number>(0);
+
 
   useEffect(() => {
     modRef.current = mod;
   }, [mod]);
+
+
+
 
   /* =========== Drag listeners =========== */
 
@@ -239,6 +276,10 @@ export default function PuzzleGame() {
             setAllBricks((prevBricks) => {
               const next = prevBricks.slice(1);
               setCurrentBrick(next[0] ?? null);
+              console.log("all bricks left:", next.length);
+              if ( next[0] && !checkPlacementValid(updatedBoard, modRef.current.cols, next[0]) || next.length === 0) {
+                setEndGame(true);
+              }
               return next;
             });
 
@@ -266,7 +307,7 @@ export default function PuzzleGame() {
   }, []);
 
   useEffect(() => {
-    onDrop(); // Pop sound on game start
+    onDrop();
   }, [board, score]);
 
   const handleGrab = (brick: Brick) => {
@@ -288,6 +329,7 @@ export default function PuzzleGame() {
         ]);
 
         const shuffled = shuffleArray(brickData);
+        setNbPieces(shuffled.length);
 
         setAllBricks(shuffled.slice(1));
         setCurrentBrick(shuffled[0] ?? null);
@@ -322,6 +364,16 @@ export default function PuzzleGame() {
 
   if (!mod.cols || !mod.rows) return <DifficultySelect setMod={setMod} />;
   if (loading) return <div className="puzzle-game">Loading...</div>;
+  if (endGame){
+    const message = score === nbPieces ? "You placed all pieces correctly!" : "You did your best!";
+    
+    return <EndingScreen  
+      message={message} 
+      nbPieces={nbPieces}
+      score={score} 
+      difficulty={mod} />;
+  }
+
 
   return (
     <div className="puzzle-game">

@@ -56,28 +56,31 @@
   margin-top: 2rem;
 }
 
-.sidebar .top nav ul li {
-  width: 100%;
-  cursor: pointer;
-  border-radius: 10px;
-  padding: 10px;
-  overflow-x: hidden;
-}
-.sidebar .top nav ul li:hover {
-  background-color: rgb(56, 56, 56);
+.sidebar .top nav ul {
+  display: flex;
+  flex-direction: column;
 }
 
-.sidebar .top nav ul li .link-li {
+.sidebar .top nav ul .link-li {
+  overflow-x: hidden;
+  color: white;
+  width: 100%;
+  cursor: pointer;
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.sidebar .top nav ul .link-li:hover {
+  background-color: rgb(56, 56, 56);
+}
+.sidebar .top nav ul .link-li div {
   display: flex;
   align-items: center;
   gap: 10px;
-  overflow-x: hidden;
   width: fit-content;
-  color: white;
 }
-.sidebar .top nav ul li .link-li {
+.sidebar .top nav ul .link-li div p {
   white-space: nowrap;
-  overflow: hidden;
 }
 
 .sidebar .user {

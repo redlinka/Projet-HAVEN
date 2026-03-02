@@ -46,16 +46,12 @@ export default function Sidebar({
         <nav>
           <ul>
             {games.map((game, index) => (
-              <li key={index}>
-                <Link
-                  to={`/game/${index}`}
-                  style={isOpen ? { margin: "0" } : { margin: "0 auto" }}
-                  className="link-li"
-                >
+              <Link to={`/game/${index}`} className="link-li">
+                <div style={isOpen ? { margin: "0" } : { margin: "0 auto" }}>
                   {game.icon}
                   {isOpen && <p>{game.title}</p>}
-                </Link>
-              </li>
+                </div>
+              </Link>
             ))}
           </ul>
         </nav>

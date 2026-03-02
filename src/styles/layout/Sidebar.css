@@ -67,14 +67,15 @@
   background-color: rgb(56, 56, 56);
 }
 
-.sidebar .top nav ul li div {
+.sidebar .top nav ul li .link-li {
   display: flex;
   align-items: center;
   gap: 10px;
   overflow-x: hidden;
   width: fit-content;
+  color: white;
 }
-.sidebar .top nav ul li div p {
+.sidebar .top nav ul li .link-li {
   white-space: nowrap;
   overflow: hidden;
 }

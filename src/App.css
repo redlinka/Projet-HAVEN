@@ -25,13 +25,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--white);
 }
-.app-content > .top > h1 {
+.app-content > .top > .main-title {
   font-weight: bold;
   font-size: 1.3rem;
   cursor: pointer;
+  color: var(--white);
 }
-.app-content > .top span {
+.app-content > .top > .main-title > span {
   color: var(--yellow);
 }

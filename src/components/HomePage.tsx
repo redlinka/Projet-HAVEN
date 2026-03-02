@@ -1,9 +1,9 @@
-import React, { type ReactNode } from "react";
+import { type ReactNode } from "react";
+import { Link } from "react-router-dom";
 import "../styles/components/HomePage.css";
 
 export default function HomePage({
   games,
-  handleOnClick,
 }: {
   games: {
     game: ReactNode;
@@ -12,25 +12,20 @@ export default function HomePage({
     icon: ReactNode;
     img: string;
   }[];
-  handleOnClick: (i: number) => void;
 }) {
   return (
     <div className="home-container">
-      <div className="new-game" onClick={() => handleOnClick(games.length - 1)}>
+      <Link to={`/game/${games.length - 1}`} className="new-game">
         <img src={games[games.length - 1].img} alt="" />
         <div className="new">New</div>
-      </div>
+      </Link>
       <div className="games-list">
         <h2>Games</h2>
         <div className="games">
-          {games.map((game, i) => (
-            <img
-              className="game"
-              key={game.title}
-              src={game.img}
-              alt="Game image"
-              onClick={() => handleOnClick(i)}
-            />
+          {games.map((game, index) => (
+            <Link key={game.title} to={`/game/${index}`}>
+              <img className="game" src={game.img} alt="Game image" />
+            </Link>
           ))}
         </div>
       </div>

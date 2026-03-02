@@ -1,10 +1,10 @@
-import React, { useState, type ReactNode } from "react";
-import "../styles/layout/Sidebar.css";
+import { useState, type ReactNode } from "react";
+import { Link } from "react-router-dom";
 import { X, User } from "lucide-react";
+import "../styles/layout/Sidebar.css";
 
 export default function Sidebar({
   games,
-  handleOnClick,
 }: {
   games: {
     game: ReactNode;
@@ -12,7 +12,6 @@ export default function Sidebar({
     title: string;
     icon: ReactNode;
   }[];
-  handleOnClick: (i: number) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -46,12 +45,16 @@ export default function Sidebar({
 
         <nav>
           <ul>
-            {games.map((game, i) => (
-              <li key={i} onClick={() => handleOnClick(i)}>
-                <div style={isOpen ? { margin: "0" } : { margin: "0 auto" }}>
+            {games.map((game, index) => (
+              <li key={index}>
+                <Link
+                  to={`/game/${index}`}
+                  style={isOpen ? { margin: "0" } : { margin: "0 auto" }}
+                  className="link-li"
+                >
                   {game.icon}
                   {isOpen && <p>{game.title}</p>}
-                </div>
+                </Link>
               </li>
             ))}
           </ul>

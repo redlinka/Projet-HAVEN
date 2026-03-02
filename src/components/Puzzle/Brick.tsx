@@ -1,5 +1,6 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import Legra from "legra";
+
 import type { Brick } from "./PuzzleGame";
 import "../../styles/components/Puzzle/Brick.css";
 

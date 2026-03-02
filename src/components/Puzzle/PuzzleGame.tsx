@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import useSound from "use-sound";
 import testBrique from "/bricks/img1.txt";
 import testBriqueAns from "/bricks/img1ans.txt";
 
@@ -134,6 +135,19 @@ export default function PuzzleGame() {
   const [answerBoard, setAnswerBoard] = useState<string[]>([]);
   const [score, setScore] = useState(0);
 
+  // ============== Sounds ==============
+  const [playGameMusic, { stop }] = useSound("/sounds/Puzzle/bg.mp3", {
+    volume: 0.13,
+    loop: true,
+  });
+
+  const [onDrag] = useSound("/sounds/Puzzle/drag.wav", {
+    volume: 0.2,
+  });
+  const [onDrop] = useSound("/sounds/Puzzle/drop.mp3", {
+    volume: 0.2,
+  });
+
   // ============== Drag State ===========
   const [activeBrick, setActiveBrick] = useState<Brick | null>(null);
   const draggingBrickRef = useRef<Brick | null>(null);
@@ -251,6 +265,10 @@ export default function PuzzleGame() {
     };
   }, []);
 
+  useEffect(() => {
+    onDrop(); // Pop sound on game start
+  }, [board, score]);
+
   const handleGrab = (brick: Brick) => {
     draggingBrickRef.current = brick;
     setActiveBrick(brick);
@@ -292,6 +310,14 @@ export default function PuzzleGame() {
     }
   }, [board, answerBoard]);
 
+  useEffect(() => {
+    playGameMusic();
+
+    return () => {
+      stop();
+    };
+  }, [playGameMusic, stop]);
+
   /* =========== Render =========== */
 
   if (!mod.cols || !mod.rows) return <DifficultySelect setMod={setMod} />;
@@ -325,7 +351,10 @@ export default function PuzzleGame() {
       <div className="infos-area">
         <div className="piece-random">
           {currentBrick && (
-            <div style={{ opacity: draggingBrickRef.current ? 0.3 : 1 }}>
+            <div
+              style={{ opacity: draggingBrickRef.current ? 0.3 : 1 }}
+              onMouseDown={() => onDrag()}
+            >
               <Brick b={currentBrick} boardSize={32} onGrab={handleGrab} />
             </div>
           )}

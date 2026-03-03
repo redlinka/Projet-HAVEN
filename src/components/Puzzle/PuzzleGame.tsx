@@ -154,7 +154,6 @@ async function readImageFile(filePath: string): Promise<string[]> {
 }
 
 /* ------------------ Component ------------------ */
-
 export default function PuzzleGame() {
   // =============== State ==============
   const [mod, setMod] = useState({ cols: 0, rows: 0 });

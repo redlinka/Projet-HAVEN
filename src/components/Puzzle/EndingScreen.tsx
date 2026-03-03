@@ -1,4 +1,10 @@
 import "../../styles/components/Puzzle/EndingScreen.css";
+import PuzzleGame from "./PuzzleGame";
+
+
+const handlePlayAgain = () => {
+  window.location.reload();
+}
 
 export default function EndingScreen(props: {
   message: string;
@@ -6,10 +12,8 @@ export default function EndingScreen(props: {
   score: number;
   difficulty: { cols: number; rows: number };
 }) {
-  const accuracy =
-    props.nbPieces > 0
-      ? Math.round((props.score / props.nbPieces) * 100)
-      : 0;
+
+  const accuracy = props.nbPieces > 0 ? Math.round((props.score / props.nbPieces) * 100): 0;
 
   return (
     <div className="difficulty-screen">
@@ -45,7 +49,7 @@ export default function EndingScreen(props: {
 
           <div className="stat-item">
             <span>Misplaced</span>
-            <strong>{props.nbPieces - props.score}</strong>
+            <strong>{props.nbPieces - props.score > 0 ? props.nbPieces - props.score : 0}</strong>
           </div>
 
           <div className="stat-item">
@@ -56,8 +60,7 @@ export default function EndingScreen(props: {
 
         {/* ACTIONS */}
         <div className="ending-actions">
-          <button className="ending-btn primary">Play Again</button>
-          <button className="ending-btn ghost">Main Menu</button>
+          <button className="ending-btn primary" onClick={handlePlayAgain}>Play Again</button>
         </div>
 
       </div>

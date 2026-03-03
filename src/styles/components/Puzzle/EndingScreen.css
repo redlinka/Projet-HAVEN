@@ -5,33 +5,40 @@
   background-repeat: no-repeat;
 
   width: 100%;
-  height: 100%;
+  min-height: 100%;
+  padding: 20px;
 
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
+/* ================= PANEL ================= */
+
 .ending-panel {
-  width: 60%;
-  height: 90%;
-  padding: 20px;
+  width: 100%;
+  max-width: 900px;
+  min-height: 600px;
+
+  padding: 40px;
   border-radius: 30px;
 
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  gap: 30px;
 
   text-align: center;
 
   background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
 }
 
 .end-title {
   background: linear-gradient(180deg, #b30000, #830000);
   color: white;
-  padding: 18px 50px;
+  padding: 14px 20px;
   border-radius: 20px;
   font-weight: bold;
   font-size: 22px;
@@ -39,20 +46,22 @@
 }
 
 .ending-header h2 {
-  font-size: 2rem;
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
   color: #830000;
 }
 
 .ending-header p {
   font-weight: 600;
   opacity: 0.8;
+  font-size: 0.95rem;
+  color: #1a1a1a;
 }
 
 .ending-score {
   background: linear-gradient(180deg, #b30000, #830000);
   color: white;
   border-radius: 20px;
-  padding: 10px;
+  padding: 20px;
 }
 
 .ending-score span {
@@ -62,48 +71,55 @@
 }
 
 .ending-score strong {
-  font-size: 2rem;
+  font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 900;
 }
 
 .ending-stats {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 25px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 20px;
 }
 
 .stat-item {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(6px);
   border-radius: 18px;
-  padding: 10px 0;
+  padding: 20px 10px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .stat-item span {
   display: block;
   font-size: 14px;
   font-weight: 600;
+  opacity: 0.8;
+  color: white;
+}
+
+.stat-item span {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.9;        
+  color: #1a1a1a;   
 }
 
 .stat-item strong {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
-}
-
-.ending-actions {
-  display: flex;
-  justify-content: center;
-  gap: 25px;
-  flex-wrap: wrap;
+  color: #1a1a1a;      
 }
 
 .ending-btn {
+  min-width: 160px;
   border-radius: 40px;
   border: none;
   font-weight: 800;
   letter-spacing: 1px;
   cursor: pointer;
-  padding: 10px;
+  padding: 12px 24px;
+  transition: all 0.25s ease;
 }
 
 .ending-btn.primary {
@@ -117,16 +133,18 @@
   color: #b30000;
 }
 
+
 @media (max-width: 768px) {
   .ending-panel {
-    padding: 40px 25px;
+    padding: 30px 20px;
+    border-radius: 20px;
   }
 
   .ending-score strong {
-    font-size: 36px;
+    font-size: 2.2rem;
   }
 
-  .ending-stats {
-    grid-template-columns: 1fr;
+  .ending-btn {
+    width: 100%;
   }
 }

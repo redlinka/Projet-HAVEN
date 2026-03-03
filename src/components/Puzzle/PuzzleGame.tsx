@@ -215,116 +215,116 @@ export default function PuzzleGame() {
   /* =========== Drag listeners =========== */
 
   useEffect(() => {
-    const getBoardInfos = () => {
-      const canvas = document.getElementById("cnv");
-      if (!canvas) return null;
+  const getBoardInfos = () => {
+    const canvas = document.getElementById("cnv");
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    const BS = rect.width / modRef.current.cols;
+    return { rect, BS };
+  };
 
-      const rect = canvas.getBoundingClientRect();
-      const BS = rect.width / modRef.current.cols;
+  const getCoords = (e: MouseEvent | TouchEvent) => {
+    if ("touches" in e) {
+      return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
+    }
+    return { clientX: e.clientX, clientY: e.clientY };
+  };
 
-      return { rect, BS };
-    };
-    const onMouseMove = (e: MouseEvent) => {
-      const brick = draggingBrickRef.current;
-      if (!brick) return;
+  const onMove = (e: MouseEvent | TouchEvent) => {
+    const brick = draggingBrickRef.current;
+    if (!brick) return;
 
-      const pos = { x: e.clientX, y: e.clientY };
-      setDragPos({ ...pos });
+    const { clientX, clientY } = getCoords(e);
+    setDragPos({ x: clientX, y: clientY });
 
-      const boardInfo = getBoardInfos();
-      if (!boardInfo) return;
+    const boardInfo = getBoardInfos();
+    if (!boardInfo) return;
 
+    const { rect, BS } = boardInfo;
+    const topLeftX = clientX - rect.left - (brick.w * BS) / 2;
+    const topLeftY = clientY - rect.top - (brick.h * BS) / 2;
+    const i = Math.round(topLeftX / BS);
+    const j = Math.round(topLeftY / BS);
+
+    const inside =
+      i >= 0 &&
+      i + brick.w <= modRef.current.cols &&
+      j >= 0 &&
+      j + brick.h <= modRef.current.rows;
+
+    if (!inside) {
+      setIsOnBoard(false);
+      setSnapCell(null);
+      return;
+    }
+    setIsOnBoard(true);
+    setSnapCell({ i, j });
+  };
+
+  const onEnd = (e: MouseEvent | TouchEvent) => {
+    const currentBrickToPlace = draggingBrickRef.current;
+    if (!currentBrickToPlace) return;
+
+    // Pour touchend, les coords sont dans changedTouches
+    const coords =
+      "changedTouches" in e
+        ? { clientX: e.changedTouches[0].clientX, clientY: e.changedTouches[0].clientY }
+        : { clientX: e.clientX, clientY: e.clientY };
+
+    const boardInfo = getBoardInfos();
+    if (boardInfo) {
       const { rect, BS } = boardInfo;
-
-      const brickWidthPx = brick.w * BS;
-      const brickHeightPx = brick.h * BS;
-
-      const topLeftX = e.clientX - rect.left - brickWidthPx / 2;
-      const topLeftY = e.clientY - rect.top - brickHeightPx / 2;
-
+      const topLeftX = coords.clientX - rect.left - (currentBrickToPlace.w * BS) / 2;
+      const topLeftY = coords.clientY - rect.top - (currentBrickToPlace.h * BS) / 2;
       const i = Math.round(topLeftX / BS);
       const j = Math.round(topLeftY / BS);
 
-      const inside =
-        i >= 0 &&
-        i + brick.w <= modRef.current.cols &&
-        j >= 0 &&
-        j + brick.h <= modRef.current.rows;
+      setBoard((prevBoard) => {
+        const updatedBoard = addBrick(
+          prevBoard,
+          modRef.current.cols,
+          { x: i, y: j },
+          currentBrickToPlace,
+        );
 
-      if (!inside) {
-        setIsOnBoard(false);
-        setSnapCell(null);
-        return;
-      }
+        if (updatedBoard) {
+          setAllBricks((prevBricks) => {
+            const next = prevBricks.slice(1);
+            setCurrentBrick(next[0] ?? null);
+            if (
+              (next[0] &&
+                !checkPlacementValid(updatedBoard, modRef.current.cols, next[0])) ||
+              next.length === 0
+            ) {
+              setEndGame(true);
+            }
+            return next;
+          });
+          return updatedBoard;
+        }
+        return prevBoard;
+      });
+    }
 
-      setIsOnBoard(true);
-      setSnapCell({ i, j });
-    };
+    draggingBrickRef.current = null;
+    setActiveBrick(null);
+    setDragPos(null);
+    setIsOnBoard(false);
+    setSnapCell(null);
+  };
 
-    const onMouseUp = (e: MouseEvent) => {
-      const currentBrickToPlace = draggingBrickRef.current;
-      if (!currentBrickToPlace) return;
+  window.addEventListener("mousemove", onMove);
+  window.addEventListener("mouseup", onEnd);
+  window.addEventListener("touchmove", onMove, { passive: true });
+  window.addEventListener("touchend", onEnd);
 
-      const boardInfo = getBoardInfos();
-      if (boardInfo) {
-        const { rect, BS } = boardInfo;
-        const topLeftX =
-          e.clientX - rect.left - (currentBrickToPlace.w * BS) / 2;
-        const topLeftY =
-          e.clientY - rect.top - (currentBrickToPlace.h * BS) / 2;
-
-        const i = Math.round(topLeftX / BS);
-        const j = Math.round(topLeftY / BS);
-
-        setBoard((prevBoard) => {
-          const updatedBoard = addBrick(
-            prevBoard,
-            modRef.current.cols,
-            { x: i, y: j },
-            currentBrickToPlace,
-          );
-
-          if (updatedBoard) {
-            setAllBricks((prevBricks) => {
-              const next = prevBricks.slice(1);
-              setCurrentBrick(next[0] ?? null);
-              console.log("all bricks left:", next.length);
-              if (
-                (next[0] &&
-                  !checkPlacementValid(
-                    updatedBoard,
-                    modRef.current.cols,
-                    next[0],
-                  )) ||
-                next.length === 0
-              ) {
-                setEndGame(true);
-              }
-              return next;
-            });
-
-            return updatedBoard;
-          }
-
-          return prevBoard;
-        });
-      }
-
-      draggingBrickRef.current = null;
-      setActiveBrick(null);
-      setDragPos(null);
-      setIsOnBoard(false);
-      setSnapCell(null);
-    };
-
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-
-    return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
-  }, []);
+  return () => {
+    window.removeEventListener("mousemove", onMove);
+    window.removeEventListener("mouseup", onEnd);
+    window.removeEventListener("touchmove", onMove);
+    window.removeEventListener("touchend", onEnd);
+  };
+}, []);
 
   useEffect(() => {
     onDrop();
@@ -334,6 +334,12 @@ export default function PuzzleGame() {
     draggingBrickRef.current = brick;
     setActiveBrick(brick);
   };
+
+  const handleTouchStart = (brick: Brick, e: React.TouchEvent) => {
+  onDrag();
+  draggingBrickRef.current = brick;
+  setActiveBrick(brick);
+};
 
   /* =========== Game loading =========== */
 
@@ -438,7 +444,7 @@ export default function PuzzleGame() {
               style={{ opacity: draggingBrickRef.current ? 0.3 : 1 }}
               onMouseDown={() => onDrag()}
             >
-              <Brick b={currentBrick} boardSize={32} onGrab={handleGrab} />
+              <Brick b={currentBrick} boardSize={32} onGrab={handleGrab} onTouchStart={handleTouchStart} />
             </div>
           )}
         </div>

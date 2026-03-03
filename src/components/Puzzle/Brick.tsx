@@ -1,21 +1,19 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect } from "react";
 import Legra from "legra";
 
 import type { Brick } from "./PuzzleGame";
 import "../../styles/components/Puzzle/Brick.css";
 
-// Component to render a single Lego brick with studs based on its properties
 export default function Brick({
   b,
   boardSize,
   onGrab,
+  onTouchStart,
 }: {
   b: Brick;
   boardSize: number;
-  onGrab?: (
-    brick: Brick,
-    e: React.MouseEvent<HTMLCanvasElement, MouseEvent>,
-  ) => void;
+  onGrab?: (brick: Brick, e: React.MouseEvent<HTMLCanvasElement>) => void;
+  onTouchStart?: (brick: Brick, e: React.TouchEvent<HTMLCanvasElement>) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -41,6 +39,9 @@ export default function Brick({
       onMouseDown={(e) => {
         e.preventDefault();
         onGrab?.(b, e);
+      }}
+      onTouchStart={(e) => {
+        onTouchStart?.(b, e);
       }}
       ref={canvasRef}
       className="lego-brick"

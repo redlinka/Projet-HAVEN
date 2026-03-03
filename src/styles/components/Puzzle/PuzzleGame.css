@@ -42,3 +42,20 @@
   font-weight: bold;
   text-align: center;
 }
+
+/* ── Tablette / petit desktop (< 1350px) ── */
+@media (max-width: 1350px) {
+  .puzzle-game {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    height: auto;
+    min-height: 100dvh;
+  }
+
+  .infos-area {
+    grid-template-rows: none;
+    grid-template-columns: auto 1fr;
+    align-items: start;
+    gap: 20px;
+  }
+}

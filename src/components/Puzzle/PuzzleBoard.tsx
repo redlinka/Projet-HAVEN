@@ -17,10 +17,8 @@ export default function PuzzleBoard({
 
   function setupCanvas() {
     const canvas = gridCanvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const brickCanvas = brickCanvasRef.current;
+    if (!canvas || !brickCanvas) return;
 
     const parent = canvas.parentElement;
     if (!parent) return;
@@ -29,18 +27,18 @@ export default function PuzzleBoard({
 
     canvas.width = size;
     canvas.height = size;
-
-    const brickCanvas = brickCanvasRef.current;
-    if (brickCanvas) {
-      brickCanvas.width = size;
-      brickCanvas.height = size;
-    }
+    brickCanvas.width = size;
+    brickCanvas.height = size;
 
     sizeRef.current = size;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
     // const legra = new Legra(ctx, size / Math.max(cols, rows));
     // legra.rectangle(0, 0, size, size, { filled: true, color: "#ffffff2f" });
 
+    ctx.clearRect(0, 0, size, size);
     drawGridLines(ctx, size);
   }
 
@@ -97,11 +95,15 @@ export default function PuzzleBoard({
   }
 
   useEffect(() => {
+    const handleResize = () => {
+      setupCanvas();
+      drawBricks();
+    };
+
     setupCanvas();
+    drawBricks();
 
-    const handleResize = () => setupCanvas();
     window.addEventListener("resize", handleResize);
-
     return () => window.removeEventListener("resize", handleResize);
   }, [cols, rows]);
 

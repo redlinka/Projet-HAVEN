@@ -15,11 +15,11 @@ export default function EndingScreen(props: {
 
   const accuracy = props.nbPieces > 0 ? Math.round((props.score / props.nbPieces) * 100): 0;
 
-  return (
-    <div className="difficulty-screen">
-      <div className="difficulty-panel ending-panel">
 
-        <div className="difficulty-title">GAME SUMMARY</div>
+  return (
+    <div className="end-screen">
+      <div className="ending-panel">
+        <div className="end-title">GAME SUMMARY</div>
 
         {/* HEADER */}
         <div className="ending-header">
@@ -43,16 +43,6 @@ export default function EndingScreen(props: {
           </div>
 
           <div className="stat-item">
-            <span>Well Placed</span>
-            <strong>{props.score}</strong>
-          </div>
-
-          <div className="stat-item">
-            <span>Misplaced</span>
-            <strong>{props.nbPieces - props.score > 0 ? props.nbPieces - props.score : 0}</strong>
-          </div>
-
-          <div className="stat-item">
             <span>Accuracy</span>
             <strong>{accuracy}%</strong>
           </div>
@@ -62,7 +52,6 @@ export default function EndingScreen(props: {
         <div className="ending-actions">
           <button className="ending-btn primary" onClick={handlePlayAgain}>Play Again</button>
         </div>
-
       </div>
     </div>
   );

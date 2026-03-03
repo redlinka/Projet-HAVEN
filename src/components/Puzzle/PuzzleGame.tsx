@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import useSound from "use-sound";
-import testBrique from "/bricks/img1.txt";
-import testBriqueAns from "/bricks/img1ans.txt";
 
 import PuzzleBoard from "./PuzzleBoard";
 import DifficultySelect from "./DifficultySelect";
@@ -20,6 +18,10 @@ export interface Brick {
 }
 
 /* ------------------ Utils ------------------ */
+
+function randint(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
 const initPuzzleBoard = (cols: number, rows: number) => {
   return Array(cols * rows).fill("");
@@ -83,10 +85,10 @@ const addBrick = (
 const checkPlacementValid = (
   board: string[],
   cols: number,
-  brick: Brick
+  brick: Brick,
 ): boolean => {
   for (let i = 0; i < board.length; i++) {
-    if (i % cols + brick.w > cols) continue;
+    if ((i % cols) + brick.w > cols) continue;
 
     let fits = true;
 
@@ -94,10 +96,7 @@ const checkPlacementValid = (
       for (let col = 0; col < brick.w; col++) {
         const idx = i + col + row * cols;
 
-        if (
-          idx >= board.length || 
-          board[idx] !== ""
-        ) {
+        if (idx >= board.length || board[idx] !== "") {
           fits = false;
           break;
         }
@@ -109,6 +108,21 @@ const checkPlacementValid = (
   }
 
   return false;
+};
+
+const getGameData = async (cols: number, rows: number) => {
+  const path = "/bricks/";
+  const difficulty = `${cols}x${rows}`;
+  const folder = randint(1, 3);
+  const pavagePath = `${path}${difficulty}/${folder}/pavage.txt`;
+  const imagePath = `${path}${difficulty}/${folder}/image.png`;
+  const bricksPath = `${path}${difficulty}/${folder}/bricks.txt`;
+
+  const [brickData, answerData] = await Promise.all([
+    readBrickFile(bricksPath),
+    readPavageFile(pavagePath),
+  ]);
+  return { brickData, answerData, imagePath };
 };
 
 /* ------------------ File readers ------------------ */
@@ -137,7 +151,7 @@ async function readBrickFile(filePath: string): Promise<Brick[]> {
   return bricksArray;
 }
 
-async function readImageFile(filePath: string): Promise<string[]> {
+async function readPavageFile(filePath: string): Promise<string[]> {
   const response = await fetch(filePath);
   const text = await response.text();
   const lines = text.split(/\r?\n/);
@@ -165,7 +179,8 @@ export default function PuzzleGame() {
   const [board, setBoard] = useState<string[]>([]);
   const [answerBoard, setAnswerBoard] = useState<string[]>([]);
   const [score, setScore] = useState(0);
-  
+
+  const [imagePath, setImagePath] = useState<string>("");
 
   // ============== Sounds ==============
   const [playGameMusic, { stop }] = useSound("/sounds/Puzzle/bg.mp3", {
@@ -187,17 +202,15 @@ export default function PuzzleGame() {
 
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const [isOnBoard, setIsOnBoard] = useState(false);
-  const [snapCell, setSnapCell] = useState<{ i: number; j: number } | null>(null);
+  const [snapCell, setSnapCell] = useState<{ i: number; j: number } | null>(
+    null,
+  );
   const [endGame, setEndGame] = useState<boolean>(false);
   const [nbPieces, setNbPieces] = useState<number>(0);
-
 
   useEffect(() => {
     modRef.current = mod;
   }, [mod]);
-
-
-
 
   /* =========== Drag listeners =========== */
 
@@ -276,7 +289,15 @@ export default function PuzzleGame() {
               const next = prevBricks.slice(1);
               setCurrentBrick(next[0] ?? null);
               console.log("all bricks left:", next.length);
-              if ( next[0] && !checkPlacementValid(updatedBoard, modRef.current.cols, next[0]) || next.length === 0) {
+              if (
+                (next[0] &&
+                  !checkPlacementValid(
+                    updatedBoard,
+                    modRef.current.cols,
+                    next[0],
+                  )) ||
+                next.length === 0
+              ) {
                 setEndGame(true);
               }
               return next;
@@ -322,14 +343,15 @@ export default function PuzzleGame() {
     const loadGame = async () => {
       setLoading(true);
       try {
-        const [brickData, answerData] = await Promise.all([
-          readBrickFile(testBrique),
-          readImageFile(testBriqueAns),
-        ]);
+        const { imagePath, brickData, answerData } = await getGameData(
+          modRef.current.cols,
+          modRef.current.rows,
+        );
 
         const shuffled = shuffleArray(brickData);
         setNbPieces(shuffled.length);
 
+        setImagePath(imagePath);
         setAllBricks(shuffled.slice(1));
         setCurrentBrick(shuffled[0] ?? null);
         setAnswerBoard(answerData);
@@ -363,20 +385,30 @@ export default function PuzzleGame() {
 
   if (!mod.cols || !mod.rows) return <DifficultySelect setMod={setMod} />;
   if (loading) return <div className="puzzle-game">Loading...</div>;
-  if (endGame){
-    const message = score === nbPieces ? "You placed all pieces correctly!" : "You did your best!";
-    
-    return <EndingScreen  
-      message={message} 
-      nbPieces={nbPieces}
-      score={score} 
-      difficulty={mod} />;
-  }
+  if (endGame) {
+    const message =
+      score === nbPieces
+        ? "You placed all pieces correctly!"
+        : "You did your best!";
 
+    return (
+      <EndingScreen
+        message={message}
+        nbPieces={nbPieces}
+        score={score}
+        difficulty={mod}
+      />
+    );
+  }
 
   return (
     <div className="puzzle-game">
-      <PuzzleBoard rows={mod.rows} cols={mod.cols} board={board} />
+      <PuzzleBoard
+        rows={mod.rows}
+        cols={mod.cols}
+        board={board}
+        img={imagePath}
+      />
 
       {/* Floating brick */}
       {activeBrick && dragPos && (

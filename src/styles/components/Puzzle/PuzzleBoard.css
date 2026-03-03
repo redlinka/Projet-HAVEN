@@ -9,6 +9,12 @@
   box-shadow: 0 0 20px rgb(56, 56, 56);
   position: relative;
 }
+.puzzle-board img {
+  height: 100%;
+  width: 100%;
+  image-rendering: pixelated;
+  opacity: 0.7;
+}
 
 .grid-layer,
 .brick-layer {

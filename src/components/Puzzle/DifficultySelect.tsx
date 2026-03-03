@@ -18,10 +18,13 @@ export default function DifficultySelect({
             <div className="lego-circle">
               <img src="/img/legohead/easy.svg" alt="easy" />
             </div>
-            <h2>EASY</h2>
-            <p>16×16 puzzle</p>
-            <p>~5 min</p>
-            <span>Gain 10% points</span>
+            <div>
+              <h2>EASY</h2>
+              <div>
+                <p>16×16 puzzle</p>
+                <span>Gain 10% points</span>
+              </div>
+            </div>
           </div>
 
           <div
@@ -31,10 +34,13 @@ export default function DifficultySelect({
             <div className="lego-circle">
               <img src="/img/legohead/medium.svg" alt="medium" />
             </div>
-            <h2>MEDIUM</h2>
-            <p>32×32 puzzle</p>
-            <p>~10 min</p>
-            <span>Gain 25% points</span>
+            <div>
+              <h2>MEDIUM</h2>
+              <div>
+                <p>32×32 puzzle</p>
+                <span>Gain 25% points</span>
+              </div>
+            </div>
           </div>
 
           <div
@@ -44,10 +50,13 @@ export default function DifficultySelect({
             <div className="lego-circle">
               <img src="/img/legohead/hard.svg" alt="hard" />
             </div>
-            <h2>HARD</h2>
-            <p>64×64 puzzle</p>
-            <p>15+ min</p>
-            <span>Gain 50% points</span>
+            <div>
+              <h2>HARD</h2>
+              <div>
+                <p>64×64 puzzle</p>
+                <span>Gain 50% points</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

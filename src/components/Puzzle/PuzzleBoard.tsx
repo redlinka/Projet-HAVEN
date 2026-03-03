@@ -6,10 +6,12 @@ export default function PuzzleBoard({
   cols,
   rows,
   board,
+  img,
 }: {
   cols: number;
   rows: number;
   board: string[];
+  img: string;
 }) {
   const gridCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const brickCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -34,9 +36,6 @@ export default function PuzzleBoard({
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
-    // const legra = new Legra(ctx, size / Math.max(cols, rows));
-    // legra.rectangle(0, 0, size, size, { filled: true, color: "#ffffff2f" });
 
     ctx.clearRect(0, 0, size, size);
     drawGridLines(ctx, size);
@@ -113,6 +112,7 @@ export default function PuzzleBoard({
 
   return (
     <div className="puzzle-board">
+      <img src={img} alt="" />
       <canvas id="cnv" ref={gridCanvasRef} className="grid-layer" />
       <canvas ref={brickCanvasRef} className="brick-layer" />
     </div>

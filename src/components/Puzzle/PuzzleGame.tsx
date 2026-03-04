@@ -298,6 +298,7 @@ export default function PuzzleGame() {
             setAllBricks((prevBricks) => {
               const next = prevBricks.slice(1);
               setCurrentBrick(next[0] ?? null);
+
               if (
                 (next[0] &&
                   !checkPlacementValid(
@@ -352,6 +353,12 @@ export default function PuzzleGame() {
     setActiveBrick(brick);
   };
 
+  const handleModMenu = () => {
+    console.log("Menu game");
+    setEndGame(false);
+    setMod({ cols: 0, rows: 0 });
+  };
+
   /* =========== Game loading =========== */
 
   useEffect(() => {
@@ -400,6 +407,33 @@ export default function PuzzleGame() {
 
   /* =========== Render =========== */
 
+  const endGamePage = () => {
+    const perfect = score === nbPieces;
+
+    return (
+      <div className="ending-overlay">
+        <div className={perfect ? "ending-title-win" : "ending-title-lose"}>
+          {perfect ? "PERFECT!" : "GAME OVER"}
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div className="ending-score">
+            SCORE {String(score).padStart(4, "0")} / {nbPieces}
+          </div>
+          {perfect && <div className="ending-hi">★ NEW RECORD ★</div>}
+        </div>
+
+        <div style={{ fontSize: 6, color: "#4a3060" }}>
+          {mod.cols}×{mod.rows} — {nbPieces} PIECES
+        </div>
+
+        <button className="retry-btn" onClick={handleModMenu}>
+          MOD MENU
+        </button>
+      </div>
+    );
+  };
+
   // -- Loading --
   if (loading)
     return (
@@ -408,45 +442,14 @@ export default function PuzzleGame() {
       </MonitorShell>
     );
 
-  // -- End game --
-  if (endGame) {
-    const perfect = score === nbPieces;
-
-    return (
-      <MonitorShell>
-        <div className="ending-overlay">
-          <div className={perfect ? "ending-title-win" : "ending-title-lose"}>
-            {perfect ? "PERFECT!" : "GAME OVER"}
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <div className="ending-score">
-              SCORE {String(score).padStart(4, "0")} / {nbPieces}
-            </div>
-            {perfect && <div className="ending-hi">★ NEW RECORD ★</div>}
-          </div>
-
-          <div style={{ fontSize: 6, color: "#4a3060" }}>
-            {mod.cols}×{mod.rows} — {nbPieces} PIECES
-          </div>
-
-          <button
-            className="retry-btn"
-            onClick={() => setMod({ cols: 0, rows: 0 })}
-          >
-            PLAY AGAIN
-          </button>
-        </div>
-      </MonitorShell>
-    );
-  }
-
   const total = nbPieces;
 
   return (
     <MonitorShell>
       {/* HUD */}
-      {!mod.cols || !mod.rows ? (
+      {endGame ? (
+        endGamePage()
+      ) : !mod.cols || !mod.rows ? (
         <DifficultySelect setMod={setMod} />
       ) : (
         <div className="puzzle-game-container">

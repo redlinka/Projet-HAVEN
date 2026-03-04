@@ -63,7 +63,6 @@ export default function DifficultySelect({
                 selected === i ? "active" : ""
               } ${d.label.toLowerCase()}`}
               onClick={() => setSelected(i)}
-              onDoubleClick={handleConfirm}
             >
               <div className="difficulty-label">{d.label}</div>
 

@@ -1,12 +1,7 @@
 .puzzle-board {
-  width: 100%;
-  max-width: min(100%);
+  height: 100%;
   aspect-ratio: 1 / 1;
-
-  backdrop-filter: blur(4px);
   border-radius: 10px;
-  border: 10px solid rgb(102, 58, 7);
-  box-shadow: 0 0 20px rgb(56, 56, 56);
   position: relative;
 }
 

@@ -1,64 +1,92 @@
+import { useState, useEffect } from "react";
 import "../../styles/components/Puzzle/DifficultySelect.css";
+
+const DIFFICULTIES = [
+  { label: "EASY", cols: 16, rows: 16, stars: 1 },
+  { label: "MEDIUM", cols: 32, rows: 32, stars: 2 },
+  { label: "HARD", cols: 64, rows: 64, stars: 3 },
+];
 
 export default function DifficultySelect({
   setMod,
 }: {
   setMod: (mod: { cols: number; rows: number }) => void;
 }) {
+  const [selected, setSelected] = useState(1);
+  const [blink, setBlink] = useState(true);
+  const [confirmed, setConfirmed] = useState(false);
+
+  useEffect(() => {
+    const t = setInterval(() => setBlink((b) => !b), 500);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    const handle = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") setSelected((s) => Math.max(0, s - 1));
+      if (e.key === "ArrowRight") setSelected((s) => Math.min(2, s + 1));
+      if (e.key === "Enter" || e.key === " ") handleConfirm();
+    };
+    window.addEventListener("keydown", handle);
+    return () => window.removeEventListener("keydown", handle);
+  }, [selected]);
+
+  const handleConfirm = () => {
+    setConfirmed(true);
+    setTimeout(() => {
+      setMod({
+        cols: DIFFICULTIES[selected].cols,
+        rows: DIFFICULTIES[selected].rows,
+      });
+    }, 400);
+  };
+
   return (
-    <div className="difficulty-screen">
-      <div className="difficulty-panel">
-        <div className="difficulty-title">SELECT A DIFFICULTY</div>
+    <div className="difficulty-crt">
+      <div className="difficulty-overlay" />
+
+      <div className="difficulty-content">
+        <div className="difficulty-title">
+          PUZZLE
+          <span>BRICKS</span>
+        </div>
+
+        <div className={`difficulty-sub ${blink ? "blink" : ""}`}>
+          SELECT DIFFICULTY
+        </div>
 
         <div className="difficulty-container">
-          <div
-            className="difficulty-card easy"
-            onClick={() => setMod({ cols: 16, rows: 16 })}
-          >
-            <div className="lego-circle">
-              <img src="/img/legohead/easy.svg" alt="easy" />
-            </div>
-            <div>
-              <h2>EASY</h2>
-              <div>
-                <p>16×16 puzzle</p>
-                <span>Gain 10% points</span>
-              </div>
-            </div>
-          </div>
+          {DIFFICULTIES.map((d, i) => (
+            <div
+              key={i}
+              className={`difficulty-card ${
+                selected === i ? "active" : ""
+              } ${d.label.toLowerCase()}`}
+              onClick={() => setSelected(i)}
+              onDoubleClick={handleConfirm}
+            >
+              <div className="difficulty-label">{d.label}</div>
 
-          <div
-            className="difficulty-card medium"
-            onClick={() => setMod({ cols: 32, rows: 32 })}
-          >
-            <div className="lego-circle">
-              <img src="/img/legohead/medium.svg" alt="medium" />
-            </div>
-            <div>
-              <h2>MEDIUM</h2>
-              <div>
-                <p>32×32 puzzle</p>
-                <span>Gain 25% points</span>
+              <div className="difficulty-stars">
+                {Array.from({ length: 3 }).map((_, s) => (
+                  <span key={s} className={s < d.stars ? "on" : ""}>
+                    ★
+                  </span>
+                ))}
               </div>
-            </div>
-          </div>
 
-          <div
-            className="difficulty-card hard"
-            onClick={() => setMod({ cols: 64, rows: 64 })}
-          >
-            <div className="lego-circle">
-              <img src="/img/legohead/hard.svg" alt="hard" />
+              <p>
+                {d.cols}×{d.rows}
+              </p>
             </div>
-            <div>
-              <h2>HARD</h2>
-              <div>
-                <p>64×64 puzzle</p>
-                <span>Gain 50% points</span>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
+
+        <button className="difficulty-play" onClick={handleConfirm}>
+          PLAY
+        </button>
+
+        <div className="difficulty-hint">← → SELECT · ENTER CONFIRM</div>
       </div>
     </div>
   );

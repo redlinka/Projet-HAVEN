@@ -1,61 +1,198 @@
-.puzzle-game {
-  background-image: url("/img/bg.png");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-  display: grid;
-  grid-template-columns: 1fr 40%;
-  gap: 20px;
-  width: 100%;
+/* ── Progress bar ────────────────────────────────────────── */
+.progress-bar-wrap {
+  position: absolute;
+  top: 44px;
+  left: 16px;
+  right: 16px;
+  height: 4px;
+  z-index: 15;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid #2a1f4a;
+}
+.progress-bar-fill {
   height: 100%;
-  margin: 0 auto;
-  padding: 20px;
-  box-sizing: border-box;
+  background: linear-gradient(90deg, #ff4500, #ff8c00, #ffdd00);
+  box-shadow: 0 0 6px #ff8c00;
+  transition: width 0.35s ease;
 }
 
-.infos-area {
-  display: grid;
-  grid-template-rows: auto auto;
-  gap: 20px;
+/* ── Main game layout ────────────────────────────────────── */
+
+.puzzle-game-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.puzzle-game {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  gap: 14px;
 }
 
-.piece-random {
-  background-color: rgba(255, 255, 255, 0.2);
-  padding: 10px;
-  border-radius: 8px;
+/* ── Board area ──────────────────────────────────────────── */
+.board-wrap {
+  flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.infos-game {
-  display: flex;
-  flex-direction: column;
   gap: 10px;
 }
 
-.infos-game p {
-  background-color: #830000;
-  color: white;
-  padding: 10px;
-  border-radius: 20px;
-  font-weight: bold;
-  text-align: center;
+.board-label {
+  font-size: 6px;
+  color: #3a2d5c;
+  letter-spacing: 2px;
+  align-self: flex-start;
+  margin-left: 2px;
 }
 
-/* ── Tablette / petit desktop (< 1350px) ── */
-@media (max-width: 1350px) {
-  .puzzle-game {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto;
-    height: auto;
-    min-height: 100dvh;
-  }
+/* The actual canvas / board container */
+.board-container {
+  height: 100%;
+  width: fit-content;
+  padding: 5px;
+  border: 2px solid #3a2d5c;
+  box-shadow:
+    0 0 0 1px #1a0f35,
+    inset 0 0 20px rgba(0, 0, 0, 0.5),
+    0 0 16px rgba(80, 40, 120, 0.4);
+  background: rgba(0, 0, 0, 0.45);
+}
 
-  .infos-area {
-    grid-template-rows: none;
-    grid-template-columns: auto 1fr;
-    align-items: start;
-    gap: 20px;
+/* ── Right panel ─────────────────────────────────────────── */
+.side-panel {
+  width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ── Panel cards ─────────────────────────────────────────── */
+.panel-card {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid #2a1f4a;
+  padding: 10px 12px;
+}
+.panel-card-title {
+  font-size: 5px;
+  color: #4a3060;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+/* ── Piece display ───────────────────────────────────────── */
+.piece-random {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+}
+
+.piece-grab-hint {
+  font-size: 5px;
+  color: #3a2d5c;
+  text-align: center;
+  letter-spacing: 1px;
+  line-height: 2;
+  margin-top: 4px;
+  opacity: 0.7;
+}
+
+/* ── Animations ──────────────────────────────────────────── */
+@keyframes crt-flicker {
+  0%,
+  100% {
+    opacity: 1;
   }
+  92% {
+    opacity: 1;
+  }
+  93% {
+    opacity: 0.85;
+  }
+  94% {
+    opacity: 1;
+  }
+  96% {
+    opacity: 0.9;
+  }
+  97% {
+    opacity: 1;
+  }
+}
+
+/* ── End screen ──────────────────────────────────────────── */
+.ending-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: rgba(10, 5, 25, 0.9);
+  animation: ending-in 0.4s ease-out;
+}
+
+@keyframes ending-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.ending-title-win {
+  font-size: 20px;
+  color: #ffdd00;
+  text-shadow:
+    0 0 16px #ffdd00,
+    0 0 40px #ff8c00;
+  animation: glow-pulse 0.6s infinite;
+}
+.ending-title-lose {
+  font-size: 16px;
+  color: #ff4455;
+  text-shadow: 0 0 12px #ff4455;
+}
+
+.ending-score {
+  font-size: 8px;
+  color: #ff8c00;
+  letter-spacing: 2px;
+}
+
+.ending-hi {
+  font-size: 7px;
+  color: #ffdd00;
+  animation: glow-pulse 1s infinite;
+}
+
+.retry-btn {
+  margin-top: 8px;
+  padding: 12px 28px;
+  background: #ff8c00;
+  color: #1a0f35;
+  font-size: 9px;
+  font-family: "Press Start 2P", monospace;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 2px;
+
+  transition:
+    filter 0.1s,
+    transform 0.1s;
+}
+.retry-btn:hover {
+  filter: brightness(1.2);
+}
+.retry-btn:active {
+  transform: scale(0.97) translate(2px, 2px);
 }

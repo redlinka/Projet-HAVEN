@@ -4,9 +4,11 @@ import useSound from "use-sound";
 import PuzzleBoard from "./PuzzleBoard";
 import DifficultySelect from "./DifficultySelect";
 import Brick from "./Brick";
+import MonitorShell from "./MonitorShell";
+import HUDBar from "./HUDBar";
+import LoadingScreen from "./LoadingScreen";
 
 import "../../styles/components/Puzzle/PuzzleGame.css";
-import EndingScreen from "./EndingScreen";
 
 // ---------------- Types ---------------------
 
@@ -215,116 +217,125 @@ export default function PuzzleGame() {
   /* =========== Drag listeners =========== */
 
   useEffect(() => {
-  const getBoardInfos = () => {
-    const canvas = document.getElementById("cnv");
-    if (!canvas) return null;
-    const rect = canvas.getBoundingClientRect();
-    const BS = rect.width / modRef.current.cols;
-    return { rect, BS };
-  };
+    const getBoardInfos = () => {
+      const canvas = document.getElementById("cnv");
+      if (!canvas) return null;
+      const rect = canvas.getBoundingClientRect();
+      const BS = rect.width / modRef.current.cols;
+      return { rect, BS };
+    };
 
-  const getCoords = (e: MouseEvent | TouchEvent) => {
-    if ("touches" in e) {
-      return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
-    }
-    return { clientX: e.clientX, clientY: e.clientY };
-  };
+    const getCoords = (e: MouseEvent | TouchEvent) => {
+      if ("touches" in e) {
+        return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
+      }
+      return { clientX: e.clientX, clientY: e.clientY };
+    };
 
-  const onMove = (e: MouseEvent | TouchEvent) => {
-    const brick = draggingBrickRef.current;
-    if (!brick) return;
+    const onMove = (e: MouseEvent | TouchEvent) => {
+      const brick = draggingBrickRef.current;
+      if (!brick) return;
 
-    const { clientX, clientY } = getCoords(e);
-    setDragPos({ x: clientX, y: clientY });
+      const { clientX, clientY } = getCoords(e);
+      setDragPos({ x: clientX, y: clientY });
 
-    const boardInfo = getBoardInfos();
-    if (!boardInfo) return;
+      const boardInfo = getBoardInfos();
+      if (!boardInfo) return;
 
-    const { rect, BS } = boardInfo;
-    const topLeftX = clientX - rect.left - (brick.w * BS) / 2;
-    const topLeftY = clientY - rect.top - (brick.h * BS) / 2;
-    const i = Math.round(topLeftX / BS);
-    const j = Math.round(topLeftY / BS);
-
-    const inside =
-      i >= 0 &&
-      i + brick.w <= modRef.current.cols &&
-      j >= 0 &&
-      j + brick.h <= modRef.current.rows;
-
-    if (!inside) {
-      setIsOnBoard(false);
-      setSnapCell(null);
-      return;
-    }
-    setIsOnBoard(true);
-    setSnapCell({ i, j });
-  };
-
-  const onEnd = (e: MouseEvent | TouchEvent) => {
-    const currentBrickToPlace = draggingBrickRef.current;
-    if (!currentBrickToPlace) return;
-
-    // Pour touchend, les coords sont dans changedTouches
-    const coords =
-      "changedTouches" in e
-        ? { clientX: e.changedTouches[0].clientX, clientY: e.changedTouches[0].clientY }
-        : { clientX: e.clientX, clientY: e.clientY };
-
-    const boardInfo = getBoardInfos();
-    if (boardInfo) {
       const { rect, BS } = boardInfo;
-      const topLeftX = coords.clientX - rect.left - (currentBrickToPlace.w * BS) / 2;
-      const topLeftY = coords.clientY - rect.top - (currentBrickToPlace.h * BS) / 2;
+      const topLeftX = clientX - rect.left - (brick.w * BS) / 2;
+      const topLeftY = clientY - rect.top - (brick.h * BS) / 2;
       const i = Math.round(topLeftX / BS);
       const j = Math.round(topLeftY / BS);
 
-      setBoard((prevBoard) => {
-        const updatedBoard = addBrick(
-          prevBoard,
-          modRef.current.cols,
-          { x: i, y: j },
-          currentBrickToPlace,
-        );
+      const inside =
+        i >= 0 &&
+        i + brick.w <= modRef.current.cols &&
+        j >= 0 &&
+        j + brick.h <= modRef.current.rows;
 
-        if (updatedBoard) {
-          setAllBricks((prevBricks) => {
-            const next = prevBricks.slice(1);
-            setCurrentBrick(next[0] ?? null);
-            if (
-              (next[0] &&
-                !checkPlacementValid(updatedBoard, modRef.current.cols, next[0])) ||
-              next.length === 0
-            ) {
-              setEndGame(true);
+      if (!inside) {
+        setIsOnBoard(false);
+        setSnapCell(null);
+        return;
+      }
+      setIsOnBoard(true);
+      setSnapCell({ i, j });
+    };
+
+    const onEnd = (e: MouseEvent | TouchEvent) => {
+      const currentBrickToPlace = draggingBrickRef.current;
+      if (!currentBrickToPlace) return;
+
+      // Pour touchend, les coords sont dans changedTouches
+      const coords =
+        "changedTouches" in e
+          ? {
+              clientX: e.changedTouches[0].clientX,
+              clientY: e.changedTouches[0].clientY,
             }
-            return next;
-          });
-          return updatedBoard;
-        }
-        return prevBoard;
-      });
-    }
+          : { clientX: e.clientX, clientY: e.clientY };
 
-    draggingBrickRef.current = null;
-    setActiveBrick(null);
-    setDragPos(null);
-    setIsOnBoard(false);
-    setSnapCell(null);
-  };
+      const boardInfo = getBoardInfos();
+      if (boardInfo) {
+        const { rect, BS } = boardInfo;
+        const topLeftX =
+          coords.clientX - rect.left - (currentBrickToPlace.w * BS) / 2;
+        const topLeftY =
+          coords.clientY - rect.top - (currentBrickToPlace.h * BS) / 2;
+        const i = Math.round(topLeftX / BS);
+        const j = Math.round(topLeftY / BS);
 
-  window.addEventListener("mousemove", onMove);
-  window.addEventListener("mouseup", onEnd);
-  window.addEventListener("touchmove", onMove, { passive: true });
-  window.addEventListener("touchend", onEnd);
+        setBoard((prevBoard) => {
+          const updatedBoard = addBrick(
+            prevBoard,
+            modRef.current.cols,
+            { x: i, y: j },
+            currentBrickToPlace,
+          );
 
-  return () => {
-    window.removeEventListener("mousemove", onMove);
-    window.removeEventListener("mouseup", onEnd);
-    window.removeEventListener("touchmove", onMove);
-    window.removeEventListener("touchend", onEnd);
-  };
-}, []);
+          if (updatedBoard) {
+            setAllBricks((prevBricks) => {
+              const next = prevBricks.slice(1);
+              setCurrentBrick(next[0] ?? null);
+              if (
+                (next[0] &&
+                  !checkPlacementValid(
+                    updatedBoard,
+                    modRef.current.cols,
+                    next[0],
+                  )) ||
+                next.length === 0
+              ) {
+                setEndGame(true);
+              }
+              return next;
+            });
+            return updatedBoard;
+          }
+          return prevBoard;
+        });
+      }
+
+      draggingBrickRef.current = null;
+      setActiveBrick(null);
+      setDragPos(null);
+      setIsOnBoard(false);
+      setSnapCell(null);
+    };
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onEnd);
+    window.addEventListener("touchmove", onMove, { passive: true });
+    window.addEventListener("touchend", onEnd);
+
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onEnd);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onEnd);
+    };
+  }, []);
 
   useEffect(() => {
     onDrop();
@@ -335,11 +346,11 @@ export default function PuzzleGame() {
     setActiveBrick(brick);
   };
 
-  const handleTouchStart = (brick: Brick, e: React.TouchEvent) => {
-  onDrag();
-  draggingBrickRef.current = brick;
-  setActiveBrick(brick);
-};
+  const handleTouchStart = (brick: Brick) => {
+    onDrag();
+    draggingBrickRef.current = brick;
+    setActiveBrick(brick);
+  };
 
   /* =========== Game loading =========== */
 
@@ -389,76 +400,125 @@ export default function PuzzleGame() {
 
   /* =========== Render =========== */
 
-  if (!mod.cols || !mod.rows) return <DifficultySelect setMod={setMod} />;
-  if (loading) return <div className="puzzle-game">Loading...</div>;
+  // -- Loading --
+  if (loading)
+    return (
+      <MonitorShell>
+        <LoadingScreen />
+      </MonitorShell>
+    );
+
+  // -- End game --
   if (endGame) {
-    const message =
-      score === nbPieces
-        ? "You placed all pieces correctly!"
-        : "You did your best!";
+    const perfect = score === nbPieces;
 
     return (
-      <EndingScreen
-        message={message}
-        nbPieces={nbPieces}
-        score={score}
-        difficulty={mod}
-      />
+      <MonitorShell>
+        <div className="ending-overlay">
+          <div className={perfect ? "ending-title-win" : "ending-title-lose"}>
+            {perfect ? "PERFECT!" : "GAME OVER"}
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div className="ending-score">
+              SCORE {String(score).padStart(4, "0")} / {nbPieces}
+            </div>
+            {perfect && <div className="ending-hi">★ NEW RECORD ★</div>}
+          </div>
+
+          <div style={{ fontSize: 6, color: "#4a3060" }}>
+            {mod.cols}×{mod.rows} — {nbPieces} PIECES
+          </div>
+
+          <button
+            className="retry-btn"
+            onClick={() => setMod({ cols: 0, rows: 0 })}
+          >
+            PLAY AGAIN
+          </button>
+        </div>
+      </MonitorShell>
     );
   }
 
+  const total = nbPieces;
+
   return (
-    <div className="puzzle-game">
-      <PuzzleBoard
-        rows={mod.rows}
-        cols={mod.cols}
-        board={board}
-        img={imagePath}
-      />
+    <MonitorShell>
+      {/* HUD */}
+      {!mod.cols || !mod.rows ? (
+        <DifficultySelect setMod={setMod} />
+      ) : (
+        <div className="puzzle-game-container">
+          <HUDBar
+            score={score}
+            placed={nbPieces - allBricks.length}
+            total={total}
+            remaining={allBricks.length}
+          />
 
-      {/* Floating brick */}
-      {activeBrick && dragPos && (
-        <div
-          style={{
-            position: "fixed",
-            left: dragPos.x,
-            top: dragPos.y,
-            transform: "translate(-50%, -50%)",
-            pointerEvents: "none",
-            zIndex: 9999,
-            opacity: isOnBoard ? 0.8 : 1,
-            filter: isOnBoard
-              ? "drop-shadow(0 0 8px rgba(100,255,100,0.8))"
-              : "drop-shadow(0 4px 8px rgba(0,0,0,0.4))",
-            transition: "filter 0.1s",
-          }}
-        >
-          <Brick b={activeBrick} boardSize={mod.cols} />
-        </div>
-      )}
+          <div className="puzzle-game">
+            {/* Board */}
+            <div className="board-wrap">
+              <span className="board-label">▸ BOARD</span>
+              <div className="board-container">
+                <PuzzleBoard
+                  rows={mod.rows}
+                  cols={mod.cols}
+                  board={board}
+                  img={imagePath}
+                />
+              </div>
+            </div>
 
-      <div className="infos-area">
-        <div className="piece-random">
-          {currentBrick && (
+            {/* Right Panel */}
+            <div className="side-panel">
+              {/* Current piece */}
+              <div className="panel-card">
+                <div className="panel-card-title">CURRENT PIECE</div>
+                <div className="piece-random">
+                  {currentBrick ? (
+                    <div
+                      style={{ opacity: draggingBrickRef.current ? 0.3 : 1 }}
+                    >
+                      <Brick
+                        b={currentBrick}
+                        boardSize={16}
+                        onGrab={handleGrab}
+                        onTouchStart={handleTouchStart}
+                      />
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 7, color: "#3a2d5c" }}>—</div>
+                  )}
+                </div>
+                <div className="piece-grab-hint">DRAG TO BOARD</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Floating dragged brick */}
+          {activeBrick && dragPos && (
             <div
-              style={{ opacity: draggingBrickRef.current ? 0.3 : 1 }}
-              onMouseDown={() => onDrag()}
+              style={{
+                position: "fixed",
+                left: dragPos.x,
+                top: dragPos.y,
+                transform: "translate(-50%, -50%)",
+                pointerEvents: "none",
+                zIndex: 9999,
+                opacity: isOnBoard ? 0.85 : 1,
+                filter: isOnBoard
+                  ? "drop-shadow(0 0 12px rgba(68,255,136,.9))"
+                  : "drop-shadow(0 0 10px rgba(255,140,0,.7))",
+                transition: "filter .1s",
+              }}
             >
-              <Brick b={currentBrick} boardSize={32} onGrab={handleGrab} onTouchStart={handleTouchStart} />
+              <Brick b={activeBrick} boardSize={mod.cols} />
             </div>
           )}
         </div>
-
-        <div className="infos-game">
-          <p>Score: {score}</p>
-          <p>Pièces manquantes : {allBricks.length}</p>
-          {snapCell && (
-            <p style={{ color: "#4ade80" }}>
-              📍 ({snapCell.i}, {snapCell.j})
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
+      )}
+    </MonitorShell>
   );
 }

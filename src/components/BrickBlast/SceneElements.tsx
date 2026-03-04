@@ -1,77 +1,96 @@
-import { useFrame, useLoader } from "@react-three/fiber";
-import { Line, Text } from "@react-three/drei";
+import {useFrame, useThree , useLoader} from "@react-three/fiber";
+import {Edges, Line, Text} from "@react-three/drei";
 import * as THREE from "three";
-import Silkscreen from "/src/assets/fonts/Silkscreen.ttf";
-import { Block } from "./Block.tsx";
+import {useRef} from "react";
+import type {RefObject} from 'react';
+import type {GameData} from './BlockBlast.tsx';
 
 export const CameraController = () => {
-  useFrame((state) => {
-    state.camera.lookAt(state.pointer.x / 3 + 60, 0, state.pointer.y * 2 + 5);
-  });
-  return null;
+    const { size } = useThree();
+    const ASPECT = size.width / size.height;
+    const FACTOR = 1.5;
+
+    useFrame((state) => {
+        // Scale the lookAt target based on aspect ratio
+        const xTarget = (state.pointer.x * ASPECT) * FACTOR;
+        const yTarget = state.pointer.y * FACTOR
+        state.camera.lookAt(xTarget, yTarget, 0);
+    });
+    return null;
 };
 
-export const Grid = () => {
-  const texture = useLoader(THREE.TextureLoader, "/src/assets/grid_asset3.png");
-  return (
-    <>
-      <ambientLight color="#ffffff" intensity={6} position={[60, 40, 0]} />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 1, 0]}>
-        <planeGeometry args={[100, 100]} />
-        <meshStandardMaterial map={texture} />
-      </mesh>
-    </>
-  );
-};
+export const Grid = ({ data }: { data: RefObject<GameData> }) => {
+    const texture = useLoader(THREE.TextureLoader, "/img/brickblast/grid_asset3.png")
+
+    return (
+        <>
+            <ambientLight intensity={6} />
+            <mesh
+                position={[-30, 0, 1]}
+                onPointerMove={(e) => {
+                    // Mapping 0-1 UV coordinates to a 0-100 scale
+                    // eslint-disable-next-line react-hooks/immutability
+                    data.current.x = Math.floor(e.uv!.x * 9);
+                    data.current.y = Math.floor(e.uv!.y * 9);
+                }}
+            >
+                <Edges lineWidth={2.5} color="white" />
+                <planeGeometry args={[100, 100]}/>
+                <meshStandardMaterial map={texture} />
+            </mesh>
+        </>
+    )
+}
 
 export const Background = () => {
-  return (
-    <>
-      <pointLight
-        color="#ffffff"
-        decay={2}
-        intensity={10000}
-        position={[60, 40, 0]}
-      />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-        <planeGeometry args={[1000, 1000]} />
-        <meshStandardMaterial color="#000022" />
-      </mesh>
-    </>
-  );
-};
+    return (
+        <>
+            <pointLight color="#ffffff" decay={2} intensity={10000} position={[0, 0, 50]} />
+            <mesh rotation={[0, 0, 0]} position={[0, 0, 0]}>
+                <planeGeometry args={[1000, 1000]}/>
+                <meshStandardMaterial color="#000022" />
+            </mesh>
+        </>
+    )
+}
 
-export const Score = () => {
-  return (
-    <Text
-      fontSize={10}
-      font={Silkscreen}
-      rotation={[-Math.PI / 2, 0, 0]}
-      position={[110, 5, -50]}
-    >
-      Score : 4005
-    </Text>
-  );
-};
+export const Score = ({ data }: { data: RefObject<GameData> }) => {
+    const scoreRef = useRef<THREE.Mesh & { text: string }>(null!);
+
+    useFrame(() => {
+        if (scoreRef.current) {
+            // Pull from shared data, push to Text component
+            const { x, y } = data.current;
+            scoreRef.current.text = "Coords: " + x + ", " + y;
+        }
+    });
+
+    return (
+        <Text
+            ref={scoreRef}
+            fontSize={7}
+            font={"/font/silkscreen/Silkscreen.ttf"}
+            position={[0, 60, 5]}
+        >
+            Coords: 0, 0
+        </Text>
+    )
+}
 
 export const BlockHolder = () => {
-  return (
-    <group>
-      {/* Offset block group to frame's origin, centered in the 100x90 space */}
-      <group position={[60 + (100 - 9) / 2, 2, -40 + (90 - 9) / 2]}>
-        <Block blockSize={5} />
-      </group>
-      <Line
-        points={[
-          [60, 2, -40],
-          [60, 2, 50],
-          [160, 2, 50],
-          [160, 2, -40],
-          [60, 2, -40],
-        ]}
-        color="#ffffff"
-        lineWidth={2}
-      />
-    </group>
-  );
+    return (
+        <group>
+            <Line
+                points={[
+                    [30, 50, 1],
+                    [30, -50, 1],
+                    [80, -50, 1],
+                    [80, 50, 1],
+                    [30, 50, 1]
+                ]}
+                color="#ffffff"
+                lineWidth={2}
+            />
+        </group>
+    );
 };

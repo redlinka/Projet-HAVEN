@@ -1,7 +1,6 @@
 import {Canvas} from "@react-three/fiber"
 import {Suspense, useEffect, useRef, useState} from "react";
-import {Background, BlockHolder, CameraController, Grid, Score} from "../../../../test/src/SceneElements.tsx";
-
+import {Background, Grid, BlockHolder, CameraController, Score} from "./SceneElements.tsx";
 
 export interface GameData {
     x: number;

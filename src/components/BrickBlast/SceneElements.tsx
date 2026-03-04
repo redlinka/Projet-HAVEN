@@ -1,7 +1,6 @@
 import {useFrame, useThree , useLoader} from "@react-three/fiber";
 import {Edges, Line, Text} from "@react-three/drei";
-import * as THREE from 'three';
-import Silkscreen from "/src/assets/fonts/Silkscreen.ttf"
+import * as THREE from "three";
 import {useRef} from "react";
 import type {RefObject} from 'react';
 import type {GameData} from './BlockBlast.tsx';
@@ -21,7 +20,7 @@ export const CameraController = () => {
 };
 
 export const Grid = ({ data }: { data: RefObject<GameData> }) => {
-    const texture = useLoader(THREE.TextureLoader, "src/assets/grid_asset3.png")
+    const texture = useLoader(THREE.TextureLoader, "/img/brickblast/grid_asset3.png")
 
     return (
         <>
@@ -70,7 +69,7 @@ export const Score = ({ data }: { data: RefObject<GameData> }) => {
         <Text
             ref={scoreRef}
             fontSize={7}
-            font={Silkscreen}
+            font={"/font/silkscreen/Silkscreen.ttf"}
             position={[0, 60, 5]}
         >
             Coords: 0, 0

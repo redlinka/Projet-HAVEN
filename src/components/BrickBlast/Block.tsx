@@ -40,34 +40,34 @@ export const Block = () => {
 
     return (
         <>
-        <mesh ref={boxRef}
+            <mesh ref={boxRef}
 
-              onPointerDown={() => {
-                  setIsDragged(true)
-              }}
+                  onPointerDown={() => {
+                      setIsDragged(true)
+                  }}
 
-              onPointerUp={() => {
-                  setIsDragged(false)
-              }}
+                  onPointerUp={() => {
+                      setIsDragged(false)
+                  }}
 
-              onPointerEnter={() => setIsHovered(true)}
-              onPointerLeave={() => setIsHovered(false)}
+                  onPointerEnter={() => setIsHovered(true)}
+                  onPointerLeave={() => setIsHovered(false)}
 
-              position={[0,0,Math.ceil(UNIT/SCALE_FACTOR) + 1]}
-        >
-            <boxGeometry args={[UNIT,UNIT,UNIT]} />
-            <meshStandardMaterial color="red" />
-        </mesh>
-        <EffectComposer autoClear={false}>
-            <Outline
-                selection={isHovered ? [boxRef] : []}
-                edgeStrength={1000}
-                blur={true}
-                kernelSize={2}
-            />
-            <Pixelation granularity={3} />
-            <Scanline opacity={0.5} density={1} />
-        </EffectComposer>
+                  position={INITIAL_POSITION}
+            >
+                <boxGeometry args={[UNIT,UNIT,UNIT]} />
+                <meshStandardMaterial color="red" />
+            </mesh>
+            <EffectComposer autoClear={false}>
+                <Outline
+                    selection={isHovered ? [boxRef] : []}
+                    edgeStrength={1000}
+                    blur={true}
+                    kernelSize={2}
+                />
+                <Pixelation granularity={3} />
+                <Scanline opacity={0.5} density={1} />
+            </EffectComposer>
         </>
     )
 }

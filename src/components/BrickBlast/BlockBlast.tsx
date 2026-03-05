@@ -1,7 +1,7 @@
 import {Canvas} from "@react-three/fiber"
 import {Suspense, useEffect, useRef, useState} from "react";
 import {Background, Grid, BlockHolder, CameraController, Score} from "./SceneElements.tsx";
-import Block from "./Block.tsx";
+import {LegoBrick} from "./blocks.tsx";
 
 export interface GameData {
     x: number;
@@ -29,7 +29,7 @@ export const BlockScene = () => {
                     <Score data={sharedData} />
                     <Grid data={sharedData} />
                     <BlockHolder />
-                    <Block />
+                    <LegoBrick />
                     <Background />
                 </Suspense>
             </Canvas>

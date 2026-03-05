@@ -65,8 +65,8 @@ export const Block = () => {
                 blur={true}
                 kernelSize={2}
             />
-            <Pixelation granularity={4.5} />
-            <Scanline density={1} />
+            <Pixelation granularity={3} />
+            <Scanline opacity={0.5} density={1} />
         </EffectComposer>
         </>
     )

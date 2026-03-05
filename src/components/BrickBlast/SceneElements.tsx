@@ -34,7 +34,7 @@ export const Grid = ({ data }: { data: RefObject<GameData> }) => {
                     data.current.y = Math.floor(e.uv!.y * 9);
                 }}
             >
-                <Edges lineWidth={2.5} color="white" />
+                <Edges lineWidth={10} color="white" />
                 <planeGeometry args={[100, 100]}/>
                 <meshStandardMaterial map={texture} />
             </mesh>
@@ -68,7 +68,7 @@ export const Score = ({ data }: { data: RefObject<GameData> }) => {
     return (
         <Text
             ref={scoreRef}
-            fontSize={7}
+            fontSize={10}
             font={"/font/silkscreen/Silkscreen.ttf"}
             position={[0, 60, 5]}
         >
@@ -89,7 +89,7 @@ export const BlockHolder = () => {
                     [30, 50, 1]
                 ]}
                 color="#ffffff"
-                lineWidth={2}
+                lineWidth={6}
             />
         </group>
     );

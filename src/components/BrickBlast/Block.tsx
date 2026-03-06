@@ -20,9 +20,9 @@ const SCALE_BIG = SCALE_NORMAL.clone().multiplyScalar(SCALE_FACTOR);
 const LERP_ALPHA = 0.15;
 //const INITIAL_POSITION = new THREE.Vector3(55,30,Math.ceil(UNIT/SCALE_FACTOR) + 1)
 const INITIAL_POSITIONS = [
-  new THREE.Vector3(55, 20, Math.ceil(UNIT / SCALE_FACTOR) + 1),
+  new THREE.Vector3(55, 30, Math.ceil(UNIT / SCALE_FACTOR) + 1),
   new THREE.Vector3(55, 0, Math.ceil(UNIT / SCALE_FACTOR) + 1),
-  new THREE.Vector3(55, -20, Math.ceil(UNIT / SCALE_FACTOR) + 1),
+  new THREE.Vector3(55, -30, Math.ceil(UNIT / SCALE_FACTOR) + 1),
 ];
 
 export const Block = ({
@@ -64,6 +64,10 @@ export const Block = ({
     }
   });
 
+  function rotationHandler() {
+    boxRef.current.rotation.z += Math.PI / 4;
+  }
+
   return (
     <>
       <mesh
@@ -82,6 +86,8 @@ export const Block = ({
         onPointerLeave={() => {
           onHover(null);
         }}
+        // rotation
+        onDoubleClick={() => rotationHandler()}
         position={[initialPosition.x, initialPosition.y, initialPosition.z]} // mesh position
       >
         <boxGeometry args={[UNIT, UNIT, UNIT]} />

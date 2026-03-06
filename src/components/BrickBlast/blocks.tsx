@@ -31,7 +31,7 @@ export const LegoBrick = (
     {
       cols = 2,
       rows = 1,
-      color = "#FF4D4D",
+      color = "#ff0000",
       position
     }:
     {

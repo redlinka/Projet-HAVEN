@@ -7,8 +7,15 @@ import {
   Pixelation,
   Scanline,
 } from "@react-three/postprocessing";
+import {Edges} from "@react-three/drei";
 
 const COLORS = ["red", "green", "blue", "yellow", "purple"];
+
+const darkenColor = (hex: string, factor = 0.7): string => {
+    const c = new THREE.Color(hex);
+    c.multiplyScalar(factor);
+    return "#" + c.getHexString();
+};
 
 export const getRandomColor = () =>
   COLORS[Math.floor(Math.random() * COLORS.length)];
@@ -90,8 +97,11 @@ export const Block = ({
         onDoubleClick={() => rotationHandler()}
         position={[initialPosition.x, initialPosition.y, initialPosition.z]} // mesh position
       >
-        <boxGeometry args={[UNIT, UNIT, UNIT]} />
-        <meshStandardMaterial color={color} />
+
+              <Edges lineWidth={10} color={darkenColor(color, 0.8)} />
+              <boxGeometry args={[UNIT, UNIT, UNIT]} />
+              <meshBasicMaterial color={color} />
+
       </mesh>
     </>
   );

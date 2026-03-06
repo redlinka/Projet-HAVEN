@@ -1,3 +1,15 @@
+.sounds-container {
+  position: absolute;
+  z-index: 100;
+  bottom: 30px;
+  right: 40px;
+  display: flex;
+  gap: 10px;
+}
+.sounds-container button {
+  color: #ff8c00;
+}
+
 /* ── Progress bar ────────────────────────────────────────── */
 .progress-bar-wrap {
   position: absolute;
@@ -195,4 +207,18 @@
 }
 .retry-btn:active {
   transform: scale(0.97) translate(2px, 2px);
+}
+
+@media screen and (max-width: 1024px) {
+  .puzzle-game {
+    flex-direction: column;
+  }
+
+  .board-wrap {
+    flex-direction: column;
+  }
+
+  .side-panel {
+    width: 100%;
+  }
 }

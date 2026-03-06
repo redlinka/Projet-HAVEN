@@ -1,0 +1,109 @@
+/* ═══════════════════════════════════════════
+   LANG SWITCHER — s'intègre dans n'importe quelle navbar
+═══════════════════════════════════════════ */
+.lang-switcher {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.lang-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 10px;
+    background: transparent;
+    border: 1.5px solid var(--border, #e0d5c8);
+    border-radius: var(--r-sm, 6px);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    color: var(--muted, #9a8a7a);
+    cursor: pointer;
+    transition: border-color .15s, color .15s, background .15s;
+    white-space: nowrap;
+    line-height: 1;
+}
+
+.lang-btn:hover {
+    border-color: var(--main-brown, #A26547);
+    color: var(--main-brown, #A26547);
+}
+
+.lang-btn svg {
+    transition: transform .2s;
+    flex-shrink: 0;
+}
+
+/* Dropdown */
+.lang-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: #fff;
+    border: 1.5px solid var(--border, #e0d5c8);
+    border-radius: var(--r-sm, 6px);
+    box-shadow: 0 6px 24px rgba(43,31,20,.12);
+    z-index: 1000;
+    min-width: 110px;
+    overflow: hidden;
+    animation: dropIn .15s ease;
+}
+
+.lang-dropdown.open {
+    display: block;
+}
+
+@keyframes dropIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.lang-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 9px 14px;
+    background: transparent;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text, #2b1f14);
+    cursor: pointer;
+    text-align: left;
+    transition: background .12s;
+}
+
+.lang-item:hover {
+    background: var(--prev-bg, #ede7de);
+}
+
+.lang-item.active {
+    color: var(--main-brown, #A26547);
+    font-weight: 600;
+    background: var(--prev-bg, #ede7de);
+}
+
+/* Loading indicator pendant la traduction */
+body.translating::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--main-brown, #A26547), var(--brown-lt, #c98b68));
+    z-index: 9999;
+    animation: translateBar 1.5s ease-in-out infinite;
+}
+
+@keyframes translateBar {
+    0%   { transform: scaleX(0); transform-origin: left; }
+    50%  { transform: scaleX(1); transform-origin: left; }
+    51%  { transform: scaleX(1); transform-origin: right; }
+    100% { transform: scaleX(0); transform-origin: right; }
+}

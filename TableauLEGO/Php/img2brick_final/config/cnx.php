@@ -1,4 +1,5 @@
 <?php
+define('BASE_URL', '/img2brick_final');
 // Load Composer dependencies for PHPMailer
 require __DIR__ . '/../vendor/autoload.php';
 

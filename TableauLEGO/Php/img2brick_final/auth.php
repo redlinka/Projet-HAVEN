@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!preg_match('/[!@#$%^&*(),.?":{}|<>]/', $password))       $errors[] = 'Password must contain at least one special character.';
 
             if (empty($errors)) {
-                $algo = constant($_ENV['ALGO']) ?? PASSWORD_DEFAULT;
+                $algo = defined($_ENV['ALGO']) ? constant($_ENV['ALGO']) : PASSWORD_DEFAULT;
                 $password_hashed = password_hash($password, $algo);
 
                 try {
@@ -132,29 +132,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     sendMail($user['email'], 'Activate your Bricksy account', $emailBody);
                     $errors[] = 'Your account is not activated. A new verification email has been sent. <a href="creation_mail.php" style="color:var(--brown);">Resend</a>.';
                 } else {
-                    if (password_needs_rehash($user['password'], $_ENV['ALGO'])) {
+                    // Rehash password if algo upadated since last login
+                    $algo = defined($_ENV['ALGO']) ? constant($_ENV['ALGO']) : PASSWORD_DEFAULT;
+                    if (password_needs_rehash($user['password'], $algo)) {
                         $upd = $cnx->prepare("UPDATE USER SET password = ? WHERE user_id = ?");
-                        $upd->execute([password_hash($_POST['password'], $_ENV['ALGO']), $user['user_id']]);
+                        $upd->execute([password_hash($_POST['password'], $algo), $user['user_id']]);
                     }
 
-                    $token     = bin2hex(random_bytes(32));
-                    $expire_at = date('Y-m-d H:i:s', time() + 60);
-                    $cnx->prepare("DELETE FROM `2FA` WHERE user_id = ?")->execute([$user['user_id']]);
-                    $cnx->prepare("INSERT INTO 2FA (user_id, verification_token, token_expire_at) VALUES (?, ?, ?)")->execute([$user['user_id'], $token, $expire_at]);
+                    // Stock user ID in a temporary session variable pending 2FA verification
+                    session_regenerate_id(true);
+                    $_SESSION['2fa_pending_user_id'] = $user['user_id'];
+                    unset($_SESSION['2fa_mail_sent']); // Force resend if email method selected
 
-                    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-                    $link = $protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/verify_connexion.php?token=' . $token;
-
-                    $emailBody = "<div style='font-family:Arial,sans-serif;padding:20px;border:1px solid #e0e0e0;border-radius:8px;max-width:600px;'>
-                        <h2 style='color:#8B5E3C;'>Secure Login Link 🔑</h2>
-                        <p>Click the button below to complete your login:</p>
-                        <p style='text-align:center;'><a href='{$link}' style='display:inline-block;background:#8B5E3C;color:#fff;padding:12px 24px;text-decoration:none;border-radius:5px;font-weight:bold;'>Log In</a></p>
-                        <p style='color:#999;font-size:12px;margin-top:20px;'>Or copy: {$link}</p>
-                        <p style='color:#999;font-size:12px;'>This link expires in 1 minute.</p></div>";
-
-                    sendMail($user['email'], 'Complete your Bricksy login', $emailBody);
                     csrf_rotate();
-                    header("Location: connexion_mail.php");
+                    header("Location: 2fa_auth.php");
                     exit;
                 }
             } catch (PDOException $e) {

@@ -14,7 +14,7 @@ if (isset($_GET['success']) && $_GET['success'] == 1)
     $success = tr('account.update_success', 'Information updated successfully!');
 
 try {
-    $stmt = $cnx->prepare("SELECT user_id, username, email, first_name, last_name, phone, birth_year FROM USER WHERE user_id = ?");
+    $stmt = $cnx->prepare("SELECT user_id, username, email, first_name, last_name, phone, birth_year, twofa_method, totp_secret FROM USER WHERE user_id = ?");
     $stmt->execute([$userId]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$user) { header("Location: index.php"); exit; }
@@ -28,6 +28,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_validate($_POST['csrf'] ?? null)) {
         $errors[] = tr('account.session_expired', 'Session expired. Please refresh.');
     } else {
+
+        // ── 2FA actions — traités en priorité avant la validation du formulaire principal ──
+        $action = $_POST['action'] ?? '';
+
+        if ($action === 'set_2fa_method') {
+            $newMethod = $_POST['twofa_method'] ?? 'email';
+            if (in_array($newMethod, ['email', 'totp'])) {
+                if ($newMethod === 'totp') {
+                    $checkSecret = $cnx->prepare("SELECT totp_secret FROM USER WHERE user_id = ?");
+                    $checkSecret->execute([$userId]);
+                    $sec = $checkSecret->fetchColumn();
+                    if (!$sec) {
+                        $errors[] = 'Please set up TOTP first before switching to this method.';
+                    } else {
+                        $cnx->prepare("UPDATE USER SET twofa_method = ? WHERE user_id = ?")->execute([$newMethod, $userId]);
+                        header("Location: my_account.php?success=1#panel-security"); exit;
+                    }
+                } else {
+                    $cnx->prepare("UPDATE USER SET twofa_method = ? WHERE user_id = ?")->execute([$newMethod, $userId]);
+                    header("Location: my_account.php?success=1"); exit;
+                }
+            }
+        }
+
+        if ($action === 'remove_totp') {
+            $cnx->prepare("UPDATE USER SET totp_secret = NULL, twofa_method = 'email' WHERE user_id = ?")
+                ->execute([$userId]);
+            header("Location: my_account.php?success=1"); exit;
+        }
+
         $username  = trim($_POST['username'] ?? '');
         $newEmail  = !empty($_POST['email']) ? trim($_POST['email']) : $user['email'];
         $name      = trim($_POST['name'] ?? '');
@@ -97,19 +127,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
+
 }
 
 $user = [
-    'username'   => ($_SERVER['REQUEST_METHOD'] === 'POST') ? $username : $user['username'],
-    'email'      => $user['email'],
-    'name'       => ($_SERVER['REQUEST_METHOD'] === 'POST') ? $name    : $user['first_name'],
-    'surname'    => ($_SERVER['REQUEST_METHOD'] === 'POST') ? $surname : $user['last_name'],
-    'phone'      => ($_SERVER['REQUEST_METHOD'] === 'POST') ? $phone   : $user['phone'],
-    'birth_year' => ($_SERVER['REQUEST_METHOD'] === 'POST') ? $birthYear : $user['birth_year'],
-    'street'     => ($_SERVER['REQUEST_METHOD'] === 'POST') ? $street  : ($addressData['street']      ?? ''),
-    'zip'        => ($_SERVER['REQUEST_METHOD'] === 'POST') ? $zip     : ($addressData['postal_code'] ?? ''),
-    'city'       => ($_SERVER['REQUEST_METHOD'] === 'POST') ? $city    : ($addressData['city']        ?? ''),
-    'country'    => ($_SERVER['REQUEST_METHOD'] === 'POST') ? $country : ($addressData['country']     ?? ''),
+    'username'      => ($_SERVER['REQUEST_METHOD'] === 'POST') ? $username : $user['username'],
+    'email'         => $user['email'],
+    'name'          => ($_SERVER['REQUEST_METHOD'] === 'POST') ? $name    : $user['first_name'],
+    'surname'       => ($_SERVER['REQUEST_METHOD'] === 'POST') ? $surname : $user['last_name'],
+    'phone'         => ($_SERVER['REQUEST_METHOD'] === 'POST') ? $phone   : $user['phone'],
+    'birth_year'    => ($_SERVER['REQUEST_METHOD'] === 'POST') ? $birthYear : $user['birth_year'],
+    'street'        => ($_SERVER['REQUEST_METHOD'] === 'POST') ? $street  : ($addressData['street']      ?? ''),
+    'zip'           => ($_SERVER['REQUEST_METHOD'] === 'POST') ? $zip     : ($addressData['postal_code'] ?? ''),
+    'city'          => ($_SERVER['REQUEST_METHOD'] === 'POST') ? $city    : ($addressData['city']        ?? ''),
+    'country'       => ($_SERVER['REQUEST_METHOD'] === 'POST') ? $country : ($addressData['country']     ?? ''),
+    'twofa_method'  => $user['twofa_method']  ?? 'email',
+    'totp_secret'   => $user['totp_secret']   ?? null,
 ];
 
 /* Active tab: security if no errors on form, else whichever had the error */
@@ -126,6 +159,71 @@ $activeTab = 'identity';
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style/my_account.css">
+    <style>
+        /* ── 2FA Section ── */
+        .twofa-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        @media (max-width: 560px) { .twofa-cards { grid-template-columns: 1fr; } }
+        .twofa-card {
+            border: 1.5px solid var(--border, #e0d5c8);
+            border-radius: 10px;
+            padding: 14px 16px;
+            background: #fff;
+            transition: border-color .15s, box-shadow .15s;
+        }
+        .twofa-card.active {
+            border-color: var(--main-brown, #A26547);
+            box-shadow: 0 0 0 3px rgba(162,101,71,.1);
+        }
+        .twofa-card-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .82rem;
+            font-weight: 600;
+            color: var(--text, #2b1f14);
+            margin-bottom: 6px;
+        }
+        .twofa-badge {
+            margin-left: auto;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: .65rem;
+            font-weight: 700;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+        .twofa-badge.active      { background: #dcfce7; color: #166534; }
+        .twofa-badge.configured  { background: #fef9c3; color: #854d0e; }
+        .twofa-card-desc {
+            font-size: .75rem;
+            color: var(--muted, #9a8a7a);
+            line-height: 1.45;
+            margin: 0;
+        }
+        .twofa-switch-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: .72rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            border: 1.5px solid var(--main-brown, #A26547);
+            color: var(--main-brown, #A26547);
+            background: transparent;
+            transition: background .15s, color .15s;
+        }
+        .twofa-switch-btn:hover { background: var(--main-brown, #A26547); color: #fff; }
+        .twofa-switch-btn.danger { border-color: #c0392b; color: #c0392b; }
+        .twofa-switch-btn.danger:hover { background: #c0392b; color: #fff; }
+    </style>
     <link rel="stylesheet" href="style/all.css">
 </head>
 <body>
@@ -295,6 +393,91 @@ $activeTab = 'identity';
                             </svg>
                             Reset Password
                         </a>
+
+                        <!-- ── 2FA METHOD ── -->
+                        <div class="twofa-section">
+                            <p class="security-note" style="margin-top:28px;">
+                                <strong>Two-Factor Authentication (2FA)</strong><br>
+                                Choose how you verify your identity when logging in.
+                                <em>Email</em> is used by default.
+                            </p>
+
+                            <?php
+                            $currentMethod = $user['twofa_method'] ?? 'email';
+                            $hasTotp       = !empty($user['totp_secret']);
+                            ?>
+
+                            <!-- Method cards -->
+                            <div class="twofa-cards">
+
+                                <!-- Email method -->
+                                <div class="twofa-card <?= $currentMethod === 'email' ? 'active' : '' ?>">
+                                    <div class="twofa-card-head">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="2" y="4" width="20" height="16" rx="2"/>
+                                            <polyline points="2,4 12,13 22,4"/>
+                                        </svg>
+                                        <span>Email link</span>
+                                        <?php if ($currentMethod === 'email'): ?>
+                                        <span class="twofa-badge active">Active</span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <p class="twofa-card-desc">A secure login link is sent to your email address each time you log in.</p>
+                                    <?php if ($currentMethod !== 'email'): ?>
+                                    <form method="POST" style="margin-top:8px;">
+                                        <input type="hidden" name="csrf"        value="<?= htmlspecialchars(csrf_get()) ?>">
+                                        <input type="hidden" name="action"      value="set_2fa_method">
+                                        <input type="hidden" name="twofa_method" value="email">
+                                        <button type="submit" class="twofa-switch-btn">Switch to Email</button>
+                                    </form>
+                                    <?php endif; ?>
+                                </div>
+
+                                <!-- TOTP method -->
+                                <div class="twofa-card <?= $currentMethod === 'totp' ? 'active' : '' ?>">
+                                    <div class="twofa-card-head">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="5" y="2" width="14" height="20" rx="2"/>
+                                            <line x1="12" y1="18" x2="12.01" y2="18"/>
+                                            <rect x="8" y="6" width="8" height="6" rx="1"/>
+                                        </svg>
+                                        <span>Authenticator app</span>
+                                        <?php if ($currentMethod === 'totp'): ?>
+                                        <span class="twofa-badge active">Active</span>
+                                        <?php elseif ($hasTotp): ?>
+                                        <span class="twofa-badge configured">Configured</span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <p class="twofa-card-desc">Use an app like LastPass Authenticator or Google Authenticator to generate a 6-digit code.</p>
+
+                                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+                                        <?php if (!$hasTotp || $currentMethod !== 'totp'): ?>
+                                        <a href="setup_totp.php" class="twofa-switch-btn">
+                                            <?= $hasTotp ? 'Reconfigure TOTP' : 'Set Up TOTP' ?>
+                                        </a>
+                                        <?php endif; ?>
+
+                                        <?php if ($hasTotp && $currentMethod !== 'totp'): ?>
+                                        <form method="POST">
+                                            <input type="hidden" name="csrf"         value="<?= htmlspecialchars(csrf_get()) ?>">
+                                            <input type="hidden" name="action"       value="set_2fa_method">
+                                            <input type="hidden" name="twofa_method" value="totp">
+                                            <button type="submit" class="twofa-switch-btn">Switch to TOTP</button>
+                                        </form>
+                                        <?php endif; ?>
+
+                                        <?php if ($hasTotp): ?>
+                                        <form method="POST" onsubmit="return confirm('Remove TOTP configuration?');">
+                                            <input type="hidden" name="csrf"   value="<?= htmlspecialchars(csrf_get()) ?>">
+                                            <input type="hidden" name="action" value="remove_totp">
+                                            <button type="submit" class="twofa-switch-btn danger">Remove TOTP</button>
+                                        </form>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+
+                            </div><!-- /twofa-cards -->
+                        </div><!-- /twofa-section -->
                     </div>
 
                 </div><!-- /form-card-body -->
@@ -313,7 +496,7 @@ $activeTab = 'identity';
 </div><!-- /page-wrapper -->
 
 <script>
-    const panels   = { identity: 'Identity', stats: 'Statistics', delivery: 'Delivery', security: 'Security' };
+    const panels   = { identity: 'Identity', stats: 'Statistics', delivery: 'Delivery', security: 'Security & 2FA' };
     const titleEl  = document.getElementById('panel-title');
     const footerEl = document.getElementById('form-footer');
 

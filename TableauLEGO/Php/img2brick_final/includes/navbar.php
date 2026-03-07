@@ -56,6 +56,10 @@ if ($isLoggedIn) {
         height: clamp(20px, 4vw, 36px);
         display: block;
     }
+    .brown-button:hover {
+        background-color: var(--main-brown) !important;
+        color: white !important
+    }
 </style>
 
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4"
@@ -102,18 +106,20 @@ if ($isLoggedIn) {
                     </a>
 
                     <a href="<?= $projectBase ?>/my_orders.php"
-                       class="btn btn-outline-secondary btn-sm <?= $currentPage === 'my_orders.php' ? 'active' : '' ?>">
+                        style="border: 0.15em solid var(--main-brown); border-radius: .6em; color: var(--main-brown); background-color: transparent; transition: all .3s ease-in-out;"
+                       class="btn btn-outline-secondary btn-sm brown-button <?= $currentPage === 'my_orders.php' ? 'active' : '' ?>">
                         My Orders
                     </a>
 
                     <?php if ($navUsername !== '4DM1N1STRAT0R_4ND_4LM16HTY'): ?>
                     <a href="<?= $projectBase ?>/my_account.php"
-                       class="btn btn-outline-secondary btn-sm <?= $currentPage === 'my_account.php' ? 'active' : '' ?>">
+                        style="border: 0.15em solid var(--main-brown); border-radius: .6em; color: var(--main-brown); background-color: transparent; transition: all .3s ease-in-out;"
+                       class="btn btn-outline-secondary btn-sm brown-button <?= $currentPage === 'my_account.php' ? 'active' : '' ?>">
                         <?= htmlspecialchars($navUsername) ?>
                     </a>
                     <?php else: ?>
                     <a href="<?= $projectBase ?>/admin_panel.php"
-                       class="btn btn-outline-secondary btn-sm <?= $currentPage === 'admin_panel.php' ? 'active' : '' ?>">
+                       class="btn btn-outline-secondary btn-sm brown-button<?= $currentPage === 'admin_panel.php' ? 'active' : '' ?>">
                         Admin Panel
                     </a>
                     <?php endif; ?>

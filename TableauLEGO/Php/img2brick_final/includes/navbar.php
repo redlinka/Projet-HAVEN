@@ -5,10 +5,14 @@ $isLoggedIn  = isset($_SESSION['userId']);
 $navUsername = $_SESSION['username'] ?? tr('nav.account_guest', 'Account');
 $currentPage = basename($_SERVER['PHP_SELF']);
 
-// Chemin absolu vers translate.php — calculé dynamiquement peu importe le sous-dossier
-$projectBase       = BASE_URL;
-$translateEndpoint = BASE_URL . '/translate.php';
-
+// Détecte automatiquement le sous-dossier du projet depuis DOCUMENT_ROOT
+// Fonctionne que navbar.php soit dans includes/ ou à la racine
+$_docRoot    = rtrim(str_replace('\\', '/', realpath($_SERVER['DOCUMENT_ROOT'])), '/');
+$_projectDir = rtrim(str_replace('\\', '/', realpath(__DIR__ . '/..')), '/');
+$projectBase = str_replace($_docRoot, '', $_projectDir);
+$projectBase = '/' . trim($projectBase, '/');
+if ($projectBase === '/') $projectBase = '';
+$translateEndpoint = $projectBase . '/translate.php';
 
 if ($isLoggedIn) {
     $userId = $_SESSION['userId'];
@@ -76,7 +80,6 @@ if ($isLoggedIn) {
         <div class="collapse navbar-collapse" id="navbarContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0"></ul>
 
-            <!-- Right actions — data-i18n-skip évite de traduire les noms/boutons navbar -->
             <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-2 mt-3 mt-lg-0"
                  data-i18n-skip>
 
@@ -130,9 +133,9 @@ if ($isLoggedIn) {
     </div>
 </nav>
 
-<!-- Bootstrap JS (nécessaire pour le collapse mobile) -->
+<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Injecte l'endpoint dynamique AVANT i18n.js -->
+<!-- Endpoint injecté AVANT i18n.js -->
 <script>window.I18N_ENDPOINT = '<?= htmlspecialchars($translateEndpoint) ?>';</script>
 <script src="<?= $projectBase ?>/js/i18n.js"></script>

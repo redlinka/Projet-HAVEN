@@ -1,7 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 
 const gameSchema = new Schema({
-    game: { type: String, required: true },
+    game: { type: String, enum: ['PUZZLE','BRICKBLAST'], required: true },
     playedAt: { type: Date, required: true },
     mode: { type: String, enum: ['solo', 'duplicate'], required: true },
     points: { type: Number, required: true },

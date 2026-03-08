@@ -2,6 +2,8 @@ import dotenv from 'dotenv';
 import connectDB from './db';
 import Player from './models/Player';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
+
 
 
 const test = async () => {
@@ -10,12 +12,14 @@ const test = async () => {
       { linkedPHPId: null },
       process.env.JWT_SECRET as string,
       { expiresIn: '1d' }
-    );
+  );
+
+  const hashedToken = await bcrypt.hash(token, 10);
 
   const player = new Player({
     isGuest: true,
     linkedPHPId: null,
-    sessionToken: token,
+    sessionToken: hashedToken,
     lastConnectedAt: new Date(),
     games: [
       {

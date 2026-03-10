@@ -1,7 +1,6 @@
 .game-container-main {
   display: flex;
   flex-direction: column;
-  padding: 10px;
   height: 100%;
   color: var(--white);
   gap: 10px;

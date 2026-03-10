@@ -8,9 +8,6 @@ export default function GameContainer({
 }) {
   return (
     <div className="game-container-main">
-      <div className="top">
-        <h1>{game.title}</h1>
-      </div>
       <div className="game-view">{game.game}</div>
     </div>
   );

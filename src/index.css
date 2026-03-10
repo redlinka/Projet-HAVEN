@@ -7,14 +7,19 @@
   font-family: "Press Start 2P";
   src: url("/font/Press_Start_2P/PressStart2P-Regular.ttf") format("TrueType");
 }
+@font-face {
+  font-family: "Gameria";
+  src: url("/font/gameria/GAMERIA.ttf") format("TrueType");
+}
 
 :root {
-  --yellow: #f8d820;
+  --purple: #a058be;
   --black: #000000;
   --gray: #5e606a;
   --white: #eeeef0;
 
   --text-font: "Inter", sans-serif;
+  --title-font: "Gameria", sans-serif;
 }
 
 * {

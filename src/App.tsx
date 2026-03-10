@@ -1,8 +1,9 @@
 import "./App.css";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ToyBrick, Puzzle } from "lucide-react";
 
-import Sidebar from "./layouts/Sidebar";
+import Navbar from "./layouts/Navbar";
+import BackgroundStars from "./components/BackgroundStars";
 
 // Pages
 import GamePage from "./components/GamePage";
@@ -18,35 +19,30 @@ function App() {
       game: <PuzzleGame />,
       description: "lorem ipsum",
       title: "PuzzleGame",
-      icon: <Puzzle color="#5e606a" />,
+      icon: <Puzzle />,
       img: "/img/LegoPuzzle.png",
     },
     {
       game: <BlockScene />,
       description: "lorem ipsum",
       title: "Brick Blast",
-      icon: <ToyBrick color="#5e606a" />,
+      icon: <ToyBrick />,
       img: "/img/BrickBlast.png",
     },
   ];
+
   return (
     <BrowserRouter>
-      <main className="app">
-        <div className="bg" />
-        <Sidebar games={games} />
+      <BackgroundStars>
+        <Navbar games={games} />
 
         <div className="app-content">
-          <div className="top">
-            <Link to="/" className="main-title">
-              Haven <span>Games</span>
-            </Link>
-          </div>
           <Routes>
-            <Route path="/" element={<HomePage games={games} />} />
+            <Route path="/" element={<HomePage />} />
             <Route path="/game/:id" element={<GamePage games={games} />} />
           </Routes>
         </div>
-      </main>
+      </BackgroundStars>
     </BrowserRouter>
   );
 }

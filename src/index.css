@@ -1,6 +1,11 @@
 @font-face {
   font-family: "Inter";
-  src: url("/public/font/inter/Inter-VariableFont.ttf") format("truetype");
+  src: url("/font/inter/Inter-VariableFont.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Press Start 2P";
+  src: url("/font/Press_Start_2P/PressStart2P-Regular.ttf") format("TrueType");
 }
 
 :root {

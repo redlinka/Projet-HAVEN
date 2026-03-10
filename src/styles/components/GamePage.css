@@ -18,3 +18,9 @@
 .game-container .game-container-right {
   flex: 1;
 }
+
+@media screen and (max-width: 1024px) {
+  .game-container-right {
+    display: none;
+  }
+}

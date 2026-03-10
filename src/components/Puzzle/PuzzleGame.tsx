@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Disc, Disc3, Volume2, VolumeOff } from "lucide-react";
 import useSound from "use-sound";
 
 import PuzzleBoard from "./PuzzleBoard";
@@ -9,6 +10,11 @@ import HUDBar from "./HUDBar";
 import LoadingScreen from "./LoadingScreen";
 
 import "../../styles/components/Puzzle/PuzzleGame.css";
+
+import bgMusic from "/sounds/Puzzle/bg2.mp3";
+import dropSound from "/sounds/Puzzle/drop2.mp3";
+import dragSound from "/sounds/Puzzle/drag.wav";
+import wrongPlacementSound from "/sounds/Puzzle/wrong.mp3";
 
 // ---------------- Types ---------------------
 
@@ -184,17 +190,27 @@ export default function PuzzleGame() {
 
   const [imagePath, setImagePath] = useState<string>("");
 
-  // ============== Sounds ==============
-  const [playGameMusic, { stop }] = useSound("/sounds/Puzzle/bg.mp3", {
-    volume: 0.13,
-    loop: true,
-  });
+  const [isPlayingMusic, setIsPlayingMusic] = useState(true);
+  const [isPlayingEffect, setIsPlayingEffect] = useState(true);
 
-  const [onDrag] = useSound("/sounds/Puzzle/drag.wav", {
+  // ============== Sounds ==============
+  const [playGameMusic, { stop: stopMusic, pause: pauseMusic }] = useSound(
+    bgMusic,
+    {
+      volume: 0.05,
+      loop: true,
+      interrupt: true,
+    },
+  );
+
+  const [playOnDrag] = useSound(dragSound, {
     volume: 0.2,
   });
-  const [onDrop] = useSound("/sounds/Puzzle/drop.mp3", {
-    volume: 0.2,
+  const [playOnDrop] = useSound(dropSound, {
+    volume: 0.05,
+  });
+  const [playWrongPlacement] = useSound(wrongPlacementSound, {
+    volume: 0.1,
   });
 
   // ============== Drag State ===========
@@ -254,13 +270,8 @@ export default function PuzzleGame() {
         j >= 0 &&
         j + brick.h <= modRef.current.rows;
 
-      if (!inside) {
-        setIsOnBoard(false);
-        setSnapCell(null);
-        return;
-      }
-      setIsOnBoard(true);
-      setSnapCell({ i, j });
+      setIsOnBoard(inside);
+      setSnapCell(inside ? { i, j } : null);
     };
 
     const onEnd = (e: MouseEvent | TouchEvent) => {
@@ -295,6 +306,10 @@ export default function PuzzleGame() {
           );
 
           if (updatedBoard) {
+            if (isPlayingEffect) {
+              playOnDrop();
+            }
+
             setAllBricks((prevBricks) => {
               const next = prevBricks.slice(1);
               setCurrentBrick(next[0] ?? null);
@@ -310,11 +325,14 @@ export default function PuzzleGame() {
               ) {
                 setEndGame(true);
               }
+
               return next;
             });
             return updatedBoard;
+          } else {
+            if (isPlayingEffect) playWrongPlacement();
+            return prevBoard;
           }
-          return prevBoard;
         });
       }
 
@@ -336,19 +354,20 @@ export default function PuzzleGame() {
       window.removeEventListener("touchmove", onMove);
       window.removeEventListener("touchend", onEnd);
     };
-  }, []);
-
-  useEffect(() => {
-    onDrop();
-  }, [board, score]);
+  }, [isPlayingEffect, playOnDrop, playWrongPlacement]);
 
   const handleGrab = (brick: Brick) => {
+    if (isPlayingEffect) {
+      playOnDrag();
+    }
     draggingBrickRef.current = brick;
     setActiveBrick(brick);
   };
 
   const handleTouchStart = (brick: Brick) => {
-    onDrag();
+    if (isPlayingEffect) {
+      playOnDrag();
+    }
     draggingBrickRef.current = brick;
     setActiveBrick(brick);
   };
@@ -398,12 +417,14 @@ export default function PuzzleGame() {
   }, [board, answerBoard]);
 
   useEffect(() => {
-    playGameMusic();
+    if (isPlayingMusic) {
+      playGameMusic();
+    }
 
     return () => {
-      stop();
+      stopMusic();
     };
-  }, [playGameMusic, stop]);
+  }, [playGameMusic, stopMusic]);
 
   /* =========== Render =========== */
 
@@ -413,7 +434,7 @@ export default function PuzzleGame() {
     return (
       <div className="ending-overlay">
         <div className={perfect ? "ending-title-win" : "ending-title-lose"}>
-          {perfect ? "PERFECT!" : "GAME OVER"}
+          {perfect ? "PERFECT!" : "GAME CLEAR"}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -434,6 +455,36 @@ export default function PuzzleGame() {
     );
   };
 
+  const soundsButtons = () => {
+    return (
+      <div className="sounds-container">
+        <button
+          onClick={() => {
+            setIsPlayingEffect((prev) => {
+              return !prev;
+            });
+          }}
+        >
+          {isPlayingEffect ? <Volume2 /> : <VolumeOff />}
+        </button>
+        <button
+          onClick={() =>
+            setIsPlayingMusic((prev) => {
+              if (prev) {
+                pauseMusic();
+              } else {
+                playGameMusic();
+              }
+              return !prev;
+            })
+          }
+        >
+          {isPlayingMusic ? <Disc3 /> : <Disc />}
+        </button>
+      </div>
+    );
+  };
+
   // -- Loading --
   if (loading)
     return (
@@ -446,6 +497,7 @@ export default function PuzzleGame() {
 
   return (
     <MonitorShell>
+      {soundsButtons()}
       {/* HUD */}
       {endGame ? (
         endGamePage()
@@ -492,7 +544,7 @@ export default function PuzzleGame() {
                       />
                     </div>
                   ) : (
-                    <div style={{ fontSize: 7, color: "#3a2d5c" }}>—</div>
+                    <div style={{ fontSize: 7, color: "#3a2d5c" }}>-</div>
                   )}
                 </div>
                 <div className="piece-grab-hint">DRAG TO BOARD</div>

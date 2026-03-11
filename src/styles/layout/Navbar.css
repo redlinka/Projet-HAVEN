@@ -69,12 +69,17 @@
   display: flex;
   align-items: center;
   gap: 20px;
+  color: white;
 }
 
 .navbar .user .user-icon {
+  height: 40px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background-color: aquamarine;
   border-radius: 30px;
   padding: 10px;
-  aspect-ratio: 1/1;
   color: black;
 }

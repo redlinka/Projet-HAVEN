@@ -3,16 +3,9 @@ import { Link } from "react-router-dom";
 import { User, ChevronUp } from "lucide-react";
 import "../styles/layout/Navbar.css";
 
-export default function Navbar({
-  games,
-}: {
-  games: {
-    game: ReactNode;
-    description: string;
-    title: string;
-    icon: ReactNode;
-  }[];
-}) {
+import type { Game } from "../types/types";
+
+export default function Navbar({ games }: { games: Game[] }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (

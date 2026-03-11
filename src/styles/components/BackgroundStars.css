@@ -16,7 +16,7 @@
 }
 
 .bg {
-  position: absolute;
+  position: fixed;
   left: 0px;
   right: 0px;
   height: 480px;

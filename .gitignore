@@ -1,2 +1,3 @@
 ./TableauLEGO/Php/.env
+./TableauLEGO/java/target/classes/config.properties
 ./TableauLEGO/Java/src/main/resources/application.properties

@@ -34,6 +34,7 @@ try {
     // Hide internal error details in production for security
     error_log("Connection Error: " . $e->getMessage());
     http_response_code(500);
+    echo $e->getMessage();
     die("Internal error. Please try again later.");
 }
 

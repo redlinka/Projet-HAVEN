@@ -130,7 +130,10 @@ function runPreset(string $key, array $preset, string $sourceFile, int $parentId
 
     $output = [];
     $rc     = 0;
+    echo "Command: " . $cmd . "<br>";
     exec($cmd, $output, $rc);
+    echo "Return code: " . $rc . "<br>";
+    echo "Output: " . implode("<br>", $output);
     error_log("[Preset $key] rc=$rc cmd=$cmd");
 
     if ($rc !== 0 || !file_exists($outputPngPath . '.png')) {

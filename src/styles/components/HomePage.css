@@ -68,8 +68,12 @@
 }
 
 .list-link {
-  backdrop-filter: blur(5px);
-  border: 1px solid var(--purple);
+  background-color: var(--purple);
+  box-shadow:
+    0px 2.5px #6f3e85,
+    0px 5px #6f3e85,
+    0px 7.5px #6f3e85,
+    0px 10px #6f3e85;
   border-radius: 10px;
 
   height: 150px;
@@ -81,8 +85,8 @@
 }
 
 .list-link:hover {
-  box-shadow: 0 0 10px var(--purple);
-  background-color: rgba(255, 255, 255, 0.034);
+  box-shadow: none;
+  transform: translateY(10px);
 }
 
 .list-link img {
@@ -94,7 +98,6 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-
   color: white;
 }
 

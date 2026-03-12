@@ -1,12 +1,14 @@
 @import url("https://fonts.googleapis.com/css2?family=Michroma&display=swap");
 
 .navbar {
-  width: 100%;
+  position: fixed;
+  inset: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 10px 3rem;
   height: 70px;
+  z-index: 100;
 }
 
 .navbar .main-title {

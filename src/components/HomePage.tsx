@@ -1,34 +1,43 @@
-import { type ReactNode } from "react";
+import type { Game } from "../types/types";
 import { Link } from "react-router-dom";
-import "../styles/components/HomePage.css";
 
-export default function HomePage({
-  games,
-}: {
-  games: {
-    game: ReactNode;
-    description: string;
-    title: string;
-    icon: ReactNode;
-    img: string;
-  }[];
-}) {
+import "../styles/components/HomePage.css";
+import { ArrowBigDown } from "lucide-react";
+
+export default function HomePage({ games }: { games: Game[] }) {
   return (
     <div className="home-container">
-      <Link to={`/game/${games.length - 1}`} className="new-game">
-        <img src={games[games.length - 1].img} alt="" />
-        <div className="new">New</div>
-      </Link>
-      <div className="games-list">
-        <h2>Games</h2>
-        <div className="games">
-          {games.map((game, index) => (
-            <Link key={game.title} to={`/game/${index}`}>
-              <img className="game" src={game.img} alt="Game image" />
-            </Link>
-          ))}
+      <div className="title">
+        <h1>
+          Haven
+          <br /> Games
+        </h1>
+        <p>Play to earn points</p>
+        <div className="scroll-down">
+          <ArrowBigDown fill="white" className="arrow" />
         </div>
+      </div>
+      <div className="games">
+        <h1>Our Games</h1>
+        <GameList games={games} />
       </div>
     </div>
   );
 }
+
+const GameList = ({ games }: { games: Game[] }) => {
+  return (
+    <ul className="game-list">
+      {games.map((game, index) => (
+        <Link key={index} to={`/game/${index}`} className="list-link">
+          <img src={game.img} alt="" />
+
+          <div className="info">
+            <p>{game.title}</p>
+            <p>{game.description}</p>
+          </div>
+        </Link>
+      ))}
+    </ul>
+  );
+};

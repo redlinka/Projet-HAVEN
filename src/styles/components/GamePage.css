@@ -1,25 +1,63 @@
 .game-container {
+  height: 100%;
+  width: min(99%, 1400px);
+  margin: 0 auto;
   display: flex;
-  padding: 20px;
-  gap: 20px;
-  flex: 1;
+  flex-wrap: wrap;
+  padding: clamp(10px, 2vw, 20px);
+  gap: clamp(10px, 2vw, 20px);
 }
 
 .game-container .game-container-left,
 .game-container .game-container-right {
-  background-color: rgba(219, 231, 255, 0.15);
-  border: 1px solid #5e606a;
+  background-color: rgba(255, 255, 255, 0.103);
+  backdrop-filter: blur(3px);
+  border: 1px solid var(--purple);
   border-radius: 10px;
+  min-width: 0;
 }
 
 .game-container .game-container-left {
-  flex: 3;
-}
-.game-container .game-container-right {
-  flex: 1;
+  flex: 3 1 500px;
 }
 
-@media screen and (max-width: 1024px) {
+.game-container .game-container-right {
+  flex: 1 1 200px;
+  min-width: 200px;
+}
+
+.chat-button {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  z-index: 100;
+  background-color: var(--purple);
+  padding: 10px;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bg-filter {
+  position: absolute;
+  top: 0;
+  left: 0;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.486);
+}
+.chat-popup {
+  height: 80%;
+  background-color: rgba(255, 255, 255, 0.103);
+  backdrop-filter: blur(3px);
+  border: 1px solid var(--purple);
+  border-radius: 10px;
+}
+
+@media screen and (max-width: 700px) {
   .game-container-right {
     display: none;
   }

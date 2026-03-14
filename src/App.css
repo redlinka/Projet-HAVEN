@@ -1,37 +1,3 @@
-.app {
-  height: 100vh;
-  position: relative;
-  display: flex;
-}
-
-.bg {
-  position: absolute;
-  left: 0px;
-  right: 0px;
-  height: 480px;
-  opacity: 0.6;
-  background: linear-gradient(to bottom, #463300, transparent);
-  z-index: -1;
-}
-
 .app-content {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-.app-content > .top {
-  width: 100%;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.app-content > .top > .main-title {
-  font-weight: bold;
-  font-size: 1.3rem;
-  cursor: pointer;
-  color: var(--white);
-}
-.app-content > .top > .main-title > span {
-  color: var(--yellow);
 }

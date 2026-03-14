@@ -10,7 +10,6 @@
     0 0 20px rgba(120, 60, 200, 0.4);
 }
 
-/* CRT grid effect */
 .difficulty-overlay {
   position: absolute;
   inset: 0;
@@ -33,26 +32,27 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: clamp(10px, 3vw, 24px);
 }
 
 .difficulty-title {
-  font-size: 22px;
+  font-size: clamp(12px, 2.5vw, 22px);
   text-align: center;
   color: #ff8c00;
-  margin-bottom: 20px;
+  margin-bottom: clamp(10px, 2vw, 20px);
   text-shadow: 0 0 12px #ff6b00;
 }
 
 .difficulty-title > span {
   display: block;
-  font-size: 32px;
+  font-size: clamp(18px, 4vw, 32px);
   margin-top: 6px;
 }
 
 .difficulty-sub {
-  font-size: 8px;
+  font-size: clamp(6px, 1vw, 8px);
   color: #e8c87a;
-  margin-bottom: 30px;
+  margin-bottom: clamp(16px, 3vw, 30px);
   opacity: 0.3;
 }
 
@@ -64,7 +64,6 @@
   0% {
     opacity: 1;
   }
-
   50% {
     opacity: 0.3;
   }
@@ -75,14 +74,16 @@
 
 .difficulty-container {
   display: flex;
-  gap: 16px;
-  margin-bottom: 30px;
-  padding: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(8px, 2vw, 16px);
+  margin-bottom: clamp(16px, 3vw, 30px);
+  padding: clamp(6px, 1.5vw, 10px);
 }
 
 .difficulty-card {
-  width: 140px;
-  padding: 18px 12px;
+  width: clamp(100px, 20vw, 140px);
+  padding: clamp(10px, 2vw, 18px) clamp(8px, 1.5vw, 12px);
   text-align: center;
   background: rgba(0, 0, 0, 0.35);
   border: 2px solid #2a1f4a;
@@ -100,13 +101,13 @@
 }
 
 .difficulty-label {
-  font-size: 12px;
+  font-size: clamp(8px, 1.5vw, 12px);
   margin-bottom: 10px;
 }
 
 .difficulty-stars span {
   color: #2a1f4a;
-  font-size: 12px;
+  font-size: clamp(8px, 1.5vw, 12px);
 }
 
 .difficulty-stars .on {
@@ -115,16 +116,16 @@
 }
 
 .difficulty-card p {
-  font-size: 8px;
+  font-size: clamp(6px, 1vw, 8px);
   margin-top: 10px;
   color: #e8c87a;
 }
 
 .difficulty-play {
-  padding: 12px 36px;
+  padding: clamp(8px, 1.5vw, 12px) clamp(20px, 4vw, 36px);
   background: #ff8c00;
   color: #1a0f35;
-  font-size: 10px;
+  font-size: clamp(7px, 1.2vw, 10px);
   border: none;
   cursor: pointer;
   letter-spacing: 2px;
@@ -139,12 +140,6 @@
 .difficulty-hint {
   position: absolute;
   bottom: 14px;
-  font-size: 6px;
+  font-size: clamp(5px, 0.8vw, 6px);
   color: #2a1f4a;
-}
-
-@media screen and (max-width: 700px) {
-  .difficulty-container {
-    flex-direction: column;
-  }
 }

@@ -1,14 +1,16 @@
-import { type ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import GameContainer from "./GameContainer";
 import Chatter from "./Chat/Chatter";
-import "../styles/components/GamePage.css";
+import type { Game } from "../types/types";
 
-export default function GamePage({
-  games,
-}: {
-  games: { game: ReactNode; description: string; title: string }[];
-}) {
+import "../styles/components/GamePage.css";
+import Button from "./commons/Button";
+import { MessageCircle, X } from "lucide-react";
+import { useState } from "react";
+import { createPortal } from "react-dom";
+
+export default function GamePage({ games }: { games: Game[] }) {
+  const [showChat, setShowChat] = useState<boolean>(false);
   const { id } = useParams();
 
   const gameSelected = id ? games[Number(id)] : null;
@@ -25,6 +27,24 @@ export default function GamePage({
       <div className="game-container-right">
         <Chatter />
       </div>
+      {window.innerWidth < 700 && (
+        <button
+          onClick={() => setShowChat((prev) => !prev)}
+          className="chat-button"
+        >
+          {!showChat ? <MessageCircle /> : <X />}
+        </button>
+      )}
+
+      {showChat &&
+        createPortal(
+          <div className="bg-filter">
+            <div className="chat-popup">
+              <Chatter />
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

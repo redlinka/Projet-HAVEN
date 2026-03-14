@@ -15,6 +15,7 @@ import bgMusic from "/sounds/Puzzle/bg2.mp3";
 import dropSound from "/sounds/Puzzle/drop2.mp3";
 import dragSound from "/sounds/Puzzle/drag.wav";
 import wrongPlacementSound from "/sounds/Puzzle/wrong.mp3";
+import { createPortal } from "react-dom";
 
 // ---------------- Types ---------------------
 
@@ -356,20 +357,22 @@ export default function PuzzleGame() {
     };
   }, [isPlayingEffect, playOnDrop, playWrongPlacement]);
 
-  const handleGrab = (brick: Brick) => {
+  const handleGrab = (brick: Brick, e: React.MouseEvent) => {
     if (isPlayingEffect) {
       playOnDrag();
     }
     draggingBrickRef.current = brick;
     setActiveBrick(brick);
+    setDragPos({ x: e.clientX, y: e.clientY });
   };
 
-  const handleTouchStart = (brick: Brick) => {
+  const handleTouchStart = (brick: Brick, e: React.TouchEvent) => {
     if (isPlayingEffect) {
       playOnDrag();
     }
     draggingBrickRef.current = brick;
     setActiveBrick(brick);
+    setDragPos({ x: e.touches[0].clientX, y: e.touches[0].clientY });
   };
 
   const handleModMenu = () => {
@@ -539,8 +542,8 @@ export default function PuzzleGame() {
                       <Brick
                         b={currentBrick}
                         boardSize={16}
-                        onGrab={handleGrab}
-                        onTouchStart={handleTouchStart}
+                        onGrab={(brick, e) => handleGrab(brick, e)}
+                        onTouchStart={(brick, e) => handleTouchStart(brick, e)}
                       />
                     </div>
                   ) : (
@@ -553,25 +556,28 @@ export default function PuzzleGame() {
           </div>
 
           {/* Floating dragged brick */}
-          {activeBrick && dragPos && (
-            <div
-              style={{
-                position: "fixed",
-                left: dragPos.x,
-                top: dragPos.y,
-                transform: "translate(-50%, -50%)",
-                pointerEvents: "none",
-                zIndex: 9999,
-                opacity: isOnBoard ? 0.85 : 1,
-                filter: isOnBoard
-                  ? "drop-shadow(0 0 12px rgba(68,255,136,.9))"
-                  : "drop-shadow(0 0 10px rgba(255,140,0,.7))",
-                transition: "filter .1s",
-              }}
-            >
-              <Brick b={activeBrick} boardSize={mod.cols} />
-            </div>
-          )}
+          {activeBrick &&
+            dragPos &&
+            createPortal(
+              <div
+                style={{
+                  position: "fixed",
+                  left: dragPos.x,
+                  top: dragPos.y,
+                  transform: "translate(-50%, -50%)",
+                  pointerEvents: "none",
+                  zIndex: 9999,
+                  opacity: isOnBoard ? 0.85 : 1,
+                  filter: isOnBoard
+                    ? "drop-shadow(0 0 12px rgba(68,255,136,.9))"
+                    : "drop-shadow(0 0 10px rgba(255,140,0,.7))",
+                  transition: "filter .1s",
+                }}
+              >
+                <Brick b={activeBrick} boardSize={mod.cols} />
+              </div>,
+              document.body,
+            )}
         </div>
       )}
     </MonitorShell>

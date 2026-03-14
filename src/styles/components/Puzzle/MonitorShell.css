@@ -6,6 +6,7 @@
   justify-content: center;
   background: radial-gradient(circle at center, #1a1028 0%, #0d081a 100%);
   padding: 20px;
+  border-radius: 10px;
 }
 
 .monitor-frame {

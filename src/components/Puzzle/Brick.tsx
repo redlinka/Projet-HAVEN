@@ -7,13 +7,11 @@ import "../../styles/components/Puzzle/Brick.css";
 export default function Brick({
   b,
   boardSize,
-  onGrab,
-  onTouchStart,
+  onPointerDown,
 }: {
   b: Brick;
   boardSize: number;
-  onGrab?: (brick: Brick, e: React.MouseEvent<HTMLCanvasElement>) => void;
-  onTouchStart?: (brick: Brick, e: React.TouchEvent<HTMLCanvasElement>) => void;
+  onPointerDown?: (e: React.PointerEvent<HTMLCanvasElement>) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -36,13 +34,11 @@ export default function Brick({
 
   return (
     <canvas
-      onMouseDown={(e) => {
+      onPointerDown={(e) => {
         e.preventDefault();
-        onGrab?.(b, e);
+        onPointerDown?.(e);
       }}
-      onTouchStart={(e) => {
-        onTouchStart?.(b, e);
-      }}
+      style={{ touchAction: "none" }}
       ref={canvasRef}
       className="lego-brick"
     />

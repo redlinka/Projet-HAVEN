@@ -177,6 +177,8 @@ async function readPavageFile(filePath: string): Promise<string[]> {
 
 /* ------------------ Component ------------------ */
 export default function PuzzleGame() {
+
+  console.log(localStorage.getItem("user"));
   // =============== State ==============
   const [mod, setMod] = useState({ cols: 0, rows: 0 });
   const [loading, setLoading] = useState(false);

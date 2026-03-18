@@ -1,51 +1,39 @@
 import dotenv from 'dotenv';
+import path from 'path';
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+
+import http from 'http';
+import express from 'express';
+import cors from 'cors';
 import connectDB from './db';
-import Player from './models/Player';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
+import { initWebSocketServer } from './ws/roomManager';
 
+const PORT = parseInt(process.env.PORT ?? '2025', 10);
 
+async function main() {
+  await connectDB();
 
-const test = async () => {
+  const app = express();
+  app.use(cors({
+    origin: process.env.CLIENT_URL ?? 'http://localhost:5173',
+    credentials: true,
+  }));
+  app.use(express.json());
 
-  const token = jwt.sign(
-      { linkedPHPId: null },
-      process.env.JWT_SECRET as string,
-      { expiresIn: '1d' }
-  );
-
-  const hashedToken = await bcrypt.hash(token, 10);
-
-  const player = new Player({
-    isGuest: true,
-    linkedPHPId: null,
-    sessionToken: hashedToken,
-    lastConnectedAt: new Date(),
-    games: [
-      {
-        game: 'PUZZLE',
-        playedAt: new Date(),
-        mode: 'solo',
-        points: 50,
-        earnedAt: new Date(),
-        expiresAt: new Date('2026-04-07'),
-        used: false
-      }
-    ]
+  app.get('/health', (_req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
-  await player.save();
-  console.log('Joueur inséré', player);
-};
+  const httpServer = http.createServer(app);
+  initWebSocketServer(httpServer);
 
-
-dotenv.config();
-
-
-// MAIN
-const main = async() => {
-  await connectDB();
-  await test();
+  httpServer.listen(PORT, () => {
+    console.log(`[server] HTTP  → http://localhost:${PORT}`);
+    console.log(`[server] WS    → ws://localhost:${PORT}/ws`);
+  });
 }
 
-main();
+main().catch(err => {
+  console.error('[server] Erreur fatale :', err);
+  process.exit(1);
+});

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev:front": "vite",
-    "dev:server": "cd ../haven-server && npm run dev",
+    "dev:server": "cd ../HavenServer && npm run dev",
     "dev": "concurrently \"npm run dev:front\" \"npm run dev:server\"",
     "build": "tsc -b && vite build",
     "lint": "eslint .",

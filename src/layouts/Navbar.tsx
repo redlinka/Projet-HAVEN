@@ -47,7 +47,7 @@ export default function Navbar({ games }: { games: Game[] }) {
           >
             {games.map((game, index) => (
               <Link
-                to={`/game/${index}`}
+                to={`/game/${index}/lobby`}
                 className="option"
                 onClick={() => setIsOpen(false)}
               >

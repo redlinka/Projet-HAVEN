@@ -1,0 +1,6 @@
+@import './_room-shared.css';
+
+/* Surcharges spécifiques à RoomCreator si nécessaire */
+.room-creator {
+  border-top: 3px solid rgba(245, 200, 66, 0.4);
+}

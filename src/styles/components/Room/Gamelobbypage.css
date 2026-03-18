@@ -1,0 +1,373 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   GameLobbyPage — style rétro pixel, cohérent avec l'UI Puzzle Bricks
+   Palette : #12082a fond | #f59e0b orange accent | #a855f7 violet clair
+───────────────────────────────────────────────────────────────────────────── */
+
+/* ── Conteneur principal ─────────────────────────────────────────────────── */
+
+.lobby-screen {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #12082a;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% 0%, #2d0f5e 0%, transparent 60%),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(0, 0, 0, 0.18) 3px,
+      rgba(0, 0, 0, 0.18) 4px
+    );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  overflow: hidden;
+}
+
+/* Cadre extérieur arcade */
+.lobby-screen::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 3px solid #3d1a7a;
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 6px #12082a,
+    0 0 0 9px #2d0f5e,
+    0 0 40px rgba(168, 85, 247, 0.15) inset;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Grain de scanlines */
+.lobby-scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 1px,
+    rgba(0, 0, 0, 0.06) 1px,
+    rgba(0, 0, 0, 0.06) 2px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── Inner wrapper ───────────────────────────────────────────────────────── */
+
+.lobby-inner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.5rem;
+  width: 100%;
+  max-width: 820px;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+
+.lobby-header {
+  text-align: center;
+}
+
+.lobby-game-title {
+  margin: 0 0 0.5rem;
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: clamp(1.4rem, 4vw, 2.2rem);
+  color: #f59e0b;
+  text-shadow:
+    3px 3px 0 #92400e,
+    0 0 20px rgba(245, 158, 11, 0.5);
+  line-height: 1.3;
+  letter-spacing: 0.03em;
+}
+
+.lobby-subtitle {
+  margin: 0;
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 0.65rem;
+  color: #7c3aed;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  animation: subtitleBlink 3s ease-in-out infinite;
+}
+
+@keyframes subtitleBlink {
+  0%, 80%, 100% { opacity: 1; }
+  90%            { opacity: 0.3; }
+}
+
+/* ── Cards de sélection de mode ─────────────────────────────────────────── */
+
+.lobby-modes {
+  display: flex;
+  gap: 1.25rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.lobby-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 180px;
+  min-height: 160px;
+  padding: 1.5rem 1rem;
+  background: #1c0b3a;
+  border: 2px solid #3d1a7a;
+  border-radius: 4px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    transform 0.1s,
+    box-shadow 0.15s;
+  text-align: center;
+
+  /* Reset button */
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  color: #e8d5ff;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.lobby-card:hover {
+  transform: translateY(-2px);
+}
+
+.lobby-card:active {
+  transform: scale(0.97);
+}
+
+/* Solo → orange */
+.lobby-card--solo:hover,
+.lobby-card--solo:focus-visible {
+  border-color: #f59e0b;
+  box-shadow:
+    0 0 0 2px #12082a,
+    0 0 16px rgba(245, 158, 11, 0.45);
+}
+
+/* Créer → violet clair */
+.lobby-card--create:hover,
+.lobby-card--create:focus-visible {
+  border-color: #a855f7;
+  box-shadow:
+    0 0 0 2px #12082a,
+    0 0 16px rgba(168, 85, 247, 0.45);
+}
+
+/* Rejoindre → violet */
+.lobby-card--join:hover,
+.lobby-card--join:focus-visible {
+  border-color: #a855f7;
+  box-shadow:
+    0 0 0 2px #12082a,
+    0 0 16px rgba(168, 85, 247, 0.45);
+}
+
+/* Carte surlignée si code URL présent */
+.lobby-card--highlighted {
+  border-color: #f59e0b;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+}
+
+.lobby-card-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+  color: #f59e0b;
+  text-shadow: 2px 2px 0 #92400e;
+}
+
+.lobby-card-name {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #f5f3ff;
+  letter-spacing: 0.08em;
+}
+
+.lobby-card-desc {
+  font-size: 0.5rem;
+  color: #7c3aed;
+  letter-spacing: 0.05em;
+  line-height: 1.5;
+}
+
+.lobby-card-stars {
+  font-size: 0.7rem;
+  color: #f59e0b;
+  text-shadow: 1px 1px 0 #92400e;
+  letter-spacing: 0.1em;
+}
+
+/* ── Wrapper chat (mode multijoueur) ─────────────────────────────────────── */
+
+.lobby-chat-wrapper {
+  width: 100%;
+  max-width: 820px;
+  /* Le composant Chatter a sa propre hauteur min-height via flex */
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+  /* Applique le style rétro sur le chatter en surchargeant ses variables */
+  --chatter-bg: #1c0b3a;
+  --chatter-border: #3d1a7a;
+  --chatter-accent: #f59e0b;
+}
+
+/* Surcharge du style Chatter pour coller à l'ambiance rétro */
+.lobby-chat-wrapper .chatter {
+  background: #1c0b3a;
+  border: 2px solid #3d1a7a;
+  box-shadow: 0 0 30px rgba(124, 58, 237, 0.15) inset;
+  min-height: 520px;
+}
+
+.lobby-chat-wrapper .chatter-header {
+  background: #12082a;
+  border-bottom-color: #3d1a7a;
+}
+
+.lobby-chat-wrapper .chatter-user-badge {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #f59e0b;
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 0.55rem;
+}
+
+.lobby-chat-wrapper .chatter-code-value {
+  background: #12082a;
+  border-color: #3d1a7a;
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: #f59e0b;
+  letter-spacing: 0.25em;
+}
+
+.lobby-chat-wrapper .chatter-start-btn--ready {
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 0.6rem;
+  border-color: #f59e0b;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.lobby-chat-wrapper .chatter-footer {
+  background: #12082a;
+  border-top-color: #3d1a7a;
+}
+
+/* Style rétro sur le lobby (état idle du Chatter) */
+.lobby-chat-wrapper .chatter-lobby {
+  background: transparent;
+  padding: 1rem 0;
+}
+
+.lobby-chat-wrapper .room-creator,
+.lobby-chat-wrapper .room-joiner {
+  background: #12082a;
+  border-color: #3d1a7a;
+}
+
+.lobby-chat-wrapper .room-field input {
+  background: #0a0518;
+  border-color: #3d1a7a;
+  color: #e8d5ff;
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 0.65rem;
+}
+
+.lobby-chat-wrapper .room-field input:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.lobby-chat-wrapper .room-field label {
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 0.5rem;
+  color: #7c3aed;
+}
+
+.lobby-chat-wrapper .room-card-header h3 {
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 0.72rem;
+  color: #f5f3ff;
+}
+
+.lobby-chat-wrapper .room-card-header p {
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 0.48rem;
+  line-height: 1.8;
+  color: #7c3aed;
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+
+.lobby-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 0.5rem;
+}
+
+.lobby-back-btn {
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 0.55rem;
+  color: #7c3aed;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.4rem 0.8rem;
+  letter-spacing: 0.08em;
+  transition: color 0.15s;
+  appearance: none;
+}
+
+.lobby-back-btn:hover {
+  color: #f59e0b;
+}
+
+.lobby-hint {
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 0.45rem;
+  color: #3d1a7a;
+  letter-spacing: 0.08em;
+  text-align: right;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .lobby-modes {
+    gap: 0.75rem;
+  }
+
+  .lobby-card {
+    width: calc(50% - 0.5rem);
+    min-width: 130px;
+    min-height: 130px;
+    padding: 1rem 0.75rem;
+  }
+
+  .lobby-game-title {
+    font-size: 1.2rem;
+  }
+
+  .lobby-footer {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .lobby-hint {
+    text-align: center;
+  }
+}

@@ -28,13 +28,17 @@ try {
     $cnx = new PDO(
         "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4",
         $user,
-        $pass
+        $pass,
+        [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES   => false,
+        ]
     );
 } catch (PDOException $e) {
     // Hide internal error details in production for security
     error_log("Connection Error: " . $e->getMessage());
     http_response_code(500);
-    echo $e->getMessage();
     die("Internal error. Please try again later.");
 }
 
@@ -56,7 +60,7 @@ function sendMail($to, $subject, $body, $attachments = [])
         $mail->Port = 587;
 
         // Set email headers and content
-        $mail->setFrom($_ENV['SMTP_USER'], 'App');
+        $mail->setFrom($_ENV['SMTP_USER'], 'Bricksy');
         $mail->addAddress($to);
 
         $mail->isHTML(true); // Enable HTML rendering
@@ -166,9 +170,21 @@ function error_message($code)
  * 3. Delete associated temporary files (thumbnails, precursors).
  * 4. Delete the current image file and text file from disk.
  * 5. Remove the record from the database. */
+function isImageLinkedToOrder($cnx, $imageId): bool
+{
+    // Vérifie si l'image est liée à une commande payée (via TILLING → contain → ORDER_BILL)
+    $stmt = $cnx->prepare("
+        SELECT COUNT(*) FROM TILLING t
+        JOIN contain c ON c.pavage_id = t.pavage_id
+        JOIN ORDER_BILL o ON o.order_id = c.order_id
+        WHERE t.image_id = ? AND o.created_at IS NOT NULL
+    ");
+    $stmt->execute([$imageId]);
+    return (int)$stmt->fetchColumn() > 0;
+}
+
 function deleteDescendants($cnx, $imageId, $imgDir, $tilingDir, $keepSelf = false)
 {
-
     // Stop if no ID provided
     if (!$imageId) return;
 
@@ -192,6 +208,12 @@ function deleteDescendants($cnx, $imageId, $imgDir, $tilingDir, $keepSelf = fals
 
     // Delete the node itself unless requested otherwise (e.g., when updating crop but keeping the ID)
     if (!$keepSelf) {
+
+        // Ne jamais supprimer une image liée à une commande payée
+        if (isImageLinkedToOrder($cnx, $imageId)) {
+            return;
+        }
+
         // Fetch filename to delete physical files
         $stmtMe = $cnx->prepare("SELECT path FROM IMAGE WHERE image_id = ?");
         $stmtMe->execute([$imageId]);
@@ -238,7 +260,21 @@ function cleanStorage($cnx, $imgDir, $brickDir)
     // Clean Abandoned Guest Data
     // Find root images (no parent) belonging to guests (no user_id)
     try {
-        $stmt = $cnx->query("SELECT image_id, path FROM IMAGE WHERE user_id IS NULL AND img_parent IS NULL"); //
+        $stmt = $cnx->query("
+    	SELECT i.image_id, i.path 
+    	FROM IMAGE i
+    	WHERE i.user_id IS NULL 
+    	AND i.img_parent IS NULL
+    	AND i.image_id NOT IN (
+        SELECT DISTINCT i2.img_parent 
+        FROM IMAGE i2
+        JOIN TILLING t ON t.image_id = i2.image_id
+        JOIN contain c ON c.pavage_id = t.pavage_id
+        JOIN ORDER_BILL o ON o.order_id = c.order_id
+        WHERE o.created_at IS NOT NULL
+        AND i2.img_parent IS NOT NULL
+    	)
+	"); //
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $filePath = $imgDir . '/' . $row['path'];
             $baseName = pathinfo($row['path'], PATHINFO_FILENAME);
@@ -294,12 +330,12 @@ function getTilingStats($file)
     $ligne = fgets(fopen($filePath, 'r'));
     if ($ligne !== false) {
         $ligne = trim($ligne);
-
         $valeurs = explode(' ', $ligne);
 
         if (count($valeurs) >= 2) {
+            $coeff = str_contains($file, 'pixel_perfect') ? 3.93 : 7.4;
             $result = [
-                'price' => $valeurs[0],
+                'price'   => (int)round((float)$valeurs[0] * $coeff + 2500),
                 'quality' => $valeurs[1]
             ];
         }

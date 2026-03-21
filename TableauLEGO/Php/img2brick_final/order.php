@@ -201,7 +201,9 @@ function createPayPalOrder(float $amount): ?string {
     if (!$token) return null;
 
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $baseUrl  = $protocol . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+    $host     = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $base     = rtrim(str_replace('\\', '/', dirname($_SERVER['PHP_SELF'])), '/');
+    $baseUrl  = $protocol . '://' . $host . $base;
 
     $payload = [
         'intent' => 'CAPTURE',

@@ -1,11 +1,12 @@
 <?php
+ob_start();
 session_start();
 global $cnx;
 include("./config/cnx.php");
 require_once __DIR__ . '/includes/i18n.php';
 
 // ── Prerequisites ──────────────────────────────────────────────────────────
-if (!isset($_SESSION['step3_image_id'])) { header("Location: index.php"); exit; }
+if (!isset($_SESSION['step3_image_id'])) { session_write_close(); ob_end_clean(); header("Location: index.php"); exit; }
 
 $parentId  = $_SESSION['step3_image_id'];
 $_SESSION['redirect_after_login'] = 'tiling_selection.php';
@@ -61,20 +62,20 @@ $PRESETS = [
     ],
     'minimal_price' => [
         'name'        => 'Minimal Price',
-        'description' => 'Large abstract colour blocks keep the brick count (and cost) very low.',
+        'description' => 'Smart grouping keeps the brick count low while the image stays recognisable. Best value for money.',
         'method'      => 'quadtree',
         'mode'        => 'relax',
-        'threshold'   => 100000,
-        'quality'     => 35,
+        'threshold'   => 3000,
+        'quality'     => 48,
         'badge'       => 'Best Price',
         'badge_class' => 'economy',
-        'algo_label'  => 'Quadtree · T=100k',
+        'algo_label'  => 'Quadtree · T=3k',
     ],
     'pixel_perfect' => [
         'name'        => 'Pixel Perfect',
         'description' => 'One 1×1 stud per pixel — the highest fidelity possible. Premium price, stunning result.',
         'method'      => '1x1',
-        'mode'        => 'strict',
+        'mode'        => 'relax',
         'quality'     => 100,
         'badge'       => 'Premium',
         'badge_class' => 'premium',
@@ -83,7 +84,7 @@ $PRESETS = [
 ];
 
 // ── Helper: run one TileAndDraw command ────────────────────────────────────
-function runPreset(string $key, array $preset, string $sourceFile, int $parentId, $cnx): array {
+function runPreset(string $key, array $preset, string $sourceFile, int $parentId, $cnx, int $userId = 0): array {
     global $imgFolder, $tilingFolder;
 
     // Return cached result if PNG still exists
@@ -130,11 +131,11 @@ function runPreset(string $key, array $preset, string $sourceFile, int $parentId
 
     $output = [];
     $rc     = 0;
-    echo "Command: " . $cmd . "<br>";
+
     exec($cmd, $output, $rc);
-    echo "Return code: " . $rc . "<br>";
-    echo "Output: " . implode("<br>", $output);
-    error_log("[Preset $key] rc=$rc cmd=$cmd");
+
+
+    error_log("[Preset $key] rc=$rc output=" . implode(" | ", $output));
 
     if ($rc !== 0 || !file_exists($outputPngPath . '.png')) {
         return ['failed' => true, 'preset_key' => $key];
@@ -144,12 +145,13 @@ function runPreset(string $key, array $preset, string $sourceFile, int $parentId
     $existingId = $_SESSION['tilings_generated'][$key]['image_id'] ?? null;
     try {
         if ($existingId) {
-            $cnx->prepare("UPDATE IMAGE SET status='LEGO' WHERE image_id=?")->execute([$existingId]);
+            // Met à jour status, path ET user_id pour couvrir le cas de la régénération
+            $cnx->prepare("UPDATE IMAGE SET status='LEGO', path=?, user_id=COALESCE(user_id, ?) WHERE image_id=?")
+                ->execute([$finalPngName . '.png', $userId ?: null, $existingId]);
             $imageId = $existingId;
         } else {
-            $userId = $_SESSION['userId'] ?? null;
             $cnx->prepare("INSERT INTO IMAGE (user_id, filename, path, status, img_parent) VALUES (?, ?, ?, 'LEGO', ?)")
-                ->execute([$userId, 'Preset ' . $key, $finalPngName . '.png', $parentId]);
+                ->execute([$userId ?: null, 'Preset ' . $key, $finalPngName . '.png', $parentId]);
             $imageId = (int)$cnx->lastInsertId();
         }
     } catch (PDOException $e) {
@@ -182,8 +184,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'generate') {
             if (!isset($_SESSION['tilings_generated'])) $_SESSION['tilings_generated'] = [];
             foreach ($PRESETS as $key => $preset) {
-                $_SESSION['tilings_generated'][$key] = runPreset($key, $preset, $sourceFile, $parentId, $cnx);
+                $currentUserId = (int)($_SESSION['userId'] ?? 0);
+                $_SESSION['tilings_generated'][$key] = runPreset($key, $preset, $sourceFile, $parentId, $cnx, $currentUserId);
             }
+            session_write_close();
+            ob_end_clean();
             header("Location: tiling_selection.php");
             exit;
         }
@@ -206,7 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $errors[] = 'Selected tilings are not available. Please regenerate.';
                 } else {
                     $userId = (int)($_SESSION['userId'] ?? 0);
-                    if (!$userId) { header("Location: auth.php"); exit; }
+                    if (!$userId) { session_write_close(); ob_end_clean(); header("Location: auth.php"); exit; }
 
                     try {
                         $cnx->beginTransaction();
@@ -226,16 +231,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $imageId  = (int)$item['image_id'];
                             $txtName  = $item['txt_name'];  // e.g. "preset_balanced_42.txt"
 
+                            // Rattache l'image LEGO à l'utilisateur connecté (protection contre cleanStorage)
+                            $cnx->prepare("UPDATE IMAGE SET user_id = ? WHERE image_id = ? AND user_id IS NULL")
+                                ->execute([$userId, $imageId]);
+                            // Rattache aussi l'image parente — JOIN syntax pour éviter l'erreur MySQL subquery
+                            $cnx->prepare("UPDATE IMAGE i1 JOIN IMAGE i2 ON i1.image_id = i2.img_parent SET i1.user_id = ? WHERE i2.image_id = ? AND i1.user_id IS NULL")
+                                ->execute([$userId, $imageId]);
+
+                            // Calcule prix et qualité depuis le fichier .txt (stockage pérenne)
+                            $stats         = getTilingStats($txtName);
+                            $storedPrice   = (int)($stats['price']   ?? 0);
+                            $storedQuality = (float)($stats['quality'] ?? 0);
+
                             // Check if this image_id already has a TILLING row
                             $stmt = $cnx->prepare("SELECT pavage_id FROM TILLING WHERE image_id = ? LIMIT 1");
                             $stmt->execute([$imageId]);
                             $pavageId = $stmt->fetchColumn();
 
                             if (!$pavageId) {
-                                // Insert new TILLING row
-                                $cnx->prepare("INSERT INTO TILLING (image_id, pavage_txt) VALUES (?, ?)")
-                                    ->execute([$imageId, $txtName]);
+                                // Insert new TILLING row avec prix et qualité
+                                $cnx->prepare("INSERT INTO TILLING (image_id, pavage_txt, price, quality) VALUES (?, ?, ?, ?)")
+                                    ->execute([$imageId, $txtName, $storedPrice, $storedQuality]);
                                 $pavageId = (int)$cnx->lastInsertId();
+                            } else {
+                                // Met à jour prix et qualité si le pavage existait déjà
+                                $cnx->prepare("UPDATE TILLING SET price=?, quality=? WHERE pavage_id=?")
+                                    ->execute([$storedPrice, $storedQuality, $pavageId]);
                             }
 
                             // Check if already in the draft order (avoid duplicates)
@@ -256,6 +277,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $_SESSION['pavage_txt_name']   = $last['txt_name'];
 
                         addLog($cnx, "USER", "ADD", "cart_multi");
+                        session_write_close();
+                        ob_end_clean();
                         header("Location: cart.php");
                         exit;
 
@@ -271,6 +294,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // REGENERATE (clear cache)
         if ($action === 'regenerate') {
             unset($_SESSION['tilings_generated']);
+            session_write_close();
+            ob_end_clean();
             header("Location: tiling_selection.php");
             exit;
         }
@@ -279,6 +304,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // ── Load stats for display ─────────────────────────────────────────────────
 $generated  = $_SESSION['tilings_generated'] ?? null;
+if ($generated) {
+    $anyValid = false;
+    foreach ($generated as $key => $t) {
+        if (!($t['failed'] ?? true) && isset($t['png']) && file_exists(__DIR__ . '/' . $imgFolder . $t['png'])) {
+            $anyValid = true;
+            break;
+        }
+    }
+    if (!$anyValid) {
+        unset($_SESSION['tilings_generated']);
+        $generated = null;
+    }
+}
 $statsCache = [];
 if ($generated) {
     foreach ($generated as $key => $t) {
@@ -397,7 +435,7 @@ if ($generated) {
             $failed  = $t['failed'] ?? true;
             $stats   = $statsCache[$key] ?? null;
             $price   = $stats ? number_format((float)$stats['price'] / 100, 2, '.', ' ') . ' €' : null;
-            $quality = $stats['quality'] ?? $preset['quality'];
+            $quality = $preset['quality']; // Qualité visuelle du preset, plus représentative que la couverture C tiler
             $pngPath = !$failed ? __DIR__ . '/' . $imgFolder . $t['png'] : null;
             $pngSrc  = ($pngPath && file_exists($pngPath))
                        ? $imgFolder . $t['png'] . '?t=' . filemtime($pngPath)
@@ -557,12 +595,14 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeZoom();
 document.addEventListener('DOMContentLoaded', () => {
     updateCount();
 
-    // Auto-trigger generation if not yet done
     const autoForm = document.getElementById('autoGenerateForm');
     if (autoForm) {
         showLoading();
-        // Small delay so the overlay renders before the blocking POST
         setTimeout(() => autoForm.submit(), 120);
+    } else {
+        // Page résultat — cache l'overlay
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) overlay.style.display = 'none';
     }
 });
 </script>

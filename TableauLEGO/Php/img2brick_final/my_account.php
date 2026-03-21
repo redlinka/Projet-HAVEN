@@ -4,8 +4,14 @@ global $cnx;
 include("./config/cnx.php");
 require_once __DIR__ . '/includes/i18n.php';
 
-if (!isset($_SESSION['userId'])) { header("Location: auth.php"); exit; }
-if ($_SESSION['username'] == '4DM1N1STRAT0R_4ND_4LM16HTY') { header("Location: admin_panel.php"); exit; }
+if (!isset($_SESSION['userId'])) {
+    header("Location: auth.php");
+    exit;
+}
+if ($_SESSION['username'] == '4DM1N1STRAT0R_4ND_4LM16HTY') {
+    header("Location: admin_panel.php");
+    exit;
+}
 
 $userId  = $_SESSION['userId'];
 $errors  = [];
@@ -17,19 +23,22 @@ try {
     $stmt = $cnx->prepare("SELECT user_id, username, email, first_name, last_name, phone, birth_year, twofa_method, totp_secret FROM USER WHERE user_id = ?");
     $stmt->execute([$userId]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
-    if (!$user) { header("Location: index.php"); exit; }
+    if (!$user) {
+        header("Location: index.php");
+        exit;
+    }
 
     $stmtAddr = $cnx->prepare("SELECT street, postal_code, city, country FROM ADDRESS WHERE user_id = ? AND is_default = 1 LIMIT 1");
     $stmtAddr->execute([$userId]);
     $addressData = $stmtAddr->fetch(PDO::FETCH_ASSOC) ?: [];
-} catch (PDOException $e) { header("Location: index.php"); }
+} catch (PDOException $e) {
+    header("Location: index.php");
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_validate($_POST['csrf'] ?? null)) {
         $errors[] = tr('account.session_expired', 'Session expired. Please refresh.');
     } else {
-
-        // ── 2FA actions — traités en priorité avant la validation du formulaire principal ──
         $action = $_POST['action'] ?? '';
 
         if ($action === 'set_2fa_method') {
@@ -43,11 +52,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $errors[] = 'Please set up TOTP first before switching to this method.';
                     } else {
                         $cnx->prepare("UPDATE USER SET twofa_method = ? WHERE user_id = ?")->execute([$newMethod, $userId]);
-                        header("Location: my_account.php?success=1#panel-security"); exit;
+                        header("Location: my_account.php?success=1");
+                        exit;
                     }
                 } else {
                     $cnx->prepare("UPDATE USER SET twofa_method = ? WHERE user_id = ?")->execute([$newMethod, $userId]);
-                    header("Location: my_account.php?success=1"); exit;
+                    header("Location: my_account.php?success=1");
+                    exit;
                 }
             }
         }
@@ -55,14 +66,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'remove_totp') {
             $cnx->prepare("UPDATE USER SET totp_secret = NULL, twofa_method = 'email' WHERE user_id = ?")
                 ->execute([$userId]);
-            header("Location: my_account.php?success=1"); exit;
+            header("Location: my_account.php?success=1");
+            exit;
         }
 
         $username  = trim($_POST['username'] ?? '');
         $newEmail  = !empty($_POST['email']) ? trim($_POST['email']) : $user['email'];
         $name      = trim($_POST['name'] ?? '');
         $surname   = trim($_POST['surname'] ?? '');
-        $phone     = trim($_POST['phone'] ?? '');
+        $phone     = trim($_POST['phone'] ?? '') ?: null;
         $birthYear = !empty($_POST['birth_year']) ? (int)$_POST['birth_year'] : null;
         $street    = trim($_POST['street'] ?? '');
         $zip       = trim($_POST['zip'] ?? '');
@@ -88,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $cnx->beginTransaction();
                 $emailChanged = ($newEmail !== $user['email']);
                 $sql = "UPDATE USER SET username=?, email=?, first_name=?, last_name=?, phone=?, birth_year=?"
-                     . ($emailChanged ? ", is_verified=0" : "") . " WHERE user_id=?";
+                    . ($emailChanged ? ", is_verified=0" : "") . " WHERE user_id=?";
                 $upd = $cnx->prepare($sql);
                 $upd->execute([$username, $newEmail, $name, $surname, $phone, $birthYear, $userId]);
 
@@ -123,11 +135,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             } catch (PDOException $e) {
                 $cnx->rollBack();
-                $errors[] = "Database error.";
+                $errors[] = "Database error: " . $e->getMessage();
             }
         }
     }
-
 }
 
 $user = [
@@ -144,12 +155,10 @@ $user = [
     'twofa_method'  => $user['twofa_method']  ?? 'email',
     'totp_secret'   => $user['totp_secret']   ?? null,
 ];
-
-/* Active tab: security if no errors on form, else whichever had the error */
-$activeTab = 'identity';
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -160,14 +169,19 @@ $activeTab = 'identity';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style/my_account.css">
     <style>
-        /* ── 2FA Section ── */
         .twofa-cards {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
             margin-top: 10px;
         }
-        @media (max-width: 560px) { .twofa-cards { grid-template-columns: 1fr; } }
+
+        @media (max-width: 560px) {
+            .twofa-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .twofa-card {
             border: 1.5px solid var(--border, #e0d5c8);
             border-radius: 10px;
@@ -175,10 +189,12 @@ $activeTab = 'identity';
             background: #fff;
             transition: border-color .15s, box-shadow .15s;
         }
+
         .twofa-card.active {
             border-color: var(--main-brown, #A26547);
-            box-shadow: 0 0 0 3px rgba(162,101,71,.1);
+            box-shadow: 0 0 0 3px rgba(162, 101, 71, .1);
         }
+
         .twofa-card-head {
             display: flex;
             align-items: center;
@@ -188,6 +204,7 @@ $activeTab = 'identity';
             color: var(--text, #2b1f14);
             margin-bottom: 6px;
         }
+
         .twofa-badge {
             margin-left: auto;
             padding: 2px 8px;
@@ -197,14 +214,24 @@ $activeTab = 'identity';
             letter-spacing: .06em;
             text-transform: uppercase;
         }
-        .twofa-badge.active      { background: #dcfce7; color: #166534; }
-        .twofa-badge.configured  { background: #fef9c3; color: #854d0e; }
+
+        .twofa-badge.active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .twofa-badge.configured {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
         .twofa-card-desc {
             font-size: .75rem;
             color: var(--muted, #9a8a7a);
             line-height: 1.45;
             margin: 0;
         }
+
         .twofa-switch-btn {
             display: inline-flex;
             align-items: center;
@@ -220,303 +247,335 @@ $activeTab = 'identity';
             background: transparent;
             transition: background .15s, color .15s;
         }
-        .twofa-switch-btn:hover { background: var(--main-brown, #A26547); color: #fff; }
-        .twofa-switch-btn.danger { border-color: #c0392b; color: #c0392b; }
-        .twofa-switch-btn.danger:hover { background: #c0392b; color: #fff; }
+
+        .twofa-switch-btn:hover {
+            background: var(--main-brown, #A26547);
+            color: #fff;
+        }
+
+        .twofa-switch-btn.danger {
+            border-color: #c0392b;
+            color: #c0392b;
+        }
+
+        .twofa-switch-btn.danger:hover {
+            background: #c0392b;
+            color: #fff;
+        }
+
+        /* Security card hidden by default, shown by JS */
+        #security-card {
+            display: none;
+        }
     </style>
     <link rel="stylesheet" href="style/all.css">
 </head>
+
 <body>
 
-<?php include("./includes/navbar.php"); ?>
+    <?php include("./includes/navbar.php"); ?>
 
-<div class="page-wrapper">
+    <div class="page-wrapper">
 
-    <!-- ══ SIDEBAR ══ -->
-    <aside class="sidebar">
-
-        <!-- User info card -->
-        <div class="user-card">
-            <div class="user-avatar">
-                <?= strtoupper(substr($user['username'], 0, 1)) ?>
+        <!-- ══ SIDEBAR ══ -->
+        <aside class="sidebar">
+            <div class="user-card">
+                <div class="user-avatar"><?= strtoupper(substr($user['username'], 0, 1)) ?></div>
+                <div>
+                    <p class="user-name"><?= htmlspecialchars($user['username']) ?></p>
+                    <p class="user-email"><?= htmlspecialchars($user['email']) ?></p>
+                </div>
             </div>
-            <div>
-                <p class="user-name"><?= htmlspecialchars($user['username']) ?></p>
-                <p class="user-email"><?= htmlspecialchars($user['email']) ?></p>
-            </div>
-        </div>
+            <nav class="nav-tabs-custom">
+                <button class="nav-tab active" id="tab-identity" onclick="switchTab('identity')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    Identity
+                </button>
+                <button class="nav-tab" id="tab-stats" onclick="switchTab('stats')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="20" x2="18" y2="10" />
+                        <line x1="12" y1="20" x2="12" y2="4" />
+                        <line x1="6" y1="20" x2="6" y2="14" />
+                    </svg>
+                    Statistics
+                </button>
+                <button class="nav-tab" id="tab-delivery" onclick="switchTab('delivery')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                    Delivery
+                </button>
+                <button class="nav-tab danger" id="tab-security" onclick="switchTab('security')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    Security
+                </button>
+            </nav>
+        </aside>
 
-        <!-- Nav tabs -->
-        <nav class="nav-tabs-custom">
-            <button class="nav-tab active" id="tab-identity" onclick="switchTab('identity')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                </svg>
-                Identity
-            </button>
-            <button class="nav-tab" id="tab-stats" onclick="switchTab('stats')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
-                </svg>
-                Statistics
-            </button>
-            <button class="nav-tab" id="tab-delivery" onclick="switchTab('delivery')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-                </svg>
-                Delivery
-            </button>
-            <button class="nav-tab danger" id="tab-security" onclick="switchTab('security')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
-                Security
-            </button>
-        </nav>
+        <!-- ══ MAIN PANEL ══ -->
+        <div class="main-panel">
 
-    </aside>
+            <?php if ($success): ?>
+                <div class="alert alert-success">✓ <?= htmlspecialchars($success) ?></div>
+            <?php endif; ?>
 
-    <!-- ══ MAIN PANEL ══ -->
-    <div class="main-panel">
+            <?php if (!empty($errors)): ?>
+                <div class="alert alert-error">
+                    <ul><?php foreach ($errors as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?></ul>
+                </div>
+            <?php endif; ?>
 
-        <?php if ($success): ?>
-        <div class="alert alert-success">✓ <?= htmlspecialchars($success) ?></div>
-        <?php endif; ?>
+            <!-- ══════════════════════════════════════
+             FORMULAIRE PRINCIPAL (sans security)
+        ══════════════════════════════════════ -->
+            <form method="POST" id="account-form">
+                <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_get()) ?>">
 
-        <?php if (!empty($errors)): ?>
-        <div class="alert alert-error">
-            <ul><?php foreach ($errors as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?></ul>
-        </div>
-        <?php endif; ?>
+                <div class="form-card" id="main-card">
+                    <div class="form-card-head" id="panel-title">Identity</div>
+                    <div class="form-card-body">
 
-        <form method="POST" id="account-form">
-            <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_get()) ?>">
+                        <!-- IDENTITY -->
+                        <div class="tab-panel active" id="panel-identity">
+                            <div class="fields-grid">
+                                <div class="field">
+                                    <label for="username">Username</label>
+                                    <input type="text" id="username" name="username"
+                                        value="<?= htmlspecialchars($user['username']) ?>" required>
+                                    <span class="field-hint">Must be unique.</span>
+                                </div>
+                                <div class="field">
+                                    <label for="email">Email</label>
+                                    <input type="text" id="email" name="email"
+                                        value="<?= htmlspecialchars($user['email']) ?>" disabled>
+                                    <span class="field-hint">Cannot be changed directly.</span>
+                                </div>
+                                <div class="field">
+                                    <label for="name">First Name</label>
+                                    <input type="text" id="name" name="name"
+                                        value="<?= htmlspecialchars($user['name'] ?? '') ?>"
+                                        placeholder="e.g. John (optional)">
+                                </div>
+                                <div class="field">
+                                    <label for="surname">Surname</label>
+                                    <input type="text" id="surname" name="surname"
+                                        value="<?= htmlspecialchars($user['surname'] ?? '') ?>"
+                                        placeholder="e.g. Doe (optional)">
+                                </div>
+                            </div>
+                        </div>
 
-            <div class="form-card">
+                        <!-- STATISTICS -->
+                        <div class="tab-panel" id="panel-stats">
+                            <div class="fields-grid cols-1">
+                                <div class="field">
+                                    <label for="birth_year">Year of Birth</label>
+                                    <input type="number" id="birth_year" name="birth_year"
+                                        min="1900" max="<?= date('Y') ?>"
+                                        value="<?= htmlspecialchars($user['birth_year'] ?? '') ?>"
+                                        placeholder="YYYY">
+                                    <span class="field-hint">Used for age statistics only. Never shared.</span>
+                                </div>
+                            </div>
+                        </div>
 
-                <!-- Card header — updated by JS -->
-                <div class="form-card-head" id="panel-title">Identity</div>
+                        <!-- DELIVERY -->
+                        <div class="tab-panel" id="panel-delivery">
+                            <div class="fields-grid">
+                                <div class="field field-full">
+                                    <label for="phone">Phone Number</label>
+                                    <input type="tel" id="phone" name="phone"
+                                        value="<?= htmlspecialchars($user['phone'] ?? '') ?>"
+                                        placeholder="+33 6 12 34 56 78">
+                                </div>
+                                <div class="field field-full">
+                                    <label for="street">Street Address</label>
+                                    <input type="text" id="street" name="street"
+                                        value="<?= htmlspecialchars($user['street'] ?? '') ?>"
+                                        placeholder="123 Brick Street">
+                                </div>
+                                <div class="field">
+                                    <label for="zip">Zip Code</label>
+                                    <input type="text" id="zip" name="zip"
+                                        value="<?= htmlspecialchars($user['zip'] ?? '') ?>"
+                                        placeholder="75001">
+                                </div>
+                                <div class="field">
+                                    <label for="city">City</label>
+                                    <input type="text" id="city" name="city"
+                                        value="<?= htmlspecialchars($user['city'] ?? '') ?>"
+                                        placeholder="Paris">
+                                </div>
+                                <div class="field field-full">
+                                    <label for="country">Country</label>
+                                    <select id="country" name="country">
+                                        <option value="France" <?= ($user['country'] === 'France' ? 'selected' : '') ?>>France</option>
+                                        <option value="Spain" <?= ($user['country'] === 'Spain'  ? 'selected' : '') ?>>Spain</option>
+                                        <option value="USA" <?= ($user['country'] === 'USA'    ? 'selected' : '') ?>>USA</option>
+                                        <option value="UK" <?= ($user['country'] === 'UK'     ? 'selected' : '') ?>>UK</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
 
+                    </div><!-- /form-card-body -->
+
+                    <div class="form-card-footer" id="form-footer">
+                        <button type="submit" class="btn-submit">Save Changes</button>
+                    </div>
+                </div><!-- /form-card -->
+            </form>
+            <!-- FIN DU FORMULAIRE PRINCIPAL — pas de formulaires imbriqués au-dessus -->
+
+            <!-- ══════════════════════════════════════
+             SECURITY — carte séparée, hors du form
+        ══════════════════════════════════════ -->
+            <div class="form-card" id="security-card">
+                <div class="form-card-head danger">Security & 2FA</div>
                 <div class="form-card-body">
 
-                    <!-- ── IDENTITY ── -->
-                    <div class="tab-panel active" id="panel-identity">
-                        <div class="fields-grid">
-                            <div class="field">
-                                <label for="username" data-i18n="account.username">Username</label>
-                                <input type="text" id="username" name="username"
-                                       value="<?= htmlspecialchars($user['username']) ?>" required>
-                                <span class="field-hint" data-i18n="account.username_hint">Must be unique.</span>
-                            </div>
-                            <div class="field">
-                                <label for="email" data-i18n="account.email">Email</label>
-                                <input type="text" id="email" name="email"
-                                       value="<?= htmlspecialchars($user['email']) ?>" disabled>
-                                <span class="field-hint" data-i18n="account.email_hint">Cannot be changed directly.</span>
-                            </div>
-                            <div class="field">
-                                <label for="name" data-i18n="account.first_name">First Name</label>
-                                <input type="text" id="name" name="name"
-                                       value="<?= htmlspecialchars($user['name'] ?? '') ?>"
-                                       placeholder="e.g. John (optional)">
-                            </div>
-                            <div class="field">
-                                <label for="surname" data-i18n="account.surname">Surname</label>
-                                <input type="text" id="surname" name="surname"
-                                       value="<?= htmlspecialchars($user['surname'] ?? '') ?>"
-                                       placeholder="e.g. Doe (optional)">
-                            </div>
-                        </div>
-                    </div>
+                    <p class="security-note">
+                        Need to change your password? We'll send a secure reset link to your registered email address.
+                    </p>
+                    <a href="password_forgotten.php" class="btn-danger-outline">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                        Reset Password
+                    </a>
 
-                    <!-- ── STATISTICS ── -->
-                    <div class="tab-panel" id="panel-stats">
-                        <div class="fields-grid cols-1">
-                            <div class="field">
-                                <label for="birth_year" data-i18n="account.birth_year">Year of Birth</label>
-                                <input type="number" id="birth_year" name="birth_year"
-                                       min="1900" max="<?= date('Y') ?>"
-                                       value="<?= htmlspecialchars($user['birth_year'] ?? '') ?>"
-                                       placeholder="YYYY">
-                                <span class="field-hint" data-i18n="account.birth_year_hint">Used for age statistics only. Never shared.</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ── DELIVERY ── -->
-                    <div class="tab-panel" id="panel-delivery">
-                        <div class="fields-grid">
-                            <div class="field field-full">
-                                <label for="phone" data-i18n="account.phone">Phone Number</label>
-                                <input type="tel" id="phone" name="phone"
-                                       value="<?= htmlspecialchars($user['phone'] ?? '') ?>"
-                                       placeholder="+33 6 12 34 56 78">
-                            </div>
-                            <div class="field field-full">
-                                <label for="street" data-i18n="account.street">Street Address</label>
-                                <input type="text" id="street" name="street"
-                                       value="<?= htmlspecialchars($user['street'] ?? '') ?>"
-                                       placeholder="123 Brick Street">
-                            </div>
-                            <div class="field">
-                                <label for="zip" data-i18n="account.zip">Zip Code</label>
-                                <input type="text" id="zip" name="zip"
-                                       value="<?= htmlspecialchars($user['zip'] ?? '') ?>"
-                                       placeholder="75001">
-                            </div>
-                            <div class="field">
-                                <label for="city" data-i18n="account.city">City</label>
-                                <input type="text" id="city" name="city"
-                                       value="<?= htmlspecialchars($user['city'] ?? '') ?>"
-                                       placeholder="Paris">
-                            </div>
-                            <div class="field field-full">
-                                <label for="country" data-i18n="account.country">Country</label>
-                                <select id="country" name="country">
-                                    <option value="France"  <?= ($user['country'] === 'France'  ? 'selected' : '') ?>>France</option>
-                                    <option value="Spain"   <?= ($user['country'] === 'Spain'   ? 'selected' : '') ?>>Spain</option>
-                                    <option value="USA"     <?= ($user['country'] === 'USA'     ? 'selected' : '') ?>>USA</option>
-                                    <option value="UK"      <?= ($user['country'] === 'UK'      ? 'selected' : '') ?>>UK</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ── SECURITY ── -->
-                    <div class="tab-panel" id="panel-security">
-                        <p class="security-note" data-i18n="account.security_hint">
-                            Need to change your password? We'll send a secure reset link to your registered email address.
+                    <div class="twofa-section">
+                        <p class="security-note" style="margin-top:28px;">
+                            <strong>Two-Factor Authentication (2FA)</strong><br>
+                            Choose how you verify your identity when logging in.
+                            <em>Email</em> is used by default.
                         </p>
-                        <a href="password_forgotten.php" class="btn-danger-outline" data-i18n="account.reset_password">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                            </svg>
-                            Reset Password
-                        </a>
 
-                        <!-- ── 2FA METHOD ── -->
-                        <div class="twofa-section">
-                            <p class="security-note" style="margin-top:28px;">
-                                <strong>Two-Factor Authentication (2FA)</strong><br>
-                                Choose how you verify your identity when logging in.
-                                <em>Email</em> is used by default.
-                            </p>
+                        <?php
+                        $currentMethod = $user['twofa_method'] ?? 'email';
+                        $hasTotp       = !empty($user['totp_secret']);
+                        ?>
 
-                            <?php
-                            $currentMethod = $user['twofa_method'] ?? 'email';
-                            $hasTotp       = !empty($user['totp_secret']);
-                            ?>
+                        <div class="twofa-cards">
 
-                            <!-- Method cards -->
-                            <div class="twofa-cards">
-
-                                <!-- Email method -->
-                                <div class="twofa-card <?= $currentMethod === 'email' ? 'active' : '' ?>">
-                                    <div class="twofa-card-head">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <rect x="2" y="4" width="20" height="16" rx="2"/>
-                                            <polyline points="2,4 12,13 22,4"/>
-                                        </svg>
-                                        <span>Email link</span>
-                                        <?php if ($currentMethod === 'email'): ?>
+                            <!-- Email method -->
+                            <div class="twofa-card <?= $currentMethod === 'email' ? 'active' : '' ?>">
+                                <div class="twofa-card-head">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="2" y="4" width="20" height="16" rx="2" />
+                                        <polyline points="2,4 12,13 22,4" />
+                                    </svg>
+                                    <span>Email link</span>
+                                    <?php if ($currentMethod === 'email'): ?>
                                         <span class="twofa-badge active">Active</span>
-                                        <?php endif; ?>
-                                    </div>
-                                    <p class="twofa-card-desc">A secure login link is sent to your email address each time you log in.</p>
-                                    <?php if ($currentMethod !== 'email'): ?>
+                                    <?php endif; ?>
+                                </div>
+                                <p class="twofa-card-desc">A secure login link is sent to your email address each time you log in.</p>
+                                <?php if ($currentMethod !== 'email'): ?>
                                     <form method="POST" style="margin-top:8px;">
-                                        <input type="hidden" name="csrf"        value="<?= htmlspecialchars(csrf_get()) ?>">
-                                        <input type="hidden" name="action"      value="set_2fa_method">
+                                        <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_get()) ?>">
+                                        <input type="hidden" name="action" value="set_2fa_method">
                                         <input type="hidden" name="twofa_method" value="email">
                                         <button type="submit" class="twofa-switch-btn">Switch to Email</button>
                                     </form>
+                                <?php endif; ?>
+                            </div>
+
+                            <!-- TOTP method -->
+                            <div class="twofa-card <?= $currentMethod === 'totp' ? 'active' : '' ?>">
+                                <div class="twofa-card-head">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="5" y="2" width="14" height="20" rx="2" />
+                                        <line x1="12" y1="18" x2="12.01" y2="18" />
+                                        <rect x="8" y="6" width="8" height="6" rx="1" />
+                                    </svg>
+                                    <span>Authenticator app</span>
+                                    <?php if ($currentMethod === 'totp'): ?>
+                                        <span class="twofa-badge active">Active</span>
+                                    <?php elseif ($hasTotp): ?>
+                                        <span class="twofa-badge configured">Configured</span>
                                     <?php endif; ?>
                                 </div>
-
-                                <!-- TOTP method -->
-                                <div class="twofa-card <?= $currentMethod === 'totp' ? 'active' : '' ?>">
-                                    <div class="twofa-card-head">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <rect x="5" y="2" width="14" height="20" rx="2"/>
-                                            <line x1="12" y1="18" x2="12.01" y2="18"/>
-                                            <rect x="8" y="6" width="8" height="6" rx="1"/>
-                                        </svg>
-                                        <span>Authenticator app</span>
-                                        <?php if ($currentMethod === 'totp'): ?>
-                                        <span class="twofa-badge active">Active</span>
-                                        <?php elseif ($hasTotp): ?>
-                                        <span class="twofa-badge configured">Configured</span>
-                                        <?php endif; ?>
-                                    </div>
-                                    <p class="twofa-card-desc">Use an app like LastPass Authenticator or Google Authenticator to generate a 6-digit code.</p>
-
-                                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-                                        <?php if (!$hasTotp || $currentMethod !== 'totp'): ?>
+                                <p class="twofa-card-desc">Use an app like LastPass Authenticator or Google Authenticator to generate a 6-digit code.</p>
+                                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+                                    <?php if (!$hasTotp || $currentMethod !== 'totp'): ?>
                                         <a href="setup_totp.php" class="twofa-switch-btn">
                                             <?= $hasTotp ? 'Reconfigure TOTP' : 'Set Up TOTP' ?>
                                         </a>
-                                        <?php endif; ?>
-
-                                        <?php if ($hasTotp && $currentMethod !== 'totp'): ?>
+                                    <?php endif; ?>
+                                    <?php if ($hasTotp && $currentMethod !== 'totp'): ?>
                                         <form method="POST">
-                                            <input type="hidden" name="csrf"         value="<?= htmlspecialchars(csrf_get()) ?>">
-                                            <input type="hidden" name="action"       value="set_2fa_method">
+                                            <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_get()) ?>">
+                                            <input type="hidden" name="action" value="set_2fa_method">
                                             <input type="hidden" name="twofa_method" value="totp">
                                             <button type="submit" class="twofa-switch-btn">Switch to TOTP</button>
                                         </form>
-                                        <?php endif; ?>
-
-                                        <?php if ($hasTotp): ?>
+                                    <?php endif; ?>
+                                    <?php if ($hasTotp): ?>
                                         <form method="POST" onsubmit="return confirm('Remove TOTP configuration?');">
-                                            <input type="hidden" name="csrf"   value="<?= htmlspecialchars(csrf_get()) ?>">
+                                            <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_get()) ?>">
                                             <input type="hidden" name="action" value="remove_totp">
                                             <button type="submit" class="twofa-switch-btn danger">Remove TOTP</button>
                                         </form>
-                                        <?php endif; ?>
-                                    </div>
+                                    <?php endif; ?>
                                 </div>
+                            </div>
 
-                            </div><!-- /twofa-cards -->
-                        </div><!-- /twofa-section -->
-                    </div>
+                        </div><!-- /twofa-cards -->
+                    </div><!-- /twofa-section -->
 
                 </div><!-- /form-card-body -->
+            </div><!-- /security-card -->
 
-                <!-- Footer — hidden on security tab -->
-                <div class="form-card-footer" id="form-footer">
-                    <button type="submit" class="btn-submit" data-i18n="account.update">
-                        Save Changes
-                    </button>
-                </div>
+        </div><!-- /main-panel -->
+    </div><!-- /page-wrapper -->
 
-            </div><!-- /form-card -->
-        </form>
+    <script>
+        const titleEl = document.getElementById('panel-title');
+        const footerEl = document.getElementById('form-footer');
+        const mainCard = document.getElementById('main-card');
+        const secCard = document.getElementById('security-card');
 
-    </div><!-- /main-panel -->
-</div><!-- /page-wrapper -->
+        function switchTab(tab) {
+            // Boutons sidebar
+            document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
 
-<script>
-    const panels   = { identity: 'Identity', stats: 'Statistics', delivery: 'Delivery', security: 'Security & 2FA' };
-    const titleEl  = document.getElementById('panel-title');
-    const footerEl = document.getElementById('form-footer');
+            if (tab === 'security') {
+                // Masque le formulaire principal, affiche la carte security
+                mainCard.style.display = 'none';
+                secCard.style.display = 'block';
+                footerEl.style.display = 'none';
+            } else {
+                // Affiche le formulaire principal, masque security
+                mainCard.style.display = 'block';
+                secCard.style.display = 'none';
+                footerEl.style.display = 'flex';
 
-    function switchTab(tab) {
-        // Buttons
-        document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
-        document.getElementById('tab-' + tab).classList.add('active');
+                // Affiche le bon panel dans le formulaire
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                document.getElementById('panel-' + tab).classList.add('active');
 
-        // Panels
-        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-        document.getElementById('panel-' + tab).classList.add('active');
-
-        // Header title
-        titleEl.textContent = panels[tab];
-        titleEl.className   = 'form-card-head' + (tab === 'security' ? ' danger' : '');
-
-        // Hide submit on security tab
-        footerEl.style.display = (tab === 'security') ? 'none' : 'flex';
-    }
-</script>
+                // Titre de la carte
+                const titles = {
+                    identity: 'Identity',
+                    stats: 'Statistics',
+                    delivery: 'Delivery'
+                };
+                titleEl.textContent = titles[tab] || tab;
+                titleEl.className = 'form-card-head';
+            }
+        }
+    </script>
 
 </body>
+
 </html>

@@ -1,22 +1,36 @@
 import { Canvas } from "@react-three/fiber";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import {
   Background,
-  Grid,
   BlockHolder,
   CameraController,
   Score,
 } from "./SceneElements.tsx";
 import BlocksGeneration from "./Block.tsx";
+import {Grid} from "./Grid.tsx";
+import {EffectComposer, Outline, Pixelation, Scanline} from "@react-three/postprocessing";
+import {useGameStore} from "./Store.ts";
 
-export interface GameData {
-  x: number;
-  y: number;
+const GlobalEffects = () => {
+
+  const hoveredMeshes = useGameStore((state) => state.hoveredMeshes);
+
+  return (
+      <EffectComposer autoClear={false}>
+        <Outline
+            selection={hoveredMeshes}
+            edgeStrength={1000}
+            blur={true}
+            kernelSize={2}
+        />
+        <Pixelation granularity={3}/>
+        <Scanline opacity={0.3} density={1}/>
+      </EffectComposer>
+  );
 }
 
 export const BlockScene = () => {
   const [fov, setFov] = useState(80);
-  const sharedData = useRef<GameData>({ x: 0, y: 0 });
 
   useEffect(() => {
     const update = () => {
@@ -30,17 +44,19 @@ export const BlockScene = () => {
   return (
     <div style={{ width: "100%", height: "100%" }}>
       <Canvas
-        camera={{ fov: fov, near: 0.1, far: 1000, position: [0, -15, 80] }}
+        camera={{ fov: fov, near: 0.1, far: 1000, position: [0, -15, 100] }}
       >
         <CameraController />
         <Suspense fallback={null}>
-          <Score data={sharedData} />
-          <Grid data={sharedData} />
+          <Score />
+          <Grid />
           <BlockHolder />
           <BlocksGeneration />
           <Background />
+          <GlobalEffects />
         </Suspense>
       </Canvas>
+
     </div>
   );
 };

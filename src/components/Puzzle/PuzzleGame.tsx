@@ -206,15 +206,9 @@ export default function PuzzleGame() {
     },
   );
 
-  const [playOnDrag] = useSound(dragSound, {
-    volume: 0.2,
-  });
-  const [playOnDrop] = useSound(dropSound, {
-    volume: 0.05,
-  });
-  const [playWrongPlacement] = useSound(wrongPlacementSound, {
-    volume: 0.1,
-  });
+  const [playOnDrag] = useSound(dragSound, { volume: 0.2 });
+  const [playOnDrop] = useSound(dropSound, { volume: 0.05 });
+  const [playWrongPlacement] = useSound(wrongPlacementSound, { volume: 0.1 });
 
   // ============== Drag State ===========
   const [activeBrick, setActiveBrick] = useState<Brick | null>(null);
@@ -223,9 +217,6 @@ export default function PuzzleGame() {
 
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const [isOnBoard, setIsOnBoard] = useState(false);
-  const [snapCell, setSnapCell] = useState<{ i: number; j: number } | null>(
-    null,
-  );
   const [endGame, setEndGame] = useState<boolean>(false);
   const [nbPieces, setNbPieces] = useState<number>(0);
 
@@ -233,7 +224,7 @@ export default function PuzzleGame() {
     modRef.current = mod;
   }, [mod]);
 
-  /* =========== Drag listeners =========== */
+  // ============== Drag listeners ==============
 
   useEffect(() => {
     const getBoardInfos = () => {
@@ -244,26 +235,18 @@ export default function PuzzleGame() {
       return { rect, BS };
     };
 
-    const getCoords = (e: MouseEvent | TouchEvent) => {
-      if ("touches" in e) {
-        return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
-      }
-      return { clientX: e.clientX, clientY: e.clientY };
-    };
-
-    const onMove = (e: MouseEvent | TouchEvent) => {
+    const onMove = (e: PointerEvent) => {
       const brick = draggingBrickRef.current;
       if (!brick) return;
 
-      const { clientX, clientY } = getCoords(e);
-      setDragPos({ x: clientX, y: clientY });
+      setDragPos({ x: e.clientX, y: e.clientY });
 
       const boardInfo = getBoardInfos();
       if (!boardInfo) return;
 
       const { rect, BS } = boardInfo;
-      const topLeftX = clientX - rect.left - (brick.w * BS) / 2;
-      const topLeftY = clientY - rect.top - (brick.h * BS) / 2;
+      const topLeftX = e.clientX - rect.left - (brick.w * BS) / 2;
+      const topLeftY = e.clientY - rect.top - (brick.h * BS) / 2;
       const i = Math.round(topLeftX / BS);
       const j = Math.round(topLeftY / BS);
 
@@ -274,29 +257,17 @@ export default function PuzzleGame() {
         j + brick.h <= modRef.current.rows;
 
       setIsOnBoard(inside);
-      setSnapCell(inside ? { i, j } : null);
     };
 
-    const onEnd = (e: MouseEvent | TouchEvent) => {
+    const onEnd = (e: PointerEvent) => {
       const currentBrickToPlace = draggingBrickRef.current;
       if (!currentBrickToPlace) return;
-
-      // Pour touchend, les coords sont dans changedTouches
-      const coords =
-        "changedTouches" in e
-          ? {
-              clientX: e.changedTouches[0].clientX,
-              clientY: e.changedTouches[0].clientY,
-            }
-          : { clientX: e.clientX, clientY: e.clientY };
 
       const boardInfo = getBoardInfos();
       if (boardInfo) {
         const { rect, BS } = boardInfo;
-        const topLeftX =
-          coords.clientX - rect.left - (currentBrickToPlace.w * BS) / 2;
-        const topLeftY =
-          coords.clientY - rect.top - (currentBrickToPlace.h * BS) / 2;
+        const topLeftX = e.clientX - rect.left - (currentBrickToPlace.w * BS) / 2;
+        const topLeftY = e.clientY - rect.top - (currentBrickToPlace.h * BS) / 2;
         const i = Math.round(topLeftX / BS);
         const j = Math.round(topLeftY / BS);
 
@@ -309,9 +280,7 @@ export default function PuzzleGame() {
           );
 
           if (updatedBoard) {
-            if (isPlayingEffect) {
-              playOnDrop();
-            }
+            if (isPlayingEffect) playOnDrop();
 
             setAllBricks((prevBricks) => {
               const next = prevBricks.slice(1);
@@ -319,11 +288,7 @@ export default function PuzzleGame() {
 
               if (
                 (next[0] &&
-                  !checkPlacementValid(
-                    updatedBoard,
-                    modRef.current.cols,
-                    next[0],
-                  )) ||
+                  !checkPlacementValid(updatedBoard, modRef.current.cols, next[0])) ||
                 next.length === 0
               ) {
                 setEndGame(true);
@@ -343,42 +308,26 @@ export default function PuzzleGame() {
       setActiveBrick(null);
       setDragPos(null);
       setIsOnBoard(false);
-      setSnapCell(null);
     };
 
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onEnd);
-    window.addEventListener("touchmove", onMove, { passive: true });
-    window.addEventListener("touchend", onEnd);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onEnd);
 
     return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onEnd);
-      window.removeEventListener("touchmove", onMove);
-      window.removeEventListener("touchend", onEnd);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onEnd);
     };
   }, [isPlayingEffect, playOnDrop, playWrongPlacement]);
 
-  const handleGrab = (brick: Brick, e: React.MouseEvent) => {
-    if (isPlayingEffect) {
-      playOnDrag();
-    }
+  const handlePointerDown = (brick: Brick, e: React.PointerEvent) => {
+    if (isPlayingEffect) playOnDrag();
     draggingBrickRef.current = brick;
     setActiveBrick(brick);
     setDragPos({ x: e.clientX, y: e.clientY });
-  };
-
-  const handleTouchStart = (brick: Brick, e: React.TouchEvent) => {
-    if (isPlayingEffect) {
-      playOnDrag();
-    }
-    draggingBrickRef.current = brick;
-    setActiveBrick(brick);
-    setDragPos({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+    (e.currentTarget as Element).setPointerCapture(e.pointerId);
   };
 
   const handleModMenu = () => {
-    console.log("Menu game");
     setEndGame(false);
     setMod({ cols: 0, rows: 0 });
   };
@@ -425,7 +374,6 @@ export default function PuzzleGame() {
     if (isPlayingMusic) {
       playGameMusic();
     }
-
     return () => {
       stopMusic();
     };
@@ -441,18 +389,15 @@ export default function PuzzleGame() {
         <div className={perfect ? "ending-title-win" : "ending-title-lose"}>
           {perfect ? "PERFECT!" : "GAME CLEAR"}
         </div>
-
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div className="ending-score">
             SCORE {String(score).padStart(4, "0")} / {nbPieces}
           </div>
           {perfect && <div className="ending-hi">★ NEW RECORD ★</div>}
         </div>
-
         <div style={{ fontSize: 6, color: "#4a3060" }}>
           {mod.cols}×{mod.rows} — {nbPieces} PIECES
         </div>
-
         <button className="retry-btn" onClick={handleModMenu}>
           MOD MENU
         </button>
@@ -463,23 +408,14 @@ export default function PuzzleGame() {
   const soundsButtons = () => {
     return (
       <div className="sounds-container">
-        <button
-          onClick={() => {
-            setIsPlayingEffect((prev) => {
-              return !prev;
-            });
-          }}
-        >
+        <button onClick={() => setIsPlayingEffect((prev) => !prev)}>
           {isPlayingEffect ? <Volume2 /> : <VolumeOff />}
         </button>
         <button
           onClick={() =>
             setIsPlayingMusic((prev) => {
-              if (prev) {
-                pauseMusic();
-              } else {
-                playGameMusic();
-              }
+              if (prev) pauseMusic();
+              else playGameMusic();
               return !prev;
             })
           }
@@ -490,7 +426,6 @@ export default function PuzzleGame() {
     );
   };
 
-  // -- Loading --
   if (loading)
     return (
       <MonitorShell>
@@ -503,7 +438,6 @@ export default function PuzzleGame() {
   return (
     <MonitorShell>
       {soundsButtons()}
-      {/* HUD */}
       {endGame ? (
         endGamePage()
       ) : !mod.cols || !mod.rows ? (
@@ -518,7 +452,6 @@ export default function PuzzleGame() {
           />
 
           <div className="puzzle-game">
-            {/* Board */}
             <div className="board-wrap">
               <span className="board-label">▸ BOARD</span>
               <div className="board-container">
@@ -531,21 +464,16 @@ export default function PuzzleGame() {
               </div>
             </div>
 
-            {/* Right Panel */}
             <div className="side-panel">
-              {/* Current piece */}
               <div className="panel-card">
                 <div className="panel-card-title">CURRENT PIECE</div>
                 <div className="piece-random">
                   {currentBrick ? (
-                    <div
-                      style={{ opacity: draggingBrickRef.current ? 0.3 : 1 }}
-                    >
+                    <div style={{ opacity: draggingBrickRef.current ? 0.3 : 1 }}>
                       <Brick
                         b={currentBrick}
                         boardSize={16}
-                        onGrab={(brick, e) => handleGrab(brick, e)}
-                        onTouchStart={(brick, e) => handleTouchStart(brick, e)}
+                        onPointerDown={(e) => handlePointerDown(currentBrick, e)}
                       />
                     </div>
                   ) : (
@@ -557,7 +485,6 @@ export default function PuzzleGame() {
             </div>
           </div>
 
-          {/* Floating dragged brick */}
           {activeBrick &&
             dragPos &&
             createPortal(

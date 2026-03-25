@@ -29,7 +29,7 @@ const GameList = ({ games }: { games: Game[] }) => {
   return (
     <ul className="game-list">
       {games.map((game, index) => (
-        <Link key={index} to={`/game/${index}`} className="list-link">
+        <Link key={index} to={`/game/${index}/lobby`} className="list-link">
           <img src={game.img} alt="" />
 
           <div className="info">

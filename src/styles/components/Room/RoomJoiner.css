@@ -1,0 +1,6 @@
+@import './_room-shared.css';
+
+/* Surcharges spécifiques à RoomJoiner si nécessaire */
+.room-joiner {
+  border-top: 3px solid rgba(59, 130, 246, 0.4);
+}

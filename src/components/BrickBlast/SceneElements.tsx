@@ -4,12 +4,10 @@ import * as THREE from "three";
 import {useRef} from "react";
 import {useGameStore} from "./Store.ts";
 
-import {getWorldCoordsFromGrid} from "./logic.ts";
-
 export const CameraController = () => {
   const { size } = useThree();
   const ASPECT = size.width / size.height;
-  const FACTOR = 1.5;
+  const FACTOR = 2.5;
 
   useFrame((state) => {
     // Scale the lookAt target based on aspect ratio
@@ -43,9 +41,12 @@ export const Score = () => {
   useFrame(() => {
     if (scoreRef.current) {
 
-        const { x, y } = useGameStore.getState().hoverCoords;
-        const coordsFromRealWorld = getWorldCoordsFromGrid(x, y)
-      scoreRef.current.text = "Coords: " + coordsFromRealWorld.x + ", " + coordsFromRealWorld.y;
+        const coords = useGameStore.getState().hoverCoords;
+        if (coords !== null) {
+            scoreRef.current.text = "Coords: " + coords.x + ", " + coords.y;
+        } else {
+            scoreRef.current.text = "Coords: Void"; // Or whatever text you want
+        }
     }
   });
 

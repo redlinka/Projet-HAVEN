@@ -23,6 +23,9 @@ export const Grid = () => {
                         }
                     });
                 }}
+                onPointerOut={() => {
+                    useGameStore.setState({ hoverCoords: null });
+                }}
             >
                 <Edges lineWidth={10} color="white"/>
                 <planeGeometry args={[100, 100]}/>

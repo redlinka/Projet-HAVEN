@@ -6,23 +6,26 @@ import {
   CameraController,
   Score,
 } from "./SceneElements.tsx";
-import BlocksGeneration from "./Block.tsx";
+import BlocksGeneration from "./SelectionBlock.tsx";
 import {Grid} from "./Grid.tsx";
 import {EffectComposer, Outline, Pixelation, Scanline} from "@react-three/postprocessing";
+import { BlendFunction } from 'postprocessing';
 import {useGameStore} from "./Store.ts";
+import {GridRenderer} from "./GridRenderer.tsx";
 
 const GlobalEffects = () => {
 
   const hoveredMeshes = useGameStore((state) => state.hoveredMeshes);
 
-  return (
+    return (
       <EffectComposer autoClear={false}>
-        <Outline
-            selection={hoveredMeshes}
-            edgeStrength={1000}
-            blur={true}
-            kernelSize={2}
-        />
+          <Outline
+              selection={hoveredMeshes}
+              blendFunction={BlendFunction.ALPHA}
+              edgeStrength={1000}
+              blur={true}
+              kernelSize={2}
+          />
         <Pixelation granularity={3}/>
         <Scanline opacity={0.3} density={1}/>
       </EffectComposer>
@@ -49,7 +52,7 @@ export const BlockScene = () => {
         <CameraController />
         <Suspense fallback={null}>
           <Score />
-          <Grid />
+          <Grid /> <GridRenderer />
           <BlockHolder />
           <BlocksGeneration />
           <Background />

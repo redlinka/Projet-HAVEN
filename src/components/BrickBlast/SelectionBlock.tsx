@@ -1,44 +1,27 @@
 import {useMemo, useRef, useState} from "react";
 import {useFrame, useThree} from "@react-three/fiber";
 import * as THREE from "three";
-import {Edges} from "@react-three/drei";
-import {CELL_SIZE} from "./logic.ts";
+import {CELL_SIZE, getRandomColor} from "./logic.ts";
 import {getRandomPiece} from "./Pieces.ts";
 import {useGameStore} from "./Store.ts";
+import {BrickUnit} from "./BrickUnit.tsx";
 
 // Constants ------------------------------------------------
-const BRICK_SIZE = CELL_SIZE/2
-const BRICK_H = BRICK_SIZE * 0.6; // lego brick body height
-const STUD_R = BRICK_SIZE * 0.3; // lego stud radius
-const STUD_H = BRICK_SIZE * 0.1; // lego stud height
-const GAP = 0; // gap between adjacent bricks
-
 const SCALE_FACTOR = 2;
+const SELECTION_SIZE = CELL_SIZE / SCALE_FACTOR
 const SCALE_NORMAL = new THREE.Vector3(1, 1, 1);
 const SCALE_BIG = SCALE_NORMAL.clone().multiplyScalar(SCALE_FACTOR);
 const LERP_ALPHA = 0.15;
 
 const INITIAL_POSITIONS = [
-  new THREE.Vector3(55, 30, Math.ceil(BRICK_SIZE / SCALE_FACTOR) + 1),
-  new THREE.Vector3(55, 0, Math.ceil(BRICK_SIZE / SCALE_FACTOR) + 1),
-  new THREE.Vector3(55, -30, Math.ceil(BRICK_SIZE / SCALE_FACTOR) + 1),
+  new THREE.Vector3(55, 30, Math.ceil(SELECTION_SIZE / SCALE_FACTOR) + 1),
+  new THREE.Vector3(55, 0, Math.ceil(SELECTION_SIZE / SCALE_FACTOR) + 1),
+  new THREE.Vector3(55, -30, Math.ceil(SELECTION_SIZE / SCALE_FACTOR) + 1),
 ];
-
-// Colors ------------------------------------------------
-const COLORS = ["red", "green", "blue", "yellow", "purple"];
-
-const darkenColor = (hex: string, factor = 2): string => {
-  const c = new THREE.Color(hex);
-  c.multiplyScalar(factor);
-  return "#" + c.getHexString();
-};
-
-const getRandomColor = () =>
-    COLORS[Math.floor(Math.random() * COLORS.length)];
 
 
 // brick component ------------------------------------------------
-export const Block = ({
+export const SelectionBlock = ({
                         initialPosition,
                         onHover,
                         color,
@@ -50,6 +33,8 @@ export const Block = ({
   shape: number[][];
 }) => {
   const [isDragged, setIsDragged] = useState(false);
+    const isDraggingGlobal = useGameStore((state) => state.isDraggingGlobal);
+    const setIsDraggingGlobal = useGameStore((state) => state.setIsDraggingGlobal);
 
   const groupRef = useRef<THREE.Group>(null!);
   const meshRefs = useRef<THREE.Mesh[]>([]); // for outline effect
@@ -72,10 +57,10 @@ export const Block = ({
     const minRow = Math.min(...rows),
         maxRow = Math.max(...rows);
     return {
-      w: (maxCol - minCol + 1) * BRICK_SIZE,
-      h: (maxRow - minRow + 1) * BRICK_SIZE,
-      cx: ((maxCol + minCol) / 2) * BRICK_SIZE,
-      cy: ((maxRow + minRow) / 2) * BRICK_SIZE,
+      w: (maxCol - minCol + 1) * SELECTION_SIZE,
+      h: (maxRow - minRow + 1) * SELECTION_SIZE,
+      cx: ((maxCol + minCol) / 2) * SELECTION_SIZE,
+      cy: ((maxRow + minRow) / 2) * SELECTION_SIZE,
     };
   }, [shape]);
 
@@ -89,7 +74,7 @@ export const Block = ({
       groupRef.current.position.y = targetPoint.current.y;
       groupRef.current.position.z = THREE.MathUtils.lerp(
           groupRef.current.position.z,
-          (BRICK_SIZE/2)+1,
+          (SELECTION_SIZE/SCALE_FACTOR)+1,
           LERP_ALPHA,
       );
       groupRef.current.scale.lerp(SCALE_BIG, LERP_ALPHA);
@@ -97,7 +82,7 @@ export const Block = ({
       groupRef.current.scale.lerp(SCALE_NORMAL, LERP_ALPHA);
       groupRef.current.position.z = THREE.MathUtils.lerp(
           groupRef.current.position.z,
-          Math.ceil(BRICK_SIZE / SCALE_FACTOR) + 1,
+          Math.ceil(SELECTION_SIZE / SCALE_FACTOR) + 1,
           LERP_ALPHA,
       );
       groupRef.current.position.lerp(initialPosition, 0.1);
@@ -114,22 +99,29 @@ export const Block = ({
       <group
           ref={groupRef}
           position={[initialPosition.x, initialPosition.y, initialPosition.z]}
-          // drag & drop + sinlge click for rotation
-          onPointerUp={(e) => {
-            e.stopPropagation(); // prevent every block from receiving the event and all rotating together it cause a block to call multiple times the rotation handler and it cause a bug where the block rotate twice instead of once.
-            (e.target as Element).releasePointerCapture(e.pointerId);
-            setIsDragged(false);
-            if (Date.now() - pointerDownTime.current < 200) rotationHandler();
-          }}
+
           onPointerDown={(e) => {
-            e.stopPropagation();
-            (e.target as Element).setPointerCapture(e.pointerId);
-            setIsDragged(true);
-            pointerDownTime.current = Date.now();
+              e.stopPropagation();
+              (e.target as Element).setPointerCapture(e.pointerId);
+              setIsDragged(true);
+              pointerDownTime.current = Date.now();
+              setIsDraggingGlobal(true);
           }}
-          // hover
-          onPointerEnter={() => onHover(meshRefs.current)}
-          onPointerLeave={() => onHover(null)}
+
+          onPointerUp={(e) => {
+              e.stopPropagation();
+              (e.target as Element).releasePointerCapture(e.pointerId);
+              setIsDragged(false);
+              if (Date.now() - pointerDownTime.current < 200) rotationHandler();
+
+              setIsDraggingGlobal(false);
+
+          }}
+
+          onPointerEnter={() => {
+              if (!isDraggingGlobal) onHover(meshRefs.current);
+          }}
+
       >
         {/* Transparent hit-area so hover/drag is uniform across the whole piece */}
         <mesh position={[bbox.cx, bbox.cy, 0]}>
@@ -137,25 +129,10 @@ export const Block = ({
           <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
 
-        {/* One Lego brick (body + stud) per shape cell */}
         {shape.map(([col, row], i) => (
-            <group key={i} position={[col * BRICK_SIZE, row * BRICK_SIZE, 0]}>
-              {/* Brick body */}
-              <mesh ref={collectMesh} position={[0, 0, BRICK_H / 2]}>
-                <Edges lineWidth={1} color={darkenColor(color, 0.8)} />
-                <boxGeometry args={[BRICK_SIZE - GAP, BRICK_SIZE - GAP, BRICK_H]} />
-                <meshStandardMaterial color={color} />
-              </mesh>
-              {/* the stud on top */}
-              <mesh
-                  ref={collectMesh}
-                  position={[0, 0, BRICK_H + STUD_H / 2]}
-                  rotation={[Math.PI / 2, 0, 0]}
-              >
-                <Edges lineWidth={5} color={darkenColor(color, 0.8)} threshold={90} />
-                <cylinderGeometry args={[STUD_R, STUD_R, STUD_H, 16]} />
-                <meshStandardMaterial color={color} />
-              </mesh>
+            <group key={i} position={[col * SELECTION_SIZE, row * SELECTION_SIZE, 0]}>
+              {/* Boom. One line of code. */}
+              <BrickUnit color={color} refCallback={collectMesh} isSmall={true} />
             </group>
         ))}
       </group>
@@ -179,7 +156,7 @@ export default function BlocksGeneration() {
   return (
       <>
         {INITIAL_POSITIONS.map((pos, i) => (
-            <Block
+            <SelectionBlock
                 key={i}
                 initialPosition={pos}
                 onHover={setHoveredMeshes}

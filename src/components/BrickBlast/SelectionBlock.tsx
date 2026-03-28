@@ -117,7 +117,7 @@ export const SelectionBlock = ({
               setIsDragged(true);
               pointerDownTime.current = Date.now();
               setIsDraggingGlobal(true);
-              setActivePiece({ shape, color });
+              setActivePiece({ shape: currentShape.current, color });
           }}
 
           onPointerUp={(e) => {
@@ -127,13 +127,11 @@ export const SelectionBlock = ({
               if (Date.now() - pointerDownTime.current < 200) rotationHandler();
               setIsDraggingGlobal(false);
               setActivePiece(null);
-
           }}
 
           onPointerEnter={() => {
               if (!isDraggingGlobal) onHover(meshRefs.current);
           }}
-
       >
         {/* Transparent hit-area so hover/drag is uniform across the whole piece */}
         <mesh position={[bbox.cx, bbox.cy, 0]}>

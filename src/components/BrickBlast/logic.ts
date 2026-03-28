@@ -51,3 +51,6 @@ export const checkCollision = (
     // If we made it through the whole loop without returning false, it fits!
     return true;
 };
+
+export const rotateShape = (shape: number[][]): number[][] =>
+    shape.map(([c, r]) => [-r, c]);

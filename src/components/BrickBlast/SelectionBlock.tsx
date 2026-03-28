@@ -1,14 +1,15 @@
-import {useMemo, useRef, useState} from "react";
-import {useFrame, useThree} from "@react-three/fiber";
+import { useMemo, useRef, useState } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import {CELL_SIZE, getRandomColor} from "./logic.ts";
-import {getRandomPiece} from "./Pieces.ts";
-import {useGameStore} from "./Store.ts";
-import {BrickUnit} from "./BrickUnit.tsx";
+import { CELL_SIZE, getRandomColor } from "./logic.ts";
+import { getRandomPiece } from "./Pieces.ts";
+import { useGameStore } from "./Store.ts";
+import { BrickUnit } from "./BrickUnit.tsx";
+import { rotateShape } from "./logic.ts";
 
 // Constants ------------------------------------------------
 const SCALE_FACTOR = 2;
-const SELECTION_SIZE = CELL_SIZE / SCALE_FACTOR
+const SELECTION_SIZE = CELL_SIZE / SCALE_FACTOR;
 const SCALE_NORMAL = new THREE.Vector3(1, 1, 1);
 const SCALE_BIG = SCALE_NORMAL.clone().multiplyScalar(SCALE_FACTOR);
 const LERP_ALPHA = 0.15;
@@ -22,11 +23,11 @@ const INITIAL_POSITIONS = [
 
 // brick component ------------------------------------------------
 export const SelectionBlock = ({
-                        initialPosition,
-                        onHover,
-                        color,
-                        shape,
-                      }: {
+  initialPosition,
+  onHover,
+  color,
+  shape,
+}: {
   initialPosition: THREE.Vector3;
   onHover: (ref: THREE.Mesh[] | null) => void;
   color: string;
@@ -51,11 +52,11 @@ export const SelectionBlock = ({
   const targetPoint = useRef(new THREE.Vector3());
 
   // Invisible bounding-box mesh used as a uniform pointer hit-area
-  const bbox = useMemo(() => {
-    const cols = shape.map(([c]) => c);
-    const rows = shape.map(([, r]) => r);
+  const computeBbox = (s: number[][]) => {
+    const cols = s.map(([c]) => c);
+    const rows = s.map(([, r]) => r);
     const minCol = Math.min(...cols),
-        maxCol = Math.max(...cols);
+      maxCol = Math.max(...cols);
     const minRow = Math.min(...rows),
         maxRow = Math.max(...rows);
     return {
@@ -64,7 +65,11 @@ export const SelectionBlock = ({
       cx: ((maxCol + minCol) / 2) * SELECTION_SIZE,
       cy: ((maxRow + minRow) / 2) * SELECTION_SIZE,
     };
-  }, [shape]);
+  };
+
+  // replacing shape by ref because it is mutable
+  const currentShape = useRef<number[][]>(shape);
+  const bbox = computeBbox(currentShape.current);
 
   useFrame(() => {
     if (!groupRef.current) return;
@@ -95,9 +100,14 @@ export const SelectionBlock = ({
   });
 
   const rotationHandler = () => {
+    // rotate the shape data
+    currentShape.current = rotateShape(currentShape.current);
+    // rotate the mesh visually
     rotationStep.current = (rotationStep.current + 1) % 4;
     groupRef.current.rotation.z = rotationStep.current * (Math.PI / 2);
-    console.log("rotate block", rotationStep.current);
+    // console log to verify that the shape data is rotating correctly and in sync with the visual rotation
+    // console.log("step de rotation:", rotationStep.current);
+    // console.log("shape après rotation:", currentShape.current);
   };
 
   return (
@@ -151,25 +161,25 @@ export default function BlocksGeneration() {
 
   // save color for each pos bcause it changes if we dont do that.
   const configs = useMemo(
-      () =>
-          INITIAL_POSITIONS.map(() => ({
-            color: getRandomColor(),
-            shape: getRandomPiece(),
-          })),
-      [],
+    () =>
+      INITIAL_POSITIONS.map(() => ({
+        color: getRandomColor(),
+        shape: getRandomPiece(),
+      })),
+    [],
   );
 
   return (
-      <>
-        {INITIAL_POSITIONS.map((pos, i) => (
-            <SelectionBlock
-                key={i}
-                initialPosition={pos}
-                onHover={setHoveredMeshes}
-                color={configs[i].color}
-                shape={configs[i].shape}
-            />
-        ))}
-      </>
+    <>
+      {INITIAL_POSITIONS.map((pos, i) => (
+        <SelectionBlock
+          key={i}
+          initialPosition={pos}
+          onHover={setHoveredMeshes}
+          color={configs[i].color}
+          shape={configs[i].shape}
+        />
+      ))}
+    </>
   );
 }

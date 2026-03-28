@@ -16,13 +16,21 @@ export const Grid = () => {
             <mesh
                 position={[GRID_WORLD_X, GRID_WORLD_Y, 1]}
                 onPointerMove={(e) => {
+
+                    let gridX = Math.floor(e.uv!.x * 9);
+
+                    // Invert Y mapping so 0 is top
+                    let gridY = Math.floor((1 - e.uv!.y) * 9);
+
+                    // Safety clamp just in case the mouse hits the exact microscopic edge (1.0)
+                    gridX = Math.max(0, Math.min(8, gridX));
+                    gridY = Math.max(0, Math.min(8, gridY));
+
                     useGameStore.setState({
-                        hoverCoords: {
-                            x: Math.floor(e.uv!.x * 9),
-                            y: Math.floor(e.uv!.y * 9),
-                        }
+                        hoverCoords: { x: gridX, y: gridY }
                     });
                 }}
+
                 onPointerOut={() => {
                     useGameStore.setState({ hoverCoords: null });
                 }}

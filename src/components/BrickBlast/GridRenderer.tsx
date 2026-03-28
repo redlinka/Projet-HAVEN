@@ -23,7 +23,7 @@ export const GridRenderer = () => {
                         <group
                             key={`cell-${x}-${y}`}
                             // Set the physical position in the 3D world
-                            position={[position.x, -position.y, 1]}
+                            position={[position.x, position.y, 1]}
                         >
                             <BrickUnit color={color} />
                         </group>

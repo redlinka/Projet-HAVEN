@@ -32,9 +32,11 @@ export const SelectionBlock = ({
   color: string;
   shape: number[][];
 }) => {
+    //grab actions from the Zustand
   const [isDragged, setIsDragged] = useState(false);
-    const isDraggingGlobal = useGameStore((state) => state.isDraggingGlobal);
-    const setIsDraggingGlobal = useGameStore((state) => state.setIsDraggingGlobal);
+  const isDraggingGlobal = useGameStore((state) => state.isDraggingGlobal);
+  const setIsDraggingGlobal = useGameStore((state) => state.setIsDraggingGlobal);
+  const setActivePiece = useGameStore((state) => state.setActivePiece);
 
   const groupRef = useRef<THREE.Group>(null!);
   const meshRefs = useRef<THREE.Mesh[]>([]); // for outline effect
@@ -106,6 +108,7 @@ export const SelectionBlock = ({
               setIsDragged(true);
               pointerDownTime.current = Date.now();
               setIsDraggingGlobal(true);
+              setActivePiece({ shape, color });
           }}
 
           onPointerUp={(e) => {
@@ -113,8 +116,8 @@ export const SelectionBlock = ({
               (e.target as Element).releasePointerCapture(e.pointerId);
               setIsDragged(false);
               if (Date.now() - pointerDownTime.current < 200) rotationHandler();
-
               setIsDraggingGlobal(false);
+              setActivePiece(null);
 
           }}
 
@@ -130,7 +133,7 @@ export const SelectionBlock = ({
         </mesh>
 
         {shape.map(([col, row], i) => (
-            <group key={i} position={[col * SELECTION_SIZE, row * SELECTION_SIZE, 0]}>
+            <group key={i} position={[col * SELECTION_SIZE, -row * SELECTION_SIZE, 0]}>
               {/* Boom. One line of code. */}
               <BrickUnit color={color} refCallback={collectMesh} isSmall={true} />
             </group>

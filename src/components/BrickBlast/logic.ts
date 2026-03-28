@@ -25,3 +25,6 @@ export const getWorldCoordsFromGrid = (gridX: number, gridY: number) => {
 
     return new THREE.Vector2(worldX, worldY);
 };
+
+export const rotateShape = (shape: number[][]): number[][] =>
+    shape.map(([c, r]) => [-r, c]);

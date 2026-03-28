@@ -1,14 +1,15 @@
-import {useMemo, useRef, useState} from "react";
-import {useFrame, useThree} from "@react-three/fiber";
+import { useMemo, useRef, useState } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import {CELL_SIZE, getRandomColor} from "./logic.ts";
-import {getRandomPiece} from "./Pieces.ts";
-import {useGameStore} from "./Store.ts";
-import {BrickUnit} from "./BrickUnit.tsx";
+import { CELL_SIZE, getRandomColor } from "./logic.ts";
+import { getRandomPiece } from "./Pieces.ts";
+import { useGameStore } from "./Store.ts";
+import { BrickUnit } from "./BrickUnit.tsx";
+import { rotateShape } from "./logic.ts";
 
 // Constants ------------------------------------------------
 const SCALE_FACTOR = 2;
-const SELECTION_SIZE = CELL_SIZE / SCALE_FACTOR
+const SELECTION_SIZE = CELL_SIZE / SCALE_FACTOR;
 const SCALE_NORMAL = new THREE.Vector3(1, 1, 1);
 const SCALE_BIG = SCALE_NORMAL.clone().multiplyScalar(SCALE_FACTOR);
 const LERP_ALPHA = 0.15;
@@ -19,22 +20,23 @@ const INITIAL_POSITIONS = [
   new THREE.Vector3(55, -30, Math.ceil(SELECTION_SIZE / SCALE_FACTOR) + 1),
 ];
 
-
 // brick component ------------------------------------------------
 export const SelectionBlock = ({
-                        initialPosition,
-                        onHover,
-                        color,
-                        shape,
-                      }: {
+  initialPosition,
+  onHover,
+  color,
+  shape,
+}: {
   initialPosition: THREE.Vector3;
   onHover: (ref: THREE.Mesh[] | null) => void;
   color: string;
   shape: number[][];
 }) => {
   const [isDragged, setIsDragged] = useState(false);
-    const isDraggingGlobal = useGameStore((state) => state.isDraggingGlobal);
-    const setIsDraggingGlobal = useGameStore((state) => state.setIsDraggingGlobal);
+  const isDraggingGlobal = useGameStore((state) => state.isDraggingGlobal);
+  const setIsDraggingGlobal = useGameStore(
+    (state) => state.setIsDraggingGlobal,
+  );
 
   const groupRef = useRef<THREE.Group>(null!);
   const meshRefs = useRef<THREE.Mesh[]>([]); // for outline effect
@@ -49,20 +51,24 @@ export const SelectionBlock = ({
   const targetPoint = useRef(new THREE.Vector3());
 
   // Invisible bounding-box mesh used as a uniform pointer hit-area
-  const bbox = useMemo(() => {
-    const cols = shape.map(([c]) => c);
-    const rows = shape.map(([, r]) => r);
+  const computeBbox = (s: number[][]) => {
+    const cols = s.map(([c]) => c);
+    const rows = s.map(([, r]) => r);
     const minCol = Math.min(...cols),
-        maxCol = Math.max(...cols);
+      maxCol = Math.max(...cols);
     const minRow = Math.min(...rows),
-        maxRow = Math.max(...rows);
+      maxRow = Math.max(...rows);
     return {
       w: (maxCol - minCol + 1) * SELECTION_SIZE,
       h: (maxRow - minRow + 1) * SELECTION_SIZE,
       cx: ((maxCol + minCol) / 2) * SELECTION_SIZE,
       cy: ((maxRow + minRow) / 2) * SELECTION_SIZE,
     };
-  }, [shape]);
+  };
+
+  // replacing shape by ref because it is mutable
+  const currentShape = useRef<number[][]>(shape);
+  const bbox = computeBbox(currentShape.current);
 
   useFrame(() => {
     if (!groupRef.current) return;
@@ -73,97 +79,101 @@ export const SelectionBlock = ({
       groupRef.current.position.x = targetPoint.current.x;
       groupRef.current.position.y = targetPoint.current.y;
       groupRef.current.position.z = THREE.MathUtils.lerp(
-          groupRef.current.position.z,
-          (SELECTION_SIZE/SCALE_FACTOR)+1,
-          LERP_ALPHA,
+        groupRef.current.position.z,
+        SELECTION_SIZE / SCALE_FACTOR + 1,
+        LERP_ALPHA,
       );
       groupRef.current.scale.lerp(SCALE_BIG, LERP_ALPHA);
     } else {
       groupRef.current.scale.lerp(SCALE_NORMAL, LERP_ALPHA);
       groupRef.current.position.z = THREE.MathUtils.lerp(
-          groupRef.current.position.z,
-          Math.ceil(SELECTION_SIZE / SCALE_FACTOR) + 1,
-          LERP_ALPHA,
+        groupRef.current.position.z,
+        Math.ceil(SELECTION_SIZE / SCALE_FACTOR) + 1,
+        LERP_ALPHA,
       );
       groupRef.current.position.lerp(initialPosition, 0.1);
     }
   });
 
   const rotationHandler = () => {
+    // rotate the shape data
+    currentShape.current = rotateShape(currentShape.current);
+    // rotate the mesh visually
     rotationStep.current = (rotationStep.current + 1) % 4;
     groupRef.current.rotation.z = rotationStep.current * (Math.PI / 2);
-    console.log("rotate block", rotationStep.current);
+    // console log to verify that the shape data is rotating correctly and in sync with the visual rotation
+    // console.log("step de rotation:", rotationStep.current);
+    // console.log("shape après rotation:", currentShape.current);
   };
 
   return (
-      <group
-          ref={groupRef}
-          position={[initialPosition.x, initialPosition.y, initialPosition.z]}
+    <group
+      ref={groupRef}
+      position={[initialPosition.x, initialPosition.y, initialPosition.z]}
+      onPointerDown={(e) => {
+        console.log("pointerDown");
+        e.stopPropagation();
+        (e.target as Element).setPointerCapture(e.pointerId);
+        setIsDragged(true);
+        pointerDownTime.current = Date.now();
+        setIsDraggingGlobal(true);
+      }}
+      onPointerUp={(e) => {
+        console.log("pointerUp", Date.now() - pointerDownTime.current);
+        e.stopPropagation();
+        (e.target as Element).releasePointerCapture(e.pointerId);
+        setIsDragged(false);
+        if (Date.now() - pointerDownTime.current < 200) rotationHandler();
 
-          onPointerDown={(e) => {
-              e.stopPropagation();
-              (e.target as Element).setPointerCapture(e.pointerId);
-              setIsDragged(true);
-              pointerDownTime.current = Date.now();
-              setIsDraggingGlobal(true);
-          }}
+        setIsDraggingGlobal(false);
+      }}
+      onPointerEnter={() => {
+        if (!isDraggingGlobal) onHover(meshRefs.current);
+      }}
+    >
+      {/* Transparent hit-area so hover/drag is uniform across the whole piece */}
+      <mesh position={[bbox.cx, bbox.cy, 0]}>
+        <planeGeometry args={[bbox.w, bbox.h]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
 
-          onPointerUp={(e) => {
-              e.stopPropagation();
-              (e.target as Element).releasePointerCapture(e.pointerId);
-              setIsDragged(false);
-              if (Date.now() - pointerDownTime.current < 200) rotationHandler();
-
-              setIsDraggingGlobal(false);
-
-          }}
-
-          onPointerEnter={() => {
-              if (!isDraggingGlobal) onHover(meshRefs.current);
-          }}
-
-      >
-        {/* Transparent hit-area so hover/drag is uniform across the whole piece */}
-        <mesh position={[bbox.cx, bbox.cy, 0]}>
-          <planeGeometry args={[bbox.w, bbox.h]} />
-          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-        </mesh>
-
-        {shape.map(([col, row], i) => (
-            <group key={i} position={[col * SELECTION_SIZE, row * SELECTION_SIZE, 0]}>
-              {/* Boom. One line of code. */}
-              <BrickUnit color={color} refCallback={collectMesh} isSmall={true} />
-            </group>
-        ))}
-      </group>
+      {shape.map(([col, row], i) => (
+        <group
+          key={i}
+          position={[col * SELECTION_SIZE, row * SELECTION_SIZE, 0]}
+        >
+          {/* Boom. One line of code. */}
+          <BrickUnit color={color} refCallback={collectMesh} isSmall={true} />
+        </group>
+      ))}
+    </group>
   );
 };
 
 export default function BlocksGeneration() {
-
   const setHoveredMeshes = useGameStore((state) => state.setHoveredMeshes);
 
   // save color for each pos bcause it changes if we dont do that.
   const configs = useMemo(
-      () =>
-          INITIAL_POSITIONS.map(() => ({
-            color: getRandomColor(),
-            shape: getRandomPiece(),
-          })),
-      [],
+    () =>
+      INITIAL_POSITIONS.map(() => ({
+        color: getRandomColor(),
+        shape: getRandomPiece(),
+      })),
+    [],
   );
 
   return (
-      <>
-        {INITIAL_POSITIONS.map((pos, i) => (
-            <SelectionBlock
-                key={i}
-                initialPosition={pos}
-                onHover={setHoveredMeshes}
-                color={configs[i].color}
-                shape={configs[i].shape}
-            />
-        ))}
-      </>
+    <>
+      {INITIAL_POSITIONS.map((pos, i) => (
+        <SelectionBlock
+          key={i}
+          initialPosition={pos}
+          onHover={setHoveredMeshes}
+          color={configs[i].color}
+          shape={configs[i].shape}
+        />
+      ))}
+    </>
   );
 }

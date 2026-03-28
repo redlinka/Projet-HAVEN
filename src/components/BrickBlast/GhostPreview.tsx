@@ -41,7 +41,7 @@ export const GhostPreview = () => {
             }
 
             // 2: Hovering the grid with a piece
-            const isValid = checkCollision(piece.shape, newCoords.x, newCoords.y+1, grid);
+            const isValid = checkCollision(piece.shape, newCoords.x, newCoords.y, grid);
 
             if (!isValid) {
                 ghostGroupRef.current.visible = false;
@@ -69,7 +69,7 @@ export const GhostPreview = () => {
         <group ref={ghostGroupRef} visible={false}>
             {activePiece.shape.map(([colOffset, rowOffset], i) => {
                 const worldX = Math.round(colOffset) * CELL_SIZE;
-                const worldY = (-Math.round(rowOffset)-1) * CELL_SIZE;
+                const worldY = (-Math.round(rowOffset)) * CELL_SIZE;
 
                 return (
                     <group key={`ghost-${i}`} position={[worldX, worldY, 0]}>

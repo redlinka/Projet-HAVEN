@@ -23,6 +23,7 @@ const GlobalEffects = () => {
           <Outline
               selection={hoveredMeshes}
               blendFunction={BlendFunction.ALPHA}
+              xRay={false}
               edgeStrength={1000}
               blur={true}
               kernelSize={2}

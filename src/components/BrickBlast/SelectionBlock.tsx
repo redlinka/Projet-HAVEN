@@ -32,11 +32,11 @@ export const SelectionBlock = ({
   color: string;
   shape: number[][];
 }) => {
+    //grab actions from the Zustand
   const [isDragged, setIsDragged] = useState(false);
   const isDraggingGlobal = useGameStore((state) => state.isDraggingGlobal);
-  const setIsDraggingGlobal = useGameStore(
-    (state) => state.setIsDraggingGlobal,
-  );
+  const setIsDraggingGlobal = useGameStore((state) => state.setIsDraggingGlobal);
+  const setActivePiece = useGameStore((state) => state.setActivePiece);
 
   const groupRef = useRef<THREE.Group>(null!);
   const meshRefs = useRef<THREE.Mesh[]>([]); // for outline effect
@@ -107,46 +107,47 @@ export const SelectionBlock = ({
   };
 
   return (
-    <group
-      ref={groupRef}
-      position={[initialPosition.x, initialPosition.y, initialPosition.z]}
-      onPointerDown={(e) => {
-        console.log("pointerDown");
-        e.stopPropagation();
-        (e.target as Element).setPointerCapture(e.pointerId);
-        setIsDragged(true);
-        pointerDownTime.current = Date.now();
-        setIsDraggingGlobal(true);
-      }}
-      onPointerUp={(e) => {
-        console.log("pointerUp", Date.now() - pointerDownTime.current);
-        e.stopPropagation();
-        (e.target as Element).releasePointerCapture(e.pointerId);
-        setIsDragged(false);
-        if (Date.now() - pointerDownTime.current < 200) rotationHandler();
+      <group
+          ref={groupRef}
+          position={[initialPosition.x, initialPosition.y, initialPosition.z]}
 
-        setIsDraggingGlobal(false);
-      }}
-      onPointerEnter={() => {
-        if (!isDraggingGlobal) onHover(meshRefs.current);
-      }}
-    >
-      {/* Transparent hit-area so hover/drag is uniform across the whole piece */}
-      <mesh position={[bbox.cx, bbox.cy, 0]}>
-        <planeGeometry args={[bbox.w, bbox.h]} />
-        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-      </mesh>
+          onPointerDown={(e) => {
+              e.stopPropagation();
+              (e.target as Element).setPointerCapture(e.pointerId);
+              setIsDragged(true);
+              pointerDownTime.current = Date.now();
+              setIsDraggingGlobal(true);
+              setActivePiece({ shape, color });
+          }}
 
-      {shape.map(([col, row], i) => (
-        <group
-          key={i}
-          position={[col * SELECTION_SIZE, row * SELECTION_SIZE, 0]}
-        >
-          {/* Boom. One line of code. */}
-          <BrickUnit color={color} refCallback={collectMesh} isSmall={true} />
-        </group>
-      ))}
-    </group>
+          onPointerUp={(e) => {
+              e.stopPropagation();
+              (e.target as Element).releasePointerCapture(e.pointerId);
+              setIsDragged(false);
+              if (Date.now() - pointerDownTime.current < 200) rotationHandler();
+              setIsDraggingGlobal(false);
+              setActivePiece(null);
+
+          }}
+
+          onPointerEnter={() => {
+              if (!isDraggingGlobal) onHover(meshRefs.current);
+          }}
+
+      >
+        {/* Transparent hit-area so hover/drag is uniform across the whole piece */}
+        <mesh position={[bbox.cx, bbox.cy, 0]}>
+          <planeGeometry args={[bbox.w, bbox.h]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+        </mesh>
+
+        {shape.map(([col, row], i) => (
+            <group key={i} position={[col * SELECTION_SIZE, -row * SELECTION_SIZE, 0]}>
+              {/* Boom. One line of code. */}
+              <BrickUnit color={color} refCallback={collectMesh} isSmall={true} />
+            </group>
+        ))}
+      </group>
   );
 };
 

@@ -12,6 +12,7 @@ import {EffectComposer, Outline, Pixelation, Scanline} from "@react-three/postpr
 import { BlendFunction } from 'postprocessing';
 import {useGameStore} from "./Store.ts";
 import {GridRenderer} from "./GridRenderer.tsx";
+import {GhostPreview} from "./GhostPreview.tsx";
 
 const GlobalEffects = () => {
 
@@ -52,7 +53,7 @@ export const BlockScene = () => {
         <CameraController />
         <Suspense fallback={null}>
           <Score />
-          <Grid /> <GridRenderer />
+          <Grid /> <GridRenderer /> <GhostPreview />
           <BlockHolder />
           <BlocksGeneration />
           <Background />

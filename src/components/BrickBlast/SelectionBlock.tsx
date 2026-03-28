@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { CELL_SIZE, getRandomColor } from "./logic.ts";
+import {CELL_SIZE, COLORS, getRandomColor} from "./logic.ts";
 import { getRandomPiece } from "./Pieces.ts";
 import { useGameStore } from "./Store.ts";
 import { BrickUnit } from "./BrickUnit.tsx";
@@ -39,6 +39,10 @@ export const SelectionBlock = ({
     const setIsDraggingGlobal = useGameStore((state) => state.setIsDraggingGlobal);
     const setActivePiece = useGameStore((state) => state.setActivePiece);
 
+    const [localColor, setLocalColor] = useState(color);
+    const [localShape, setLocalShape] = useState(shape);
+    const currentShape = useRef<number[][]>(shape);
+
     const groupRef = useRef<THREE.Group>(null!);
     const meshRefs = useRef<THREE.Mesh[]>([]); // for outline effect
     const collectMesh = (m: THREE.Mesh | null) => {
@@ -68,10 +72,7 @@ export const SelectionBlock = ({
     };
 
     // replacing shape by ref because it is mutable
-    const [localColor, setLocalColor] = useState(color);
-    const [localShape, setLocalShape] = useState(shape);
-    const currentShape = useRef<number[][]>(shape);
-    const bbox = computeBbox(currentShape.current);
+    const bbox = computeBbox(localShape);
 
     useFrame(() => {
         if (!groupRef.current) return;
@@ -118,34 +119,59 @@ export const SelectionBlock = ({
                 setIsDragged(true);
                 pointerDownTime.current = Date.now();
                 setIsDraggingGlobal(true);
-                setActivePiece({ shape: currentShape.current, color });
+                setActivePiece({ shape: currentShape.current, color: localColor });
             }}
 
             onPointerUp={(e) => {
                 e.stopPropagation();
                 (e.target as Element).releasePointerCapture(e.pointerId);
                 setIsDragged(false);
-                if (Date.now() - pointerDownTime.current < 200) rotationHandler();
+
+                const store = useGameStore.getState();
+
+                if (store.isValidDrop && store.hoverCoords) {
+
+                    const colorIndex = Number(Object.keys(COLORS).find(
+                        key => COLORS[Number(key) as keyof typeof COLORS] === localColor
+                    ));
+                    
+                    store.placePiece(currentShape.current, store.hoverCoords.x, store.hoverCoords.y, colorIndex);
+
+                    const newShape = getRandomPiece();
+                    const newColor = getRandomColor();
+
+                    setLocalShape(newShape);
+                    setLocalColor(newColor);
+                    currentShape.current = newShape;
+
+                    rotationStep.current = 0;
+                    groupRef.current.rotation.z = 0;
+                    groupRef.current.position.copy(initialPosition);
+                } else {
+                    // Only rotate if we didn't just drop it
+                    if (Date.now() - pointerDownTime.current < 200) rotationHandler();
+                }
+
                 setIsDraggingGlobal(false);
                 setActivePiece(null);
+                store.setIsValidDrop(false); // Reset the flag
             }}
 
             onPointerEnter={() => {
                 if (!isDraggingGlobal) onHover(meshRefs.current);
             }}
         >
-        {/* Transparent hit-area so hover/drag is uniform across the whole piece */}
-        <mesh position={[bbox.cx, bbox.cy, 0]}>
-            <planeGeometry args={[bbox.w, bbox.h]} />
-            <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-        </mesh>
+            {/* Transparent hit-area so hover/drag is uniform across the whole piece */}
+            <mesh position={[bbox.cx, bbox.cy, 0]}>
+                <planeGeometry args={[bbox.w, bbox.h]} />
+                <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+            </mesh>
 
-        {shape.map(([col, row], i) => (
-            <group key={i} position={[col * SELECTION_SIZE, -row * SELECTION_SIZE, 0]}>
-                {/* Boom. One line of code. */}
-                <BrickUnit color={color} refCallback={collectMesh} isSmall={true} />
-            </group>
-        ))}
+            {localShape.map(([col, row], i) => (
+                <group key={i} position={[col * SELECTION_SIZE, -row * SELECTION_SIZE, 0]}>
+                    <BrickUnit color={localColor} refCallback={collectMesh} isSmall={true} />
+                </group>
+            ))}
       </group>
     );
 };

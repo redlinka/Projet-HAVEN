@@ -26,7 +26,7 @@ interface GameState {
 
 export const useGameStore = create<GameState>((set) => ({
     score: 0,
-    hoverCoords: null,
+    hoverCoords: {x: 0, y: 0},
     grid: [
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -53,7 +53,6 @@ export const useGameStore = create<GameState>((set) => ({
 
     placePiece: (shape, gridX, gridY, colorIndex) => {
         set((state) => ({
-            // ✅ Just feed the old grid in, and save the new grid out
             grid: placePieceOnBoard(state.grid, shape, gridX, gridY, colorIndex)
         }));
     },

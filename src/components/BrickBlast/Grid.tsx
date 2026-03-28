@@ -32,7 +32,7 @@ export const Grid = () => {
                 }}
 
                 onPointerOut={() => {
-                    useGameStore.setState({ hoverCoords: null });
+                    useGameStore.setState({ hoverCoords: {x:1, y:1} });
                 }}
             >
                 <Edges lineWidth={10} color="white"/>

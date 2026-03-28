@@ -4,17 +4,18 @@ import * as THREE from 'three';
 interface GameState {
     score: number;
     hoverCoords: { x: number; y: number } | null;
+    grid: number[][]
 
+    //pre-bloc drop necessities
     hoveredMeshes: THREE.Mesh[];
     setHoveredMeshes: (meshes: THREE.Mesh[] | null) => void;
 
     isDraggingGlobal: boolean;
     setIsDraggingGlobal: (dragging: boolean) => void;
 
-    grid: number[][]
-
     activePiece: { shape: number[][], color: string } | null;
     setActivePiece: (piece: { shape: number[][], color: string } | null) => void;
+
 
     isValidDrop: boolean;
     setIsValidDrop: (valid: boolean) => void;

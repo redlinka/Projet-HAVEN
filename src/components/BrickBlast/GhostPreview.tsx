@@ -59,7 +59,6 @@ export const GhostPreview = () => {
             }
         });
 
-        // Cleanup function
         return () => unsubscribe();
     }, [grid]);
 
@@ -73,7 +72,7 @@ export const GhostPreview = () => {
 
                 return (
                     <group key={`ghost-${i}`} position={[worldX, worldY, 0]}>
-                        <BrickUnit color={activePiece.color} isSmall={false} opacity={0.5} refCallback={collectGhostMesh} />
+                        <BrickUnit color={activePiece.color} isSmall={false} opacity={1} refCallback={collectGhostMesh} />
                     </group>
                 );
             })}

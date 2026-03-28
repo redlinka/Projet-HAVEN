@@ -70,24 +70,27 @@ export const SelectionBlock = ({
     if (!groupRef.current) return;
 
     if (isDragged) {
-      raycaster.setFromCamera(pointer, camera);
-      raycaster.ray.intersectPlane(plane.current, targetPoint.current);
-      groupRef.current.position.x = targetPoint.current.x;
-      groupRef.current.position.y = targetPoint.current.y;
-      groupRef.current.position.z = THREE.MathUtils.lerp(
-          groupRef.current.position.z,
-          (SELECTION_SIZE/SCALE_FACTOR)+1,
-          LERP_ALPHA,
-      );
+        const isValidDrop = useGameStore.getState().isValidDrop;
+        groupRef.current.visible = !isValidDrop;
+        raycaster.setFromCamera(pointer, camera);
+        raycaster.ray.intersectPlane(plane.current, targetPoint.current);
+        groupRef.current.position.x = targetPoint.current.x;
+        groupRef.current.position.y = targetPoint.current.y;
+        groupRef.current.position.z = THREE.MathUtils.lerp(
+            groupRef.current.position.z,
+            (SELECTION_SIZE/SCALE_FACTOR)+1,
+            LERP_ALPHA,
+        );
       groupRef.current.scale.lerp(SCALE_BIG, LERP_ALPHA);
     } else {
-      groupRef.current.scale.lerp(SCALE_NORMAL, LERP_ALPHA);
-      groupRef.current.position.z = THREE.MathUtils.lerp(
-          groupRef.current.position.z,
-          Math.ceil(SELECTION_SIZE / SCALE_FACTOR) + 1,
-          LERP_ALPHA,
-      );
-      groupRef.current.position.lerp(initialPosition, 0.1);
+        groupRef.current.visible = true;
+        groupRef.current.scale.lerp(SCALE_NORMAL, LERP_ALPHA);
+        groupRef.current.position.z = THREE.MathUtils.lerp(
+            groupRef.current.position.z,
+            Math.ceil(SELECTION_SIZE / SCALE_FACTOR) + 1,
+            LERP_ALPHA,
+        );
+        groupRef.current.position.lerp(initialPosition, 0.1);
     }
   });
 

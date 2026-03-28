@@ -15,6 +15,9 @@ interface GameState {
 
     activePiece: { shape: number[][], color: string } | null;
     setActivePiece: (piece: { shape: number[][], color: string } | null) => void;
+
+    isValidDrop: boolean;
+    setIsValidDrop: (valid: boolean) => void;
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -39,4 +42,7 @@ export const useGameStore = create<GameState>((set) => ({
 
     activePiece: null,
     setActivePiece: (piece) => set({ activePiece: piece }),
+
+    isValidDrop: false,
+    setIsValidDrop: (valid) => set({ isValidDrop: valid }),
 }));

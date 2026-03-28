@@ -4,6 +4,7 @@ const gameSchema = new Schema({
     game: { type: String, enum: ['PUZZLE','BRICKBLAST'], required: true },
     playedAt: { type: Date, required: true },
     mode: { type: String, enum: ['solo', 'duplicate'], required: true },
+    difficulty: { type: String, enum: ['easy', 'normal','hard'], required: true },
     points: { type: Number, required: true },
     earnedAt: { type: Date, required: true },
     expiresAt: { type: Date, required: true },
@@ -11,11 +12,10 @@ const gameSchema = new Schema({
 });
 
 const playerSchema = new Schema({
-    isGuest: { type: Boolean, default: true },
-    linkedPHPId: { type: String, default: null },
+    SQL_id: { type: Number, default: -1 },
     sessionToken: { type: String, default: null },
     lastConnectedAt: { type: Date },
-    games: [gameSchema]
+    games: [gameSchema], default: []
 });
 
 playerSchema.index({ 'linkedPHPId': 1 });

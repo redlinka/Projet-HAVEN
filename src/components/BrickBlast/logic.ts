@@ -63,3 +63,24 @@ export const checkCollision = (
 
 export const rotateShape = (shape: number[][]): number[][] =>
   shape.map(([c, r]) => [r, -c]);
+
+export const placePieceOnBoard = (
+    board: number[][],
+    shape: number[][],
+    gridX: number,
+    gridY: number,
+    colorIndex: number
+): number[][] => {
+    const newBoard = board.map(row => [...row]);
+
+    shape.forEach(([colOffset, rowOffset]) => {
+        const targetX = gridX + Math.round(colOffset);
+        const targetY = gridY + Math.round(rowOffset);
+
+        if (targetY >= 0 && targetY < 9 && targetX >= 0 && targetX < 9) {
+            newBoard[targetY][targetX] = colorIndex;
+        }
+    });
+
+    return newBoard;
+};

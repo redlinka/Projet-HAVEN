@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import * as THREE from 'three';
+import {placePieceOnBoard} from "./logic.ts";
 
 interface GameState {
     score: number;
@@ -19,12 +20,13 @@ interface GameState {
 
     isValidDrop: boolean;
     setIsValidDrop: (valid: boolean) => void;
+
+    placePiece: (shape: number[][], gridX: number, gridY: number, colorIndex: number) => void;
 }
 
 export const useGameStore = create<GameState>((set) => ({
     score: 0,
     hoverCoords: null,
-    hoveredMeshes: [],
     grid: [
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -36,6 +38,8 @@ export const useGameStore = create<GameState>((set) => ({
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
     ],
+
+    hoveredMeshes: [],
     setHoveredMeshes: (meshes) => set({ hoveredMeshes: meshes || [] }),
 
     isDraggingGlobal: false,
@@ -46,4 +50,11 @@ export const useGameStore = create<GameState>((set) => ({
 
     isValidDrop: false,
     setIsValidDrop: (valid) => set({ isValidDrop: valid }),
+
+    placePiece: (shape, gridX, gridY, colorIndex) => {
+        set((state) => ({
+            // ✅ Just feed the old grid in, and save the new grid out
+            grid: placePieceOnBoard(state.grid, shape, gridX, gridY, colorIndex)
+        }));
+    },
 }));

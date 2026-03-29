@@ -58,7 +58,8 @@ export const GhostPreview = () => {
                 ghostGroupRef.current.visible = true;
 
                 store.setIsValidDrop(true);
-                store.setHoveredMeshes(ghostMeshesRef.current);
+                const combinedMeshes = Array.from(new Set([...store.hoveredMeshes, ...ghostMeshesRef.current]));
+                store.setHoveredMeshes(combinedMeshes);
             }
         });
 

@@ -11,6 +11,7 @@ import { rotateShape } from "./logic.ts";
 const SCALE_FACTOR = 2;
 const SELECTION_SIZE = CELL_SIZE / SCALE_FACTOR;
 const SCALE_NORMAL = new THREE.Vector3(1, 1, 1);
+const SCALE_POP = new THREE.Vector3(1.5, 1.5, 2);
 const SCALE_BIG = SCALE_NORMAL.clone().multiplyScalar(SCALE_FACTOR);
 const LERP_ALPHA = 0.15;
 
@@ -34,7 +35,8 @@ export const SelectionBrick = ({
     shape: number[][];
 }) => {
     //grab actions from the Zustand
-    const [isDragged, setIsDragged] = useState(false);
+    const isDragged = useRef(false);
+    const isPoppingIn = useRef(false);
     const isDraggingGlobal = useGameStore((state) => state.isDraggingGlobal);
     const setIsDraggingGlobal = useGameStore((state) => state.setIsDraggingGlobal);
     const setActivePiece = useGameStore((state) => state.setActivePiece);
@@ -43,6 +45,7 @@ export const SelectionBrick = ({
     const [localColor, setLocalColor] = useState(color);
     const [localShape, setLocalShape] = useState(shape);
     const currentShape = useRef<number[][]>(shape);
+    const baseShape = useRef<number[][]>(shape);
 
     //outline-relative variables
     const groupRef = useRef<THREE.Group>(null!);
@@ -80,7 +83,7 @@ export const SelectionBrick = ({
     useFrame(() => {
         if (!groupRef.current) return;
 
-        if (isDragged) {
+        if (isDragged.current) {
 
             const isValidDrop = useGameStore.getState().isValidDrop;
             groupRef.current.visible = !isValidDrop;
@@ -97,7 +100,20 @@ export const SelectionBrick = ({
             groupRef.current.scale.lerp(SCALE_BIG, LERP_ALPHA);
         } else {
             //automatic callback to initial spot
-            groupRef.current.scale.lerp(SCALE_NORMAL, LERP_ALPHA);
+            if (baseShape.current !== localShape) return;
+
+            if (isPoppingIn.current) {
+                // Lerp fast towards 1.5
+                groupRef.current.scale.lerp(SCALE_POP, 0.3);
+
+                // Once we hit the peak, turn off the pop-in phase
+                if (groupRef.current.scale.x > 1.4) {
+                    isPoppingIn.current = false;
+                }
+            } else {
+                // Smoothly settle back down to 1.0
+                groupRef.current.scale.lerp(SCALE_NORMAL, LERP_ALPHA);
+            }
             groupRef.current.position.z = THREE.MathUtils.lerp(
                 groupRef.current.position.z,
                 Math.ceil(SELECTION_SIZE / SCALE_FACTOR) + 1, LERP_ALPHA
@@ -127,7 +143,8 @@ export const SelectionBrick = ({
             onPointerDown={(e) => {
                 e.stopPropagation();
                 (e.target as Element).setPointerCapture(e.pointerId);
-                setIsDragged(true);
+                isDragged.current = true;
+                isPoppingIn.current = false;
                 pointerDownTime.current = Date.now();
                 setIsDraggingGlobal(true);
                 setActivePiece({ shape: currentShape.current, color: localColor });
@@ -158,18 +175,22 @@ export const SelectionBrick = ({
                     setLocalColor(newColor);
 
                     //giving the new brick the same state as the old one
+                    baseShape.current = newShape;
                     currentShape.current = newShape;
                     rotationStep.current = 0;
                     groupRef.current.rotation.z = 0;
                     groupRef.current.position.copy(initialPosition);
+                    groupRef.current.scale.set(0, 0, 0);
+                    isPoppingIn.current = true;
                 } else {
                     // Only rotate if we didn't just drop it
                     if (Date.now() - pointerDownTime.current < 200) rotationHandler();
                 }
-                setIsDragged(false);
+                isDragged.current = false;
                 setIsDraggingGlobal(false);
                 setActivePiece(null);
                 store.setIsValidDrop(false);
+                store.setHoveredMeshes([]);
             }}
 
             //just to give the outline when hovered

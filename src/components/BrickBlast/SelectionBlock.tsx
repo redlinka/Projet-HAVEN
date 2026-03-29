@@ -123,19 +123,23 @@ export const SelectionBlock = ({
             }}
 
             onPointerUp={(e) => {
+
+                const store = useGameStore.getState();
+                const dropValid = store.isValidDrop;
+                const dropCoords = store.hoverCoords;
+
                 e.stopPropagation();
+
                 (e.target as Element).releasePointerCapture(e.pointerId);
                 setIsDragged(false);
 
-                const store = useGameStore.getState();
-
-                if (store.isValidDrop && store.hoverCoords) {
+                if (dropValid && dropCoords) {
 
                     const colorIndex = Number(Object.keys(COLORS).find(
                         key => COLORS[Number(key) as keyof typeof COLORS] === localColor
                     ));
-                    
-                    store.placePiece(currentShape.current, store.hoverCoords.x, store.hoverCoords.y, colorIndex);
+
+                    store.placePiece(currentShape.current, dropCoords.x, dropCoords.y, colorIndex);
 
                     const newShape = getRandomPiece();
                     const newColor = getRandomColor();
@@ -154,11 +158,15 @@ export const SelectionBlock = ({
 
                 setIsDraggingGlobal(false);
                 setActivePiece(null);
-                store.setIsValidDrop(false); // Reset the flag
+                store.setIsValidDrop(false);
             }}
 
             onPointerEnter={() => {
                 if (!isDraggingGlobal) onHover(meshRefs.current);
+            }}
+
+            onPointerLeave={() => {
+                if (!isDraggingGlobal) onHover(null);
             }}
         >
             {/* Transparent hit-area so hover/drag is uniform across the whole piece */}

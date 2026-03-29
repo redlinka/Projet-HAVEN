@@ -1,5 +1,5 @@
 // LegoBrick.tsx
-import {Edges, Outlines} from "@react-three/drei";
+import {Edges} from "@react-three/drei";
 import * as THREE from "three";
 import {CELL_SIZE, darkenColor} from "./logic.ts";
 
@@ -37,7 +37,6 @@ export const BrickUnit = ({ color, refCallback, isSmall = false, opacity = 1 }: 
                 rotation={[Math.PI / 2, 0, 0]}
             >
                 <Edges lineWidth={5} color={darkenColor(color, 0.8)} threshold={90} />
-                <Outlines thickness={5} color="black" />
                 <cylinderGeometry args={[STUD_R, STUD_R, STUD_H, 16]} />
                 <meshStandardMaterial color={color} transparent={isGhost} opacity={opacity} />
             </mesh>

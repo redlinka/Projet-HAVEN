@@ -26,7 +26,7 @@ interface GameState {
 
 export const useGameStore = create<GameState>((set) => ({
     score: 0,
-    hoverCoords: {x: 0, y: 0},
+    hoverCoords: null,
     grid: [
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0],

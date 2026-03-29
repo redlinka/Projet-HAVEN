@@ -3,24 +3,28 @@ import * as THREE from 'three';
 import {placePieceOnBoard} from "./logic.ts";
 
 interface GameState {
+
     score: number;
     hoverCoords: { x: number; y: number } | null;
     grid: number[][]
 
-    //pre-bloc drop necessities
+    //all the currently "hovered" meshes. Only serves to make the white outline
     hoveredMeshes: THREE.Mesh[];
     setHoveredMeshes: (meshes: THREE.Mesh[] | null) => void;
 
+    // prevents the pointer from hovering on a block while currently dragging one
     isDraggingGlobal: boolean;
     setIsDraggingGlobal: (dragging: boolean) => void;
 
+    //the currently dragged shape, serves for the placing logic and the ghost preview
     activePiece: { shape: number[][], color: string } | null;
     setActivePiece: (piece: { shape: number[][], color: string } | null) => void;
 
-
+    // indicates if we can drop the brick or not
     isValidDrop: boolean;
     setIsValidDrop: (valid: boolean) => void;
 
+    // decoupled logic
     placePiece: (shape: number[][], gridX: number, gridY: number, colorIndex: number) => void;
 }
 
@@ -30,9 +34,9 @@ export const useGameStore = create<GameState>((set) => ({
     grid: [
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 1, 0, 0],
-        [0, 0, 0, 0, 0, 5, 0, 0, 0],
-        [0, 0, 0, 0, 5, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0],

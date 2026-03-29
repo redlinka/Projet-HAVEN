@@ -6,8 +6,11 @@ import {BrickUnit} from "./BrickUnit.tsx";
 
 export const GhostPreview = () => {
 
+    //necessary to render the preview
     const activePiece = useGameStore((state) => state.activePiece);
     const grid = useGameStore((state) => state.grid);
+
+    //to create the outline, just like the SelectionBricks
     const ghostGroupRef = useRef<THREE.Group>(null!);
     const ghostMeshesRef = useRef<THREE.Mesh[]>([]);
     const collectGhostMesh = (m: THREE.Mesh | null) => {
@@ -16,6 +19,7 @@ export const GhostPreview = () => {
 
     useEffect(() => {
 
+        //we subscribe to re render only when the the coords actually change
         const unsubscribe = useGameStore.subscribe((currentState, prevState) => {
 
             const newCoords = currentState.hoverCoords;
@@ -32,7 +36,7 @@ export const GhostPreview = () => {
 
             if (!ghostGroupRef.current || newCoords === prevCoords) return;
 
-            // CONDITION 1: In the void OR no piece is actively held
+            // CASE 1: In the void OR no piece is actively held
             if (newCoords === null || piece === null) {
                 ghostGroupRef.current.visible = false;
                 store.setIsValidDrop(false);
@@ -40,7 +44,7 @@ export const GhostPreview = () => {
                 return;
             }
 
-            // 2: Hovering the grid with a piece
+            // CASE 2: Hovering the grid with a piece
             const isValid = checkCollision(piece.shape, newCoords.x, newCoords.y, grid);
 
             if (!isValid) {
@@ -54,8 +58,7 @@ export const GhostPreview = () => {
                 ghostGroupRef.current.visible = true;
 
                 store.setIsValidDrop(true);
-                const combinedMeshes = Array.from(new Set([...store.hoveredMeshes, ...ghostMeshesRef.current]));
-                store.setHoveredMeshes(combinedMeshes);
+                store.setHoveredMeshes(ghostMeshesRef.current);
             }
         });
 

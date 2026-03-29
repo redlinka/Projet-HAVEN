@@ -1,19 +1,16 @@
 import { Canvas } from "@react-three/fiber";
 import { Suspense, useEffect, useState } from "react";
-import {
-  Background,
-  BlockHolder,
-  CameraController,
-  Score,
-} from "./SceneElements.tsx";
-import BlocksGeneration from "./SelectionBlock.tsx";
+import {Background, BlockHolder, CameraController, Score} from "./SceneElements.tsx";
+import BlocksGeneration from "./SelectionBrick.tsx";
 import {Grid} from "./Grid.tsx";
 import {EffectComposer, Outline, Pixelation, Scanline} from "@react-three/postprocessing";
 import { BlendFunction } from 'postprocessing';
 import {useGameStore} from "./Store.ts";
 import {GridRenderer} from "./GridRenderer.tsx";
 import {GhostPreview} from "./GhostPreview.tsx";
+import {Stats} from "@react-three/drei";
 
+// manager of all postprocessing effects
 const GlobalEffects = () => {
 
     const hoveredMeshes = useGameStore((state) => state.hoveredMeshes);
@@ -34,12 +31,13 @@ const GlobalEffects = () => {
     );
 }
 
+//main scene
 export const BlockScene = () => {
     const [fov, setFov] = useState(80);
 
     useEffect(() => {
         const update = () => {
-            setFov(window.innerWidth < window.innerHeight ? 100 : 80);
+            setFov(80);
         };
         update();
         window.addEventListener("resize", update);
@@ -52,6 +50,7 @@ export const BlockScene = () => {
             <Canvas
               camera={{ fov: fov, near: 0.1, far: 1000, position: [0, -15, 100] }}
             >
+                <Stats />
                 <CameraController />
                 <Suspense fallback={null}>
                     <Score />

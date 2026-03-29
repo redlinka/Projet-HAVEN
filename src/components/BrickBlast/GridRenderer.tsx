@@ -2,6 +2,7 @@ import { useGameStore } from "./Store.ts";
 import {COLORS, getWorldCoordsFromGrid} from "./logic.ts";
 import {BrickUnit} from "./BrickUnit.tsx";
 
+//will simply render the grid
 export const GridRenderer = () => {
     // Grab the 2D array from your global backpack
     const board = useGameStore((state) => state.grid);

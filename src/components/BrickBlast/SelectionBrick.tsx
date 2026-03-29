@@ -2,12 +2,12 @@ import { useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import {CELL_SIZE, COLORS, getRandomColor} from "./logic.ts";
-import { getRandomPiece } from "./Pieces.ts";
+import { getRandomPiece } from "./Shapes.ts";
 import { useGameStore } from "./Store.ts";
 import { BrickUnit } from "./BrickUnit.tsx";
 import { rotateShape } from "./logic.ts";
 
-// Constants ------------------------------------------------
+// Constants
 const SCALE_FACTOR = 2;
 const SELECTION_SIZE = CELL_SIZE / SCALE_FACTOR;
 const SCALE_NORMAL = new THREE.Vector3(1, 1, 1);
@@ -21,8 +21,8 @@ const INITIAL_POSITIONS = [
 ];
 
 
-// brick component ------------------------------------------------
-export const SelectionBlock = ({
+// brick component
+export const SelectionBrick = ({
     initialPosition,
     onHover,
     color,
@@ -39,22 +39,25 @@ export const SelectionBlock = ({
     const setIsDraggingGlobal = useGameStore((state) => state.setIsDraggingGlobal);
     const setActivePiece = useGameStore((state) => state.setActivePiece);
 
+    // localize props so we can edit them
     const [localColor, setLocalColor] = useState(color);
     const [localShape, setLocalShape] = useState(shape);
     const currentShape = useRef<number[][]>(shape);
 
+    //outline-relative variables
     const groupRef = useRef<THREE.Group>(null!);
     const meshRefs = useRef<THREE.Mesh[]>([]); // for outline effect
     const collectMesh = (m: THREE.Mesh | null) => {
       if (m && !meshRefs.current.includes(m)) meshRefs.current.push(m);
     };
-    const pointerDownTime = useRef(0);
-    const rotationStep = useRef(0);
 
+    //variables relative to camera movement
     const { raycaster, camera, pointer } = useThree();
     const plane = useRef(new THREE.Plane(new THREE.Vector3(0, 0, 15), 0));
     const targetPoint = useRef(new THREE.Vector3());
 
+    const pointerDownTime = useRef(0);
+    const rotationStep = useRef(0);
     // Invisible bounding-box mesh used as a uniform pointer hit-area
     const computeBbox = (s: number[][]) => {
         const cols = s.map(([c]) => c);
@@ -78,22 +81,29 @@ export const SelectionBlock = ({
         if (!groupRef.current) return;
 
         if (isDragged) {
+
             const isValidDrop = useGameStore.getState().isValidDrop;
             groupRef.current.visible = !isValidDrop;
+
+            //moving and scaling the brick according to the casted ray
             raycaster.setFromCamera(pointer, camera);
             raycaster.ray.intersectPlane(plane.current, targetPoint.current);
             groupRef.current.position.x = targetPoint.current.x;
             groupRef.current.position.y = targetPoint.current.y;
             groupRef.current.position.z = THREE.MathUtils.lerp(
-            groupRef.current.position.z, (SELECTION_SIZE/SCALE_FACTOR)+1, LERP_ALPHA);
+                groupRef.current.position.z,
+                (SELECTION_SIZE/SCALE_FACTOR)+1, LERP_ALPHA
+            );
             groupRef.current.scale.lerp(SCALE_BIG, LERP_ALPHA);
         } else {
-            groupRef.current.visible = true;
+            //automatic callback to initial spot
             groupRef.current.scale.lerp(SCALE_NORMAL, LERP_ALPHA);
             groupRef.current.position.z = THREE.MathUtils.lerp(
-            groupRef.current.position.z,
-            Math.ceil(SELECTION_SIZE / SCALE_FACTOR) + 1, LERP_ALPHA);
+                groupRef.current.position.z,
+                Math.ceil(SELECTION_SIZE / SCALE_FACTOR) + 1, LERP_ALPHA
+            );
             groupRef.current.position.lerp(initialPosition, 0.1);
+            groupRef.current.visible = true;
         }
     });
 
@@ -113,6 +123,7 @@ export const SelectionBlock = ({
             ref={groupRef}
             position={[initialPosition.x, initialPosition.y, initialPosition.z]}
 
+            //when clicked, the piece snaps to the cursor and follows it
             onPointerDown={(e) => {
                 e.stopPropagation();
                 (e.target as Element).setPointerCapture(e.pointerId);
@@ -122,6 +133,7 @@ export const SelectionBlock = ({
                 setActivePiece({ shape: currentShape.current, color: localColor });
             }}
 
+            // brick snaps back to original position, if it hovered a valid spot, we place it and genereate a new one
             onPointerUp={(e) => {
 
                 const store = useGameStore.getState();
@@ -129,9 +141,7 @@ export const SelectionBlock = ({
                 const dropCoords = store.hoverCoords;
 
                 e.stopPropagation();
-
                 (e.target as Element).releasePointerCapture(e.pointerId);
-                setIsDragged(false);
 
                 if (dropValid && dropCoords) {
 
@@ -146,8 +156,9 @@ export const SelectionBlock = ({
 
                     setLocalShape(newShape);
                     setLocalColor(newColor);
-                    currentShape.current = newShape;
 
+                    //giving the new brick the same state as the old one
+                    currentShape.current = newShape;
                     rotationStep.current = 0;
                     groupRef.current.rotation.z = 0;
                     groupRef.current.position.copy(initialPosition);
@@ -155,16 +166,18 @@ export const SelectionBlock = ({
                     // Only rotate if we didn't just drop it
                     if (Date.now() - pointerDownTime.current < 200) rotationHandler();
                 }
-
+                setIsDragged(false);
                 setIsDraggingGlobal(false);
                 setActivePiece(null);
                 store.setIsValidDrop(false);
             }}
 
+            //just to give the outline when hovered
             onPointerEnter={() => {
                 if (!isDraggingGlobal) onHover(meshRefs.current);
             }}
 
+            //and removing it
             onPointerLeave={() => {
                 if (!isDraggingGlobal) onHover(null);
             }}
@@ -184,6 +197,7 @@ export const SelectionBlock = ({
     );
 };
 
+// the actual component holding the three bricks
 export default function BlocksGeneration() {
 
     const setHoveredMeshes = useGameStore((state) => state.setHoveredMeshes);
@@ -201,7 +215,7 @@ export default function BlocksGeneration() {
   return (
     <>
       {INITIAL_POSITIONS.map((pos, i) => (
-        <SelectionBlock
+        <SelectionBrick
           key={i}
           initialPosition={pos}
           onHover={setHoveredMeshes}

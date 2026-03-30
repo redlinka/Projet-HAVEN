@@ -22,17 +22,19 @@ const INITIAL_POSITIONS = [
 ];
 
 
-// brick component
+// brick component representing the pieces in the selection area, with all the logic for dragging, rotating and placing them on the board
 export const SelectionBrick = ({
     initialPosition,
     onHover,
     color,
     shape,
+    nextPieceIndex,
 }: {
     initialPosition: THREE.Vector3;
     onHover: (ref: THREE.Mesh[] | null) => void;
     color: string;
     shape: number[][];
+    nextPieceIndex: number;
 }) => {
     //grab actions from the Zustand
     const isDragged = useRef(false);
@@ -40,6 +42,8 @@ export const SelectionBrick = ({
     const isDraggingGlobal = useGameStore((state) => state.isDraggingGlobal);
     const setIsDraggingGlobal = useGameStore((state) => state.setIsDraggingGlobal);
     const setActivePiece = useGameStore((state) => state.setActivePiece);
+    const nextPieces = useGameStore((state) => state.nextPieces);
+    const setNextPieces = useGameStore((state) => state.setNextPieces);
 
     // localize props so we can edit them
     const [localColor, setLocalColor] = useState(color);
@@ -171,6 +175,11 @@ export const SelectionBrick = ({
                     const newShape = getRandomPiece();
                     const newColor = getRandomColor();
 
+                    // Update the store with the new piece (corresponding to the 3 pieces in the selection area)
+                    const updatedPieces = [...nextPieces];
+                    updatedPieces[nextPieceIndex] = { shape: newShape, color: newColor };
+                    setNextPieces(updatedPieces);
+
                     setLocalShape(newShape);
                     setLocalColor(newColor);
 
@@ -222,16 +231,20 @@ export const SelectionBrick = ({
 export default function BlocksGeneration() {
 
     const setHoveredMeshes = useGameStore((state) => state.setHoveredMeshes);
+    const nextPieces = useGameStore((state) => state.nextPieces);
+    const setNextPieces = useGameStore((state) => state.setNextPieces);
 
-  // save color for each pos bcause it changes if we dont do that.
-  const configs = useMemo(
-      () =>
-          INITIAL_POSITIONS.map(() => ({
-              color: getRandomColor(),
-              shape: getRandomPiece(),
-          })),
-      [],
-  );
+    // to save pieces infos (shape and color) in the store and make them accessible to the placing logic and the ghost preview bcause otherwise they would be lost when the piece is placed and regenerated in the selection area with a new random shape and color
+    // Initialize nextPieces once on mount if empty
+    useMemo(() => {
+        if (nextPieces.length === 0) { // if there are no pieces in the store, we generate 3 random ones to fill the selection area at the start of the game
+            const initialPieces = INITIAL_POSITIONS.map(() => ({
+                color: getRandomColor(),
+                shape: getRandomPiece(),
+            }));
+            setNextPieces(initialPieces);
+        }
+    }, []);
 
   return (
     <>
@@ -240,8 +253,9 @@ export default function BlocksGeneration() {
           key={i}
           initialPosition={pos}
           onHover={setHoveredMeshes}
-          color={configs[i].color}
-          shape={configs[i].shape}
+          color={nextPieces[i]?.color || getRandomColor()}
+          shape={nextPieces[i]?.shape || getRandomPiece()}
+          nextPieceIndex={i}
         />
       ))}
     </>

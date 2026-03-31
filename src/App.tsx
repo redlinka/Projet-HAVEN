@@ -1,5 +1,5 @@
 import "./App.css";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route} from "react-router-dom";
 import { useEffect, useState} from "react"
 import { ToyBrick, Puzzle } from "lucide-react";
 import {getSession} from "./api/session";
@@ -19,16 +19,30 @@ import PuzzleGame from "./components/Puzzle/PuzzleGame";
 import GameLobbyPage from "./components/Gamelobbypage";
 
 function App() {
-  const [user, setUser] = useState<{id:number, username:string} | null>(null);
 
   useEffect(() => {
-    getSession()
-      .then(data => setUser(data))
+    getSession().then(data => {
+      console.log(data);
+      localStorage.setItem("SQLid", JSON.stringify(data?.id ?? null));
+
+      // we retrive player infos 
+      if (data?.id) {
+
+        fetch(`/api-node/player?SQLid=${data.id}`)
+        .then(r => r.json())
+        .then(player => {
+          if (player) {
+            // we only store his token
+            localStorage.setItem("sessionToken", player.sessionToken);
+
+          }
+          // if we cannot find one, we will create his account after he end a game (so generate his sessionToken)
+        });
+      }
+    
+    })
       .catch(err => console.error("Erreur fetch session:", err));
   }, []);
-
-
-  localStorage.setItem("user",JSON.stringify(user));
 
   const games = [
     {

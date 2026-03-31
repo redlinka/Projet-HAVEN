@@ -1,6 +1,5 @@
 import "../../styles/components/Puzzle/EndingScreen.css";
-import PuzzleGame from "./PuzzleGame";
-
+import {useEffect} from "react";
 
 const handlePlayAgain = () => {
   window.location.reload();
@@ -14,7 +13,32 @@ export default function EndingScreen(props: {
 }) {
 
   const accuracy = props.nbPieces > 0 ? Math.round((props.score / props.nbPieces) * 100): 0;
+  const difficulty = props.difficulty.cols === 16 ? "easy" : props.difficulty.cols === 32 ? "normal" : "hard";
 
+
+  useEffect(() => {
+    const token = localStorage.getItem("sessionToken");
+    const SQLid = localStorage.getItem("SQLid");
+
+    fetch('/api-node/endgame', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token,
+        SQLid: SQLid ? JSON.parse(SQLid) : null,
+        game: 'PUZZLE',
+        mode: 'solo',
+        difficulty,
+        points: props.score
+      })
+    })
+    .then(r => r.json())
+    .then(player => {
+      if (player?.sessionToken) {
+        localStorage.setItem("sessionToken", player.sessionToken);
+      }
+    });
+  }, []);
 
   return (
     <div className="end-screen">
@@ -53,6 +77,15 @@ export default function EndingScreen(props: {
           <button className="ending-btn primary" onClick={handlePlayAgain}>Play Again</button>
         </div>
       </div>
+
+      {/* GUEST WARNING */}
+      {JSON.parse(localStorage.getItem("SQLid") ?? "null") === null && (
+        <div className="guest-warning">
+          Guest account ! Your points will expire within 7 days. Connect at <a href="https://adam.nachnouchi.com/">Bricksy</a> to keep them !
+        </div>
+      )}
     </div>
+
+    
   );
 }

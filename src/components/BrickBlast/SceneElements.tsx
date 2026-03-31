@@ -1,13 +1,13 @@
-import { useFrame, useThree, useLoader } from "@react-three/fiber";
-import { Edges, Line, Text } from "@react-three/drei";
+import {useFrame, useThree} from "@react-three/fiber";
+import {Line, Text} from "@react-three/drei";
 import * as THREE from "three";
-import { useRef } from "react";
-import type { RefObject } from "react";
-import type { GameData } from "./BlockBlast.tsx";
+import {useRef, useState} from "react";
+import {useGameStore} from "./Store.ts";
+
 export const CameraController = () => {
   const { size } = useThree();
   const ASPECT = size.width / size.height;
-  const FACTOR = 1.5;
+  const FACTOR = 2.5;
 
   useFrame((state) => {
     // Scale the lookAt target based on aspect ratio
@@ -16,31 +16,6 @@ export const CameraController = () => {
     state.camera.lookAt(xTarget, yTarget, 0);
   });
   return null;
-};
-
-export const Grid = ({ data }: { data: RefObject<GameData> }) => {
-  const texture = useLoader(
-    THREE.TextureLoader,
-    "/img/brickblast/grid_asset3.png",
-  );
-
-  return (
-    <>
-      <ambientLight intensity={6} />
-      <mesh
-        position={[-30, 0, 1]}
-        onPointerMove={(e) => {
-          // Mapping 0-1 UV coordinates to a 0-100 scale
-          data.current.x = Math.floor(e.uv!.x * 9);
-          data.current.y = Math.floor(e.uv!.y * 9);
-        }}
-      >
-        <Edges lineWidth={10} color="white" />
-        <planeGeometry args={[100, 100]} />
-        <meshStandardMaterial map={texture} />
-      </mesh>
-    </>
-  );
 };
 
 export const Background = () => {
@@ -60,14 +35,19 @@ export const Background = () => {
   );
 };
 
-export const Score = ({ data }: { data: RefObject<GameData> }) => {
+export const Score = () => {
   const scoreRef = useRef<THREE.Mesh & { text: string }>(null!);
 
   useFrame(() => {
     if (scoreRef.current) {
-      // Pull from shared data, push to Text component
-      const { x, y } = data.current;
-      scoreRef.current.text = "Coords: " + x + ", " + y;
+
+        const coords = useGameStore.getState().hoverCoords;
+        const gamestate = useGameStore.getState().isGameOver;
+        if (coords !== null) {
+            scoreRef.current.text = "Coords: " + coords.x + ", " + coords.y + ", " + gamestate;
+        } else {
+            scoreRef.current.text = "Coords: Void, " + gamestate;
+        }
     }
   });
 
@@ -81,6 +61,61 @@ export const Score = ({ data }: { data: RefObject<GameData> }) => {
       Coords: 0, 0
     </Text>
   );
+};
+
+export const RestartButton = () => {
+    const [hovered, setHovered] = useState(false);
+
+    const handleRestart = () => {
+        // Forcefully reset the global state without needing a custom action
+        useGameStore.setState({
+            score: 0,
+            grid: Array(9).fill(0).map(() => Array(9).fill(0)),
+            isGameOver: false,
+            hoverCoords: null,
+            hoveredMeshes: [],
+            activePiece: null,
+            isValidDrop: false,
+            nextPieces: [],
+        });
+    };
+
+    return (
+        <group
+            position={[-100, 60, 5]} // Top left corner
+            onClick={(e) => {
+                e.stopPropagation();
+                handleRestart();
+            }}
+            onPointerEnter={(e) => {
+                e.stopPropagation();
+                setHovered(true);
+                document.body.style.cursor = "pointer"; // Make it feel like a real button
+            }}
+            onPointerLeave={(e) => {
+                e.stopPropagation();
+                setHovered(false);
+                document.body.style.cursor = "default";
+            }}
+        >
+            {/* The background plate of the button */}
+            <mesh>
+                <planeGeometry args={[12, 12]} />
+                {/* Colors swap when you hover over it */}
+                <meshBasicMaterial color={hovered ? "#ff4444" : "#aa0000"} />
+            </mesh>
+
+            {/* The button text */}
+            <Text
+                fontSize={4}
+                font={"/font/silkscreen/Silkscreen.ttf"}
+                position={[0, 0, 1]} // Slightly in front of the background
+                color="white"
+            >
+                RESTART
+            </Text>
+        </group>
+    );
 };
 
 export const BlockHolder = () => {

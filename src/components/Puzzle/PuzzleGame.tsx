@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Disc, Disc3, Volume2, VolumeOff } from "lucide-react";
+import { Disc, Disc3, Volume2, VolumeOff, X } from "lucide-react";
 import useSound from "use-sound";
 
 import PuzzleBoard from "./PuzzleBoard";
@@ -179,7 +179,6 @@ async function readPavageFile(filePath: string): Promise<string[]> {
 /* ------------------ Component ------------------ */
 export default function PuzzleGame() {
 
-  console.log(localStorage.getItem("user"));
   // =============== State ==============
   const [mod, setMod] = useState({ cols: 0, rows: 0 });
   const [loading, setLoading] = useState(false);
@@ -192,6 +191,7 @@ export default function PuzzleGame() {
   const [score, setScore] = useState(0);
 
   const [imagePath, setImagePath] = useState<string>("");
+  const [imageZoomed, setImageZoomed] = useState(false);
 
   const [isPlayingMusic, setIsPlayingMusic] = useState(true);
   const [isPlayingEffect, setIsPlayingEffect] = useState(true);
@@ -438,6 +438,53 @@ export default function PuzzleGame() {
   return (
     <MonitorShell>
       {soundsButtons()}
+
+      {imageZoomed &&
+        createPortal(
+          <div
+            onClick={() => setImageZoomed(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 99999,
+              background: "rgba(0,0,0,0.92)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "zoom-out",
+            }}
+          >
+            <button
+              onClick={() => setImageZoomed(false)}
+              style={{
+                position: "absolute",
+                top: 20,
+                right: 24,
+                background: "none",
+                border: "none",
+                color: "#fff",
+                cursor: "pointer",
+                opacity: 0.7,
+              }}
+            >
+              <X size={32} />
+            </button>
+            <img
+              src={imagePath}
+              alt="Puzzle reference"
+              style={{
+                width: "min(85vw, 85vh)",
+                height: "min(85vw, 85vh)",
+                objectFit: "contain",
+                imageRendering: "pixelated",
+                boxShadow: "0 0 80px rgba(0,0,0,0.9)",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>,
+          document.body,
+        )}
+
       {endGame ? (
         endGamePage()
       ) : !mod.cols || !mod.rows ? (
@@ -459,7 +506,6 @@ export default function PuzzleGame() {
                   rows={mod.rows}
                   cols={mod.cols}
                   board={board}
-                  img={imagePath}
                 />
               </div>
             </div>
@@ -482,6 +528,17 @@ export default function PuzzleGame() {
                 </div>
                 <div className="piece-grab-hint">DRAG TO BOARD</div>
               </div>
+
+              <div
+                className="panel-card image-card"
+                style={{
+                  backgroundImage: `url(${imagePath})`,
+                  cursor: "zoom-in",
+                  imageRendering: "pixelated",
+                }}
+                onClick={() => setImageZoomed(true)}
+                title="Click to zoom"
+              />
             </div>
           </div>
 

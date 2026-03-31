@@ -26,6 +26,29 @@ export interface Brick {
   color: string;
 }
 
+const LS_MOD = "puzzle_mod";
+const LS_BOARD = "puzzle_board";
+const LS_ANSWER = "puzzle_answer";
+const LS_BRICKS = "puzzle_bricks_remaining";
+const LS_CURRENT_BRICK = "puzzle_current_brick";
+const LS_IMAGE = "puzzle_image";
+const LS_NB_PIECES = "puzzle_nb_pieces";
+
+function lsGet<T>(key: string): T | null {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+function lsClear() {
+  [LS_MOD, LS_BOARD, LS_ANSWER, LS_BRICKS, LS_CURRENT_BRICK, LS_IMAGE, LS_NB_PIECES].forEach(
+    (k) => localStorage.removeItem(k),
+  );
+}
+
 /* ------------------ Utils ------------------ */
 
 function randint(min: number, max: number) {
@@ -179,31 +202,30 @@ async function readPavageFile(filePath: string): Promise<string[]> {
 /* ------------------ Component ------------------ */
 export default function PuzzleGame() {
 
-  // =============== State ==============
-  const [mod, setMod] = useState({ cols: 0, rows: 0 });
+  const savedMod = lsGet<{ cols: number; rows: number }>(LS_MOD);
+
+  const [mod, setMod] = useState(savedMod ?? { cols: 0, rows: 0 });
   const [loading, setLoading] = useState(false);
 
-  const [allBricks, setAllBricks] = useState<Brick[]>([]);
-  const [currentBrick, setCurrentBrick] = useState<Brick | null>(null);
+  const [allBricks, setAllBricks] = useState<Brick[]>(lsGet<Brick[]>(LS_BRICKS) ?? []);
+  const [currentBrick, setCurrentBrick] = useState<Brick | null>(lsGet<Brick>(LS_CURRENT_BRICK));
 
-  const [board, setBoard] = useState<string[]>([]);
-  const [answerBoard, setAnswerBoard] = useState<string[]>([]);
+  const [board, setBoard] = useState<string[]>(lsGet<string[]>(LS_BOARD) ?? []);
+  const [answerBoard, setAnswerBoard] = useState<string[]>(lsGet<string[]>(LS_ANSWER) ?? []);
   const [score, setScore] = useState(0);
 
-  const [imagePath, setImagePath] = useState<string>("");
+  const [imagePath, setImagePath] = useState<string>(lsGet<string>(LS_IMAGE) ?? "");
   const [imageZoomed, setImageZoomed] = useState(false);
 
   const [isPlayingMusic, setIsPlayingMusic] = useState(true);
   const [isPlayingEffect, setIsPlayingEffect] = useState(true);
 
+  const [nbPieces, setNbPieces] = useState<number>(lsGet<number>(LS_NB_PIECES) ?? 0);
+
   // ============== Sounds ==============
   const [playGameMusic, { stop: stopMusic, pause: pauseMusic }] = useSound(
     bgMusic,
-    {
-      volume: 0.05,
-      loop: true,
-      interrupt: true,
-    },
+    { volume: 0.05, loop: true, interrupt: true },
   );
 
   const [playOnDrag] = useSound(dragSound, { volume: 0.2 });
@@ -213,12 +235,11 @@ export default function PuzzleGame() {
   // ============== Drag State ===========
   const [activeBrick, setActiveBrick] = useState<Brick | null>(null);
   const draggingBrickRef = useRef<Brick | null>(null);
-  const modRef = useRef({ cols: 0, rows: 0 });
+  const modRef = useRef(mod);
 
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const [isOnBoard, setIsOnBoard] = useState(false);
   const [endGame, setEndGame] = useState<boolean>(false);
-  const [nbPieces, setNbPieces] = useState<number>(0);
 
   useEffect(() => {
     modRef.current = mod;
@@ -282,9 +303,16 @@ export default function PuzzleGame() {
           if (updatedBoard) {
             if (isPlayingEffect) playOnDrop();
 
+            localStorage.setItem(LS_BOARD, JSON.stringify(updatedBoard));
+
             setAllBricks((prevBricks) => {
               const next = prevBricks.slice(1);
-              setCurrentBrick(next[0] ?? null);
+              const nextCurrent = next[0] ?? null;
+
+              setCurrentBrick(nextCurrent);
+
+              localStorage.setItem(LS_BRICKS, JSON.stringify(next));
+              localStorage.setItem(LS_CURRENT_BRICK, JSON.stringify(nextCurrent));
 
               if (
                 (next[0] &&
@@ -292,6 +320,7 @@ export default function PuzzleGame() {
                 next.length === 0
               ) {
                 setEndGame(true);
+                lsClear();
               }
 
               return next;
@@ -327,8 +356,9 @@ export default function PuzzleGame() {
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
   };
 
-  const handleModMenu = () => {
+  const handleModeMenu = () => {
     setEndGame(false);
+    lsClear();
     setMod({ cols: 0, rows: 0 });
   };
 
@@ -336,6 +366,17 @@ export default function PuzzleGame() {
 
   useEffect(() => {
     if (!mod.cols || !mod.rows) return;
+
+    // Si on a déjà un plateau sauvegardé pour ce mod, on ne recharge pas
+    const savedBoard = lsGet<string[]>(LS_BOARD);
+    const savedModLS = lsGet<{ cols: number; rows: number }>(LS_MOD);
+    const isResume =
+      savedBoard &&
+      savedBoard.length > 0 &&
+      savedModLS?.cols === mod.cols &&
+      savedModLS?.rows === mod.rows;
+
+    if (isResume) return;
 
     const loadGame = async () => {
       setLoading(true);
@@ -346,13 +387,26 @@ export default function PuzzleGame() {
         );
 
         const shuffled = shuffleArray(brickData);
-        setNbPieces(shuffled.length);
+        const nb = shuffled.length;
+        const firstBrick = shuffled[0] ?? null;
+        const remaining = shuffled.slice(1);
 
+        setNbPieces(nb);
         setImagePath(imagePath);
-        setAllBricks(shuffled.slice(1));
-        setCurrentBrick(shuffled[0] ?? null);
+        setAllBricks(remaining);
+        setCurrentBrick(firstBrick);
         setAnswerBoard(answerData);
         setBoard(initPuzzleBoard(mod.cols, mod.rows));
+
+        // we save everything in LS in case of reload or accidental close
+        localStorage.setItem(LS_MOD, JSON.stringify({ cols: mod.cols, rows: mod.rows }));
+        localStorage.setItem(LS_BOARD, JSON.stringify(initPuzzleBoard(mod.cols, mod.rows)));
+        localStorage.setItem(LS_ANSWER, JSON.stringify(answerData));
+        localStorage.setItem(LS_BRICKS, JSON.stringify(remaining));
+        localStorage.setItem(LS_CURRENT_BRICK, JSON.stringify(firstBrick));
+        localStorage.setItem(LS_IMAGE, JSON.stringify(imagePath));
+        localStorage.setItem(LS_NB_PIECES, JSON.stringify(nb));
+
       } catch (err) {
         console.error("Error loading game:", err);
       } finally {
@@ -398,8 +452,8 @@ export default function PuzzleGame() {
         <div style={{ fontSize: 6, color: "#4a3060" }}>
           {mod.cols}×{mod.rows} — {nbPieces} PIECES
         </div>
-        <button className="retry-btn" onClick={handleModMenu}>
-          MOD MENU
+        <button className="retry-btn" onClick={handleModeMenu}>
+          MODE MENU
         </button>
       </div>
     );
@@ -539,12 +593,24 @@ export default function PuzzleGame() {
                 onClick={() => setImageZoomed(true)}
                 title="Click to zoom"
               />
+
+              <div className="panel-card">
+                <button onClick={()=>{
+                  lsClear();
+                  window.location.reload();
+
+
+                }}>Surrender</button>
+              </div>
             </div>
+
+
+
+            
           </div>
 
           {activeBrick &&
-            dragPos &&
-            createPortal(
+            dragPos && createPortal(
               <div
                 style={{
                   position: "fixed",

@@ -147,6 +147,14 @@
   );
 }
 
+.panel-card button {
+  font-size: 70%;
+  color: #3a2d5c;
+  text-align: center;
+  font-family: "Press Start 2P", monospace;
+
+}
+
 /* ── Animations ──────────────────────────────────────────── */
 @keyframes crt-flicker {
   0%,
@@ -261,12 +269,12 @@
   }
 
   .panel-card {
-    flex: 0 0 140px; /* 👈 taille fixe plus petite */
+    flex: 0 0 140px; 
     max-width: 140px;
   }
 
   .piece-random {
-    min-height: 80px; /* 👈 réduit aussi */
+    min-height: 80px; 
   }
 
   .panel-card.image-card {

@@ -1,7 +1,7 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import {CELL_SIZE, checkGameOver, COLORS, getRandomColor} from "./logic.ts";
+import { CELL_SIZE, checkGameOver, clearFullLines, COLORS, getRandomColor } from "./logic.ts";
 import { getRandomPiece } from "./Shapes.ts";
 import { useGameStore } from "./Store.ts";
 import { BrickUnit } from "./BrickUnit.tsx";
@@ -21,15 +21,14 @@ const INITIAL_POSITIONS = [
     new THREE.Vector3(55, -30, Math.ceil(SELECTION_SIZE / SCALE_FACTOR) + 1),
 ];
 
-
-// brick component representing the pieces in the selection area, with all the logic for dragging, rotating and placing them on the board
+// brick component representing the pieces in the selection area
 export const SelectionBrick = ({
-    initialPosition,
-    onHover,
-    color,
-    shape,
-    nextPieceIndex,
-}: {
+                                   initialPosition,
+                                   onHover,
+                                   color,
+                                   shape,
+                                   nextPieceIndex,
+                               }: {
     initialPosition: THREE.Vector3;
     onHover: (ref: THREE.Mesh[] | null) => void;
     color: string;
@@ -38,7 +37,8 @@ export const SelectionBrick = ({
 }) => {
 
     const isDragged = useRef(false);
-    const isPoppingIn = useRef(false);
+    const isPoppingIn = useRef(true);
+    const isConsumed = useRef(false);
 
     //grab actions from the Zustand
     const isDraggingGlobal = useGameStore((state) => state.isDraggingGlobal);
@@ -47,17 +47,13 @@ export const SelectionBrick = ({
     const nextPieces = useGameStore((state) => state.nextPieces);
     const setNextPieces = useGameStore((state) => state.setNextPieces);
 
-    // localize props so we can edit them
-    const [localColor, setLocalColor] = useState(color);
-    const [localShape, setLocalShape] = useState(shape);
     const currentShape = useRef<number[][]>(shape);
-    const baseShape = useRef<number[][]>(shape);
 
     //outline-relative variables
     const groupRef = useRef<THREE.Group>(null!);
-    const meshRefs = useRef<THREE.Mesh[]>([]); // for outline effect
+    const meshRefs = useRef<THREE.Mesh[]>([]);
     const collectMesh = (m: THREE.Mesh | null) => {
-      if (m && !meshRefs.current.includes(m)) meshRefs.current.push(m);
+        if (m && !meshRefs.current.includes(m)) meshRefs.current.push(m);
     };
 
     //variables relative to camera movement
@@ -67,12 +63,13 @@ export const SelectionBrick = ({
 
     const pointerDownTime = useRef(0);
     const rotationStep = useRef(0);
+
     // Invisible bounding-box mesh used as a uniform pointer hit-area
     const computeBbox = (s: number[][]) => {
         const cols = s.map(([c]) => c);
         const rows = s.map(([, r]) => r);
         const minCol = Math.min(...cols),
-        maxCol = Math.max(...cols);
+            maxCol = Math.max(...cols);
 
         const minRow = Math.min(...rows), maxRow = Math.max(...rows);
         return {
@@ -83,11 +80,10 @@ export const SelectionBrick = ({
         };
     };
 
-    // replacing shape by ref because it is mutable
-    const bbox = computeBbox(localShape);
+    const bbox = computeBbox(shape);
 
     useFrame(() => {
-        if (!groupRef.current) return;
+        if (!groupRef.current || isConsumed.current) return;
 
         if (isDragged.current) {
 
@@ -106,8 +102,6 @@ export const SelectionBrick = ({
             groupRef.current.scale.lerp(SCALE_BIG, LERP_ALPHA);
         } else {
             //automatic callback to initial spot
-            if (baseShape.current !== localShape) return;
-
             if (isPoppingIn.current) {
                 // Lerp fast towards SCALE_POP
                 groupRef.current.scale.lerp(SCALE_POP, LERP_ALPHA);
@@ -120,6 +114,7 @@ export const SelectionBrick = ({
                 // Smoothly settle back down to SCALE_NORMAL
                 groupRef.current.scale.lerp(SCALE_NORMAL, LERP_ALPHA);
             }
+
             groupRef.current.position.z = THREE.MathUtils.lerp(
                 groupRef.current.position.z,
                 Math.ceil(SELECTION_SIZE / SCALE_FACTOR) + 1, LERP_ALPHA
@@ -130,22 +125,20 @@ export const SelectionBrick = ({
     });
 
     const rotationHandler = () => {
-        // rotate the shape data
         currentShape.current = rotateShape(currentShape.current);
-        // rotate the mesh visually
         rotationStep.current = (rotationStep.current + 1) % 4;
         groupRef.current.rotation.z = rotationStep.current * (Math.PI / 2);
-        // console log to verify that the shape data is rotating correctly and in sync with the visual rotation
-        // console.log("step de rotation:", rotationStep.current);
-        // console.log("shape après rotation:", currentShape.current);
     };
+
+    useEffect(() => {
+        if (groupRef.current) groupRef.current.scale.set(0, 0, 0);
+    }, []);
 
     return (
         <group
             ref={groupRef}
             position={[initialPosition.x, initialPosition.y, initialPosition.z]}
 
-            //when clicked, the piece snaps to the cursor and follows it
             onPointerDown={(e) => {
                 e.stopPropagation();
                 (e.target as Element).setPointerCapture(e.pointerId);
@@ -153,12 +146,10 @@ export const SelectionBrick = ({
                 isPoppingIn.current = false;
                 pointerDownTime.current = Date.now();
                 setIsDraggingGlobal(true);
-                setActivePiece({ shape: currentShape.current, color: localColor });
+                setActivePiece({ shape: currentShape.current, color: color });
             }}
 
-            // brick snaps back to original position, if it hovered a valid spot, we place it and genereate a new one
             onPointerUp={(e) => {
-
                 const store = useGameStore.getState();
                 const dropValid = store.isValidDrop;
                 const dropCoords = store.hoverCoords;
@@ -169,43 +160,50 @@ export const SelectionBrick = ({
                 if (dropValid && dropCoords) {
 
                     const colorIndex = Number(Object.keys(COLORS).find(
-                        key => COLORS[Number(key) as keyof typeof COLORS] === localColor
+                        key => COLORS[Number(key) as keyof typeof COLORS] === color
                     ));
 
+                    // 1. Stamp the grid
                     store.placePiece(currentShape.current, dropCoords.x, dropCoords.y, colorIndex);
 
-                    const newShape = getRandomPiece();
-                    const newColor = getRandomColor();
+                    // 2. Clear any full lines
+                    const newBoard = clearFullLines(useGameStore.getState().grid);
+                    store.setGrid(newBoard);
 
-                    // Update the store with the new piece (corresponding to the 3 pieces in the selection area)
+                    isConsumed.current = true;
+                    groupRef.current.visible = false;
+
+                    // 4. Update the store to mark THIS piece's slot as empty
                     const updatedPieces = [...nextPieces];
-                    updatedPieces[nextPieceIndex] = { shape: newShape, color: newColor };
-                    setNextPieces(updatedPieces);
+                    updatedPieces[nextPieceIndex] = null;
 
-                    setLocalShape(newShape);
-                    setLocalColor(newColor);
+                    let piecesToCheck = updatedPieces;
 
-                    //giving the new brick the same state as the old one
-                    baseShape.current = newShape;
-                    currentShape.current = newShape;
-                    rotationStep.current = 0;
-                    groupRef.current.rotation.z = 0;
-                    groupRef.current.position.copy(initialPosition);
-                    groupRef.current.scale.set(0, 0, 0);
-                    isPoppingIn.current = true;
+                    // 5. If all 3 slots are empty, fetch a brand new batch
+                    if (updatedPieces.every(p => p === null)) {
+                        const newBatch = INITIAL_POSITIONS.map(() => ({
+                            color: getRandomColor(),
+                            shape: getRandomPiece(),
+                        }));
+                        setNextPieces(newBatch);
+                        piecesToCheck = newBatch;
+                    } else {
+                        setNextPieces(updatedPieces);
+                    }
 
-
+                    // 6. Run the Game Over check
                     const latestGrid = useGameStore.getState().grid;
-                    const isOver = checkGameOver(latestGrid, updatedPieces);
+                    const isOver = checkGameOver(latestGrid, piecesToCheck);
 
                     if (isOver) {
                         console.log("💀 GAME OVER 💀");
                         store.setIsGameOver(true);
                     }
+
                 } else {
-                    // Only rotate if we didn't just drop it
                     if (Date.now() - pointerDownTime.current < 200) rotationHandler();
                 }
+
                 isDragged.current = false;
                 setIsDraggingGlobal(false);
                 setActivePiece(null);
@@ -213,12 +211,10 @@ export const SelectionBrick = ({
                 store.setHoveredMeshes([]);
             }}
 
-            //just to give the outline when hovered
             onPointerEnter={() => {
                 if (!isDraggingGlobal) onHover(meshRefs.current);
             }}
 
-            //and removing it
             onPointerLeave={() => {
                 if (!isDraggingGlobal) onHover(null);
             }}
@@ -229,46 +225,51 @@ export const SelectionBrick = ({
                 <meshBasicMaterial transparent opacity={0} depthWrite={false} />
             </mesh>
 
-            {localShape.map(([col, row], i) => (
+            {shape.map(([col, row], i) => (
                 <group key={i} position={[col * SELECTION_SIZE, -row * SELECTION_SIZE, 0]}>
-                    <BrickUnit color={localColor} refCallback={collectMesh} isSmall={true} />
+                    <BrickUnit color={color} refCallback={collectMesh} isSmall={true} />
                 </group>
             ))}
-      </group>
+        </group>
     );
 };
 
-// the actual component holding the three bricks
 export default function BlocksGeneration() {
 
     const setHoveredMeshes = useGameStore((state) => state.setHoveredMeshes);
     const nextPieces = useGameStore((state) => state.nextPieces);
     const setNextPieces = useGameStore((state) => state.setNextPieces);
 
-    // to save pieces infos (shape and color) in the store and make them accessible to the placing logic and the ghost preview bcause otherwise they would be lost when the piece is placed and regenerated in the selection area with a new random shape and color
-    // Initialize nextPieces once on mount if empty
     useMemo(() => {
-        if (nextPieces.length === 0) { // if there are no pieces in the store, we generate 3 random ones to fill the selection area at the start of the game
+        if (nextPieces.length === 0) {
             const initialPieces = INITIAL_POSITIONS.map(() => ({
                 color: getRandomColor(),
                 shape: getRandomPiece(),
             }));
             setNextPieces(initialPieces);
         }
-    }, []);
+    }, [nextPieces.length, setNextPieces]);
 
-  return (
-    <>
-      {INITIAL_POSITIONS.map((pos, i) => (
-        <SelectionBrick
-          key={i}
-          initialPosition={pos}
-          onHover={setHoveredMeshes}
-          color={nextPieces[i]?.color || getRandomColor()}
-          shape={nextPieces[i]?.shape || getRandomPiece()}
-          nextPieceIndex={i}
-        />
-      ))}
-    </>
-  );
+    return (
+        <>
+            {INITIAL_POSITIONS.map((pos, i) => {
+                const piece = nextPieces[i];
+
+                if (!piece) return null;
+
+                const uniqueKey = `piece-${i}-${piece.color}-${JSON.stringify(piece.shape)}`;
+
+                return (
+                    <SelectionBrick
+                        key={uniqueKey}
+                        initialPosition={pos}
+                        onHover={setHoveredMeshes}
+                        color={piece.color}
+                        shape={piece.shape}
+                        nextPieceIndex={i}
+                    />
+                );
+            })}
+        </>
+    );
 }

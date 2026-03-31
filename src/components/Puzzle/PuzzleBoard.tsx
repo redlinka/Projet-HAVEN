@@ -5,13 +5,11 @@ import "../../styles/components/Puzzle/PuzzleBoard.css";
 export default function PuzzleBoard({
   cols,
   rows,
-  board,
-  img,
+  board
 }: {
   cols: number;
   rows: number;
   board: string[];
-  img: string;
 }) {
   const gridCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const brickCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -112,7 +110,6 @@ export default function PuzzleBoard({
 
   return (
     <div className="puzzle-board">
-      <img src={img} alt="" />
       <canvas id="cnv" ref={gridCanvasRef} className="grid-layer" />
       <canvas ref={brickCanvasRef} className="brick-layer" />
     </div>

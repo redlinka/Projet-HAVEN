@@ -1,5 +1,5 @@
-import { useFrame, useThree } from "@react-three/fiber";
-import { Line, Text } from "@react-three/drei";
+import { useFrame, useLoader, useThree } from "@react-three/fiber";
+import { Edges, Line, Text } from "@react-three/drei";
 import * as THREE from "three";
 import { useRef, useState } from "react";
 import { useGameStore } from "./Store.ts";
@@ -66,58 +66,51 @@ export const Score = () => {
 export const RestartButton = () => {
 	const [hovered, setHovered] = useState(false);
 
-	const handleRestart = () => {
-		// Forcefully reset the global state without needing a custom action
-		useGameStore.setState({
-			score: 0,
-			grid: Array(9)
-				.fill(0)
-				.map(() => Array(9).fill(0)),
-			isGameOver: false,
-			hoverCoords: null,
-			hoveredMeshes: [],
-			activePiece: null,
-			isValidDrop: false,
-			nextPieces: [],
-		});
-	};
+    const handleRestart = () => {
+        // Forcefully reset the global state without needing a custom action
+        useGameStore.setState({
+            score: 0,
+            grid: Array(9).fill(0).map(() => Array(9).fill(0)),
+            isGameOver: false,
+            hoverCoords: null,
+            hoveredMeshes: [],
+            activePiece: null,
+            isValidDrop: false,
+            nextPieces: [],
+        });
+    };
 
-	return (
-		<group
-			position={[-100, 60, 5]} // Top left corner
-			onClick={(e) => {
-				e.stopPropagation();
-				handleRestart();
-			}}
-			onPointerEnter={(e) => {
-				e.stopPropagation();
-				setHovered(true);
-				document.body.style.cursor = "pointer"; // Make it feel like a real button
-			}}
-			onPointerLeave={(e) => {
-				e.stopPropagation();
-				setHovered(false);
-				document.body.style.cursor = "default";
-			}}
-		>
-			{/* The background plate of the button */}
-			<mesh>
-				<planeGeometry args={[12, 12]} />
-				{/* Colors swap when you hover over it */}
-				<meshBasicMaterial color={hovered ? "#ff4444" : "#aa0000"} />
-			</mesh>
+    const texture = useLoader(
+        THREE.TextureLoader,
+        "/img/brickblast/replay.png",
+    );
 
-			{/* The button text */}
-			<Text
-				fontSize={4}
-				font={"/font/silkscreen/Silkscreen.ttf"}
-				position={[0, 0, 1]} // Slightly in front of the background
-				color="white"
-			>
-				RESTART
-			</Text>
-		</group>
-	);
+    return (
+        <group
+            position={[-73, 75, 5]} // Top left corner
+            onClick={(e) => {
+                e.stopPropagation();
+                handleRestart();
+            }}
+            onPointerEnter={(e) => {
+                e.stopPropagation();
+                setHovered(true);
+                document.body.style.cursor = "pointer";
+            }}
+            onPointerLeave={(e) => {
+                e.stopPropagation();
+                setHovered(false);
+                document.body.style.cursor = "default";
+            }}
+        >
+
+            <mesh>
+                <planeGeometry args={[7, 7]} />
+                <meshStandardMaterial color={hovered ? "#ff4444" : "#ffffff"} map={texture}/>
+                <Edges color={hovered ? "#ff4444" : "#ffffff"} lineWidth={3} scale={new THREE.Vector3( 1.5, 1.5, 1.5 )}/>
+            </mesh>
+        </group>
+    );
 };
 
 export const BlockHolder = () => {

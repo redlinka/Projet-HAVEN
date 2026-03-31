@@ -1,6 +1,6 @@
 import "./App.css";
 import { BrowserRouter, Routes, Route} from "react-router-dom";
-import { useEffect, useState} from "react"
+import { useEffect} from "react"
 import { ToyBrick, Puzzle } from "lucide-react";
 import {getSession} from "./api/session";
 

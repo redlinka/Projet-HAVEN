@@ -168,7 +168,7 @@ async function readBrickFile(filePath: string): Promise<Brick[]> {
   lines.forEach((line, index) => {
     if (!line.trim()) return;
     if (index !== 0) {
-      const [sizeColor, x, y, rota] = line.split(",");
+      const [sizeColor, rota] = line.split(",");
       const [size, colorHex] = sizeColor.split("/");
       const [w, h] = size.split("-");
       const rotaInt = parseInt(rota);
@@ -321,6 +321,7 @@ export default function PuzzleGame() {
               ) {
                 setEndGame(true);
                 lsClear();
+
               }
 
               return next;

@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import {CELL_SIZE, checkGameOver, COLORS, getRandomColor} from "./logic.ts";
+import {CELL_SIZE, checkGameOver, clearFullLines, COLORS, getRandomColor} from "./logic.ts";
 import { getRandomPiece } from "./Shapes.ts";
 import { useGameStore } from "./Store.ts";
 import { BrickUnit } from "./BrickUnit.tsx";
@@ -174,6 +174,8 @@ export const SelectionBrick = ({
 
                     store.placePiece(currentShape.current, dropCoords.x, dropCoords.y, colorIndex);
 
+                    const newBoard = clearFullLines(useGameStore.getState().grid);
+                    store.setGrid(newBoard);
                     const newShape = getRandomPiece();
                     const newColor = getRandomColor();
 

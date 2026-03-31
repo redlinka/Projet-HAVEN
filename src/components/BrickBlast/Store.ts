@@ -7,8 +7,12 @@ interface GameState {
 	score: number;
 	hoverCoords: { x: number; y: number } | null;
 	grid: number[][];
+	setGrid: (grid: number[][]) => void;
 
-	// les 3 pièces suivantes à placer
+
+	setScore: (score: number) => void;
+
+	// the next pieces that will come, serves for the preview and the placing logic
 	nextPieces: Array<{ shape: number[][]; color: string }>;
 	setNextPieces: (pieces: Array<{ shape: number[][]; color: string }>) => void;
 
@@ -43,7 +47,7 @@ interface GameState {
 
 export const useGameStore = create<
 	GameState,
-	[["zustand/persist", Omit<GameState, "setHoveredMeshes" | "setIsDraggingGlobal" | "setActivePiece" | "setIsValidDrop" | "placePiece" | "setNextPieces" | "hoverCoords" | "hoveredMeshes" | "isDraggingGlobal" | "activePiece" | "isValidDrop" | "isGameOver" | "setIsGameOver">]]
+	[["zustand/persist", Omit<GameState, "setHoveredMeshes" | "setIsDraggingGlobal" | "setActivePiece" | "setIsValidDrop" | "placePiece" | "setNextPieces" | "setGrid" | "setScore" | "hoverCoords" | "hoveredMeshes" | "isDraggingGlobal" | "activePiece" | "isValidDrop" | "isGameOver" | "setIsGameOver">]]
 >(
 	persist(
 		(set) => ({
@@ -63,6 +67,10 @@ export const useGameStore = create<
 
 			nextPieces: [],
 			setNextPieces: (pieces) => set({ nextPieces: pieces }),
+
+			setGrid: (grid) => set({ grid }),
+
+			setScore: (score) => set({ score }),
 
 			hoveredMeshes: [],
 			setHoveredMeshes: (meshes) => set({ hoveredMeshes: meshes || [] }),

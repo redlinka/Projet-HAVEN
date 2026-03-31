@@ -1,6 +1,6 @@
 import { Canvas } from "@react-three/fiber";
 import { Suspense, useEffect, useState } from "react";
-import {Background, BlockHolder, CameraController, Score} from "./SceneElements.tsx";
+import {Background, BlockHolder, CameraController, RestartButton, Score} from "./SceneElements.tsx";
 import BlocksGeneration from "./SelectionBrick.tsx";
 import {Grid} from "./Grid.tsx";
 import {EffectComposer, Outline, Pixelation, Scanline} from "@react-three/postprocessing";
@@ -54,6 +54,7 @@ export const BlockScene = () => {
                 <CameraController />
                 <Suspense fallback={null}>
                     <Score />
+                    <RestartButton />
                     <Grid /> <GridRenderer /> <GhostPreview />
                     <BlockHolder />
                     <BlocksGeneration />

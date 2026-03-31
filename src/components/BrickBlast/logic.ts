@@ -84,3 +84,36 @@ export const placePieceOnBoard = (
 
     return newBoard;
 };
+
+export const checkGameOver = (
+    board: number[][],
+    nextPieces: Array<{ shape: number[][]; color: string }>
+): boolean => {
+
+    // 1. Loop through all 3 pieces in the dock
+    for (const piece of nextPieces) {
+        if (!piece) continue;
+
+        let currentShape = piece.shape;
+
+        // 2. Test all 4 rotations for this piece
+        for (let r = 0; r < 4; r++) {
+
+            // 3. Scan every single cell on the 9x9 grid
+            for (let y = 0; y < 9; y++) {
+                for (let x = 0; x < 9; x++) {
+
+                    // If it fits even ONCE, the game is not over. Kill the check instantly.
+                    if (checkCollision(currentShape, x, y, board)) {
+                        return false;
+                    }
+                }
+            }
+            // Rotate the shape 90 degrees and try the grid again
+            currentShape = rotateShape(currentShape);
+        }
+    }
+
+    // If we made it through all pieces, all rotations, and all cells... you're dead.
+    return true;
+};

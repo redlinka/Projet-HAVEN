@@ -1,7 +1,7 @@
 import {useFrame, useThree} from "@react-three/fiber";
 import {Line, Text} from "@react-three/drei";
 import * as THREE from "three";
-import {useRef} from "react";
+import {useRef, useState} from "react";
 import {useGameStore} from "./Store.ts";
 
 export const CameraController = () => {
@@ -42,10 +42,11 @@ export const Score = () => {
     if (scoreRef.current) {
 
         const coords = useGameStore.getState().hoverCoords;
+        const gamestate = useGameStore.getState().isGameOver;
         if (coords !== null) {
-            scoreRef.current.text = "Coords: " + coords.x + ", " + coords.y;
+            scoreRef.current.text = "Coords: " + coords.x + ", " + coords.y + ", " + gamestate;
         } else {
-            scoreRef.current.text = "Coords: Void"; // Or whatever text you want
+            scoreRef.current.text = "Coords: Void, " + gamestate;
         }
     }
   });
@@ -60,6 +61,61 @@ export const Score = () => {
       Coords: 0, 0
     </Text>
   );
+};
+
+export const RestartButton = () => {
+    const [hovered, setHovered] = useState(false);
+
+    const handleRestart = () => {
+        // Forcefully reset the global state without needing a custom action
+        useGameStore.setState({
+            score: 0,
+            grid: Array(9).fill(0).map(() => Array(9).fill(0)),
+            isGameOver: false,
+            hoverCoords: null,
+            hoveredMeshes: [],
+            activePiece: null,
+            isValidDrop: false,
+            nextPieces: [],
+        });
+    };
+
+    return (
+        <group
+            position={[-100, 60, 5]} // Top left corner
+            onClick={(e) => {
+                e.stopPropagation();
+                handleRestart();
+            }}
+            onPointerEnter={(e) => {
+                e.stopPropagation();
+                setHovered(true);
+                document.body.style.cursor = "pointer"; // Make it feel like a real button
+            }}
+            onPointerLeave={(e) => {
+                e.stopPropagation();
+                setHovered(false);
+                document.body.style.cursor = "default";
+            }}
+        >
+            {/* The background plate of the button */}
+            <mesh>
+                <planeGeometry args={[12, 12]} />
+                {/* Colors swap when you hover over it */}
+                <meshBasicMaterial color={hovered ? "#ff4444" : "#aa0000"} />
+            </mesh>
+
+            {/* The button text */}
+            <Text
+                fontSize={4}
+                font={"/font/silkscreen/Silkscreen.ttf"}
+                position={[0, 0, 1]} // Slightly in front of the background
+                color="white"
+            >
+                RESTART
+            </Text>
+        </group>
+    );
 };
 
 export const BlockHolder = () => {

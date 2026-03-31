@@ -28,6 +28,10 @@ interface GameState {
 	isValidDrop: boolean;
 	setIsValidDrop: (valid: boolean) => void;
 
+	//allows to share the game state with multiple components
+	isGameOver: boolean;
+	setIsGameOver: (isOver: boolean) => void;
+
 	// decoupled logic
 	placePiece: (
 		shape: number[][],
@@ -39,7 +43,7 @@ interface GameState {
 
 export const useGameStore = create<
 	GameState,
-	[["zustand/persist", Omit<GameState, "setHoveredMeshes" | "setIsDraggingGlobal" | "setActivePiece" | "setIsValidDrop" | "placePiece" | "setNextPieces" | "hoverCoords" | "hoveredMeshes" | "isDraggingGlobal" | "activePiece" | "isValidDrop">]]
+	[["zustand/persist", Omit<GameState, "setHoveredMeshes" | "setIsDraggingGlobal" | "setActivePiece" | "setIsValidDrop" | "placePiece" | "setNextPieces" | "hoverCoords" | "hoveredMeshes" | "isDraggingGlobal" | "activePiece" | "isValidDrop" | "isGameOver" | "setIsGameOver">]]
 >(
 	persist(
 		(set) => ({
@@ -71,6 +75,9 @@ export const useGameStore = create<
 
 			isValidDrop: false,
 			setIsValidDrop: (valid) => set({ isValidDrop: valid }),
+
+			isGameOver: false,
+			setIsGameOver: (isOver) => set({ isGameOver: isOver }),
 
 			placePiece: (shape, gridX, gridY, colorIndex) => {
 				set((state) => ({

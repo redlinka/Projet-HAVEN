@@ -1,17 +1,17 @@
 import { useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import {CELL_SIZE, COLORS, getRandomColor} from "./logic.ts";
+import {CELL_SIZE, checkGameOver, COLORS, getRandomColor} from "./logic.ts";
 import { getRandomPiece } from "./Shapes.ts";
 import { useGameStore } from "./Store.ts";
 import { BrickUnit } from "./BrickUnit.tsx";
 import { rotateShape } from "./logic.ts";
 
 // Constants
-const SCALE_FACTOR = 2;
-const SELECTION_SIZE = CELL_SIZE / SCALE_FACTOR;
 const SCALE_NORMAL = new THREE.Vector3(1, 1, 1);
 const SCALE_POP = new THREE.Vector3(1.5, 1.5, 2);
+const SCALE_FACTOR = 2;
+const SELECTION_SIZE = CELL_SIZE / SCALE_FACTOR;
 const SCALE_BIG = SCALE_NORMAL.clone().multiplyScalar(SCALE_FACTOR);
 const LERP_ALPHA = 0.15;
 
@@ -36,9 +36,11 @@ export const SelectionBrick = ({
     shape: number[][];
     nextPieceIndex: number;
 }) => {
-    //grab actions from the Zustand
+
     const isDragged = useRef(false);
     const isPoppingIn = useRef(false);
+
+    //grab actions from the Zustand
     const isDraggingGlobal = useGameStore((state) => state.isDraggingGlobal);
     const setIsDraggingGlobal = useGameStore((state) => state.setIsDraggingGlobal);
     const setActivePiece = useGameStore((state) => state.setActivePiece);
@@ -107,15 +109,15 @@ export const SelectionBrick = ({
             if (baseShape.current !== localShape) return;
 
             if (isPoppingIn.current) {
-                // Lerp fast towards 1.5
-                groupRef.current.scale.lerp(SCALE_POP, 0.3);
+                // Lerp fast towards SCALE_POP
+                groupRef.current.scale.lerp(SCALE_POP, LERP_ALPHA);
 
                 // Once we hit the peak, turn off the pop-in phase
                 if (groupRef.current.scale.x > 1.4) {
                     isPoppingIn.current = false;
                 }
             } else {
-                // Smoothly settle back down to 1.0
+                // Smoothly settle back down to SCALE_NORMAL
                 groupRef.current.scale.lerp(SCALE_NORMAL, LERP_ALPHA);
             }
             groupRef.current.position.z = THREE.MathUtils.lerp(
@@ -191,6 +193,15 @@ export const SelectionBrick = ({
                     groupRef.current.position.copy(initialPosition);
                     groupRef.current.scale.set(0, 0, 0);
                     isPoppingIn.current = true;
+
+
+                    const latestGrid = useGameStore.getState().grid;
+                    const isOver = checkGameOver(latestGrid, updatedPieces);
+
+                    if (isOver) {
+                        console.log("💀 GAME OVER 💀");
+                        store.setIsGameOver(true);
+                    }
                 } else {
                     // Only rotate if we didn't just drop it
                     if (Date.now() - pointerDownTime.current < 200) rotationHandler();

@@ -10,7 +10,6 @@ export const COLORS = {
 	2: "green",
 	3: "blue",
 	4: "yellow",
-	5: "purple",
 };
 
 export const getRandomColor = () => {
@@ -87,8 +86,8 @@ export const placePieceOnBoard = (
 };
 
 export const checkGameOver = (
-	board: number[][],
-	nextPieces: Array<{ shape: number[][]; color: string }>,
+    board: number[][],
+    nextPieces: Array<{ shape: number[][]; color: string } | null>
 ): boolean => {
 	// 1. Loop through all 3 pieces in the dock
 	for (const piece of nextPieces) {
@@ -144,13 +143,13 @@ function clearLines(rowsToClear: number[], colsToClear: number[], grid: number[]
 export function clearFullLines(grid: number[][]) {
     const store = useGameStore.getState();
     let linesCleared = 0;
-    let rowsToClear: number[] = [];
-    let colsToClear: number[] = [];
-    
+    const rowsToClear: number[] = [];
+    const colsToClear: number[] = [];
+
     // checking for full rows of same color
     for (let y = 0; y < 9; y++) {
         if (grid[y].every((cell) => cell !== 0)) {
-            // all non-zero AND same color. 
+            // all non-zero AND same color.
             const firstColor = grid[y][0];
             if (grid[y].every((cell) => cell === firstColor)) {
                 linesCleared++;
@@ -158,11 +157,11 @@ export function clearFullLines(grid: number[][]) {
             }
         }
     }
-    
+
     // checking for full columns of same color
     for (let x = 0; x < 9; x++) {
         if (grid.every((row) => row[x] !== 0)) {
-            // all non-zero AND same color. 
+            // all non-zero AND same color.
             const firstColor = grid[0][x];
             if (grid.every((row) => row[x] === firstColor)) {
                 linesCleared++;

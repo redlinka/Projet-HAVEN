@@ -4,17 +4,15 @@ import { placePieceOnBoard } from "./logic.ts";
 import { persist } from "zustand/middleware";
 
 interface GameState {
+	setScore: (score: number) => void;
 	score: number;
 	hoverCoords: { x: number; y: number } | null;
 	grid: number[][];
 	setGrid: (grid: number[][]) => void;
 
-
-	setScore: (score: number) => void;
-
 	// the next pieces that will come, serves for the preview and the placing logic
-	nextPieces: Array<{ shape: number[][]; color: string }>;
-	setNextPieces: (pieces: Array<{ shape: number[][]; color: string }>) => void;
+	nextPieces: Array<{ shape: number[][]; color: string } | null>;
+	setNextPieces: (pieces: Array<{ shape: number[][]; color: string } | null>) => void;
 
 	//all the currently "hovered" meshes. Only serves to make the white outline
 	hoveredMeshes: THREE.Mesh[];

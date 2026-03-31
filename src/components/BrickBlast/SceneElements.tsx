@@ -40,14 +40,9 @@ export const Score = () => {
 
 	useFrame(() => {
 		if (scoreRef.current) {
-			const coords = useGameStore.getState().hoverCoords;
+			const score = useGameStore.getState().score;
 			const gamestate = useGameStore.getState().isGameOver;
-			if (coords !== null) {
-				scoreRef.current.text =
-					"Coords: " + coords.x + ", " + coords.y + ", " + gamestate;
-			} else {
-				scoreRef.current.text = "Coords: Void, " + gamestate;
-			}
+			scoreRef.current.text = "Scores: " + score + gamestate;
 		}
 	});
 

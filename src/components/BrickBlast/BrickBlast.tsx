@@ -28,11 +28,11 @@ const GlobalEffects = () => {
 
 	const hoveredMeshes = useGameStore((state) => state.hoveredMeshes);
 	const isGameOver = useGameStore((state) => state.isGameOver);
-	const [pixelSize, setPixelSize] = useState(3);
-	const floatSize = useRef(3);
+	const [pixelSize, setPixelSize] = useState(4);
+	const floatSize = useRef(4);
 
 	useFrame(() => {
-		const target = isGameOver ? 15 : 3;
+		const target = isGameOver ? 15 : 4;
 		if (Math.abs(floatSize.current - target) > 0.1) {
 			floatSize.current = THREE.MathUtils.lerp(
 				floatSize.current,
@@ -57,7 +57,7 @@ const GlobalEffects = () => {
 				kernelSize={1}
 			/>
 			<Pixelation granularity={pixelSize} />
-			<Scanline opacity={0.4} density={10} />
+			<Scanline opacity={0.2} density={10} />
 		</EffectComposer>
 	);
 };

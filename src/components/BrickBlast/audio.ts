@@ -8,14 +8,14 @@ export const playSFX = (src: string, volume: number = 1) => {
 let bgm: HTMLAudioElement | null = null;
 
 export const toggleBGM = (src: string, volume: number = 0.3, forceMute?: boolean) => {
-    // 1. Initialize the track if it doesn't exist yet
+    //Initialize the track if it doesn't exist yet
     if (!bgm) {
         bgm = new Audio(src);
-        bgm.loop = true; // 🔥 This forces it to loop infinitely
+        bgm.loop = true;
         bgm.volume = volume;
     }
 
-    // 2. If a specific state is requested (like from a save file or button state)
+    //If a specific state is requested
     if (forceMute !== undefined) {
         if (forceMute) {
             bgm.pause();
@@ -25,10 +25,17 @@ export const toggleBGM = (src: string, volume: number = 0.3, forceMute?: boolean
         return;
     }
 
-    // 3. Otherwise, just flip it
+    //Otherwise, just flip it
     if (bgm.paused) {
         bgm.play().catch(e => console.warn("BGM autoplay blocked:", e));
     } else {
         bgm.pause();
+    }
+};
+
+export const stopBGM = () => {
+    if (bgm) {
+        bgm.pause();
+        bgm.currentTime = 0;
     }
 };

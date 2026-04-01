@@ -227,7 +227,7 @@ export const MusicButton = () => {
 		setIsMuted(nextMutedState);
 
 		// Pass the path to your music file, the volume, and whether it should be muted
-		toggleBGM("/sounds/brickblast/background.mp3", 0.3, nextMutedState);
+		toggleBGM("/sounds/brickblast/background.mp3", 0.25, nextMutedState);
 	};
 
 	return (

@@ -1,5 +1,5 @@
 import {Canvas, useFrame} from "@react-three/fiber";
-import {Suspense, useRef, useState} from "react";
+import {Suspense, useEffect, useRef, useState} from "react";
 import {
 	Background,
 	BlockHolder,
@@ -22,6 +22,7 @@ import { GridRenderer } from "./GridRenderer.tsx";
 import { GhostPreview } from "./GhostPreview.tsx";
 import { Stats } from "@react-three/drei";
 import * as THREE from "three";
+import {stopBGM} from "./audio.ts";
 
 // manager of all postprocessing effects
 const GlobalEffects = () => {
@@ -64,6 +65,12 @@ const GlobalEffects = () => {
 
 //main scene
 export const Scene = () => {
+
+	useEffect(() => {
+		return () => {
+			stopBGM();
+		};
+	}, []);
 
 	return (
 		<div style={{ width: "100%", height: "100%" }}>

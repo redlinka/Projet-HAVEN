@@ -1,29 +1,24 @@
-import { useState } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useCallback, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { MessageCircle, X } from "lucide-react";
-
+import { useRoomService } from "../contexts/RoomServiceContext";
+import type { Game } from "../types/types";
 import GameContainer from "./GameContainer";
 import Chatter from "./Chat/Chatter";
-import type { Game } from "../types/types";
-import type { ChatManager } from "../services/ChatManager";
 
 import "../styles/components/GamePage.css";
-
-interface LocationState {
-  chatManager?: ChatManager;
-  multiplayer?: boolean;
-}
 
 export default function GamePage({ games }: { games: Game[] }) {
   const [showChat, setShowChat] = useState<boolean>(false);
   const { id } = useParams();
-  const location = useLocation();
+  const navigate = useNavigate();
+  const chatManager = useRoomService();
+  const isMultiplayer = chatManager.isInRoom;
 
-  // Récupère le chatManager transmis par GameLobbyPage (mode multijoueur)
-  const state = (location.state ?? {}) as LocationState;
-  const chatManager = state.chatManager ?? null;
-  const isMultiplayer = state.multiplayer === true && chatManager !== null;
+  const handleRoomClosed = useCallback(() => {
+    navigate(`/game/${id}/lobby/`);
+  }, [navigate, id]);
 
   const gameSelected = id ? games[Number(id)] : null;
 
@@ -34,18 +29,20 @@ export default function GamePage({ games }: { games: Game[] }) {
   return (
     <div className="game-container">
       {/* Jeu */}
-      <div className={`game-container-left ${!isMultiplayer ? "game-container-left--fullwidth" : ""}`}>
+      <div
+        className={`game-container-left ${!isMultiplayer ? "game-container-left--fullwidth" : ""}`}
+      >
         <GameContainer game={gameSelected} />
       </div>
 
-      {/* Chat latéral — uniquement en mode multijoueur sur grand écran */}
+      {/* Chat latéral - uniquement en mode multijoueur sur grand écran */}
       {isMultiplayer && window.innerWidth >= 700 && (
         <div className="game-container-right">
-          <Chatter chatManager={chatManager!} />
+          <Chatter />
         </div>
       )}
 
-      {/* Bouton flottant — mobile uniquement, mode multijoueur */}
+      {/* Bouton flottant - mobile uniquement, mode multijoueur */}
       {isMultiplayer && window.innerWidth < 700 && (
         <button
           onClick={() => setShowChat((prev) => !prev)}
@@ -62,10 +59,10 @@ export default function GamePage({ games }: { games: Game[] }) {
         createPortal(
           <div className="bg-filter">
             <div className="chat-popup">
-              <Chatter chatManager={chatManager!} />
+              <Chatter />
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   );

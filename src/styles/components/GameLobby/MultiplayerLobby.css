@@ -1,0 +1,93 @@
+.lobby-chat-wrapper {
+  width: 100%;
+  max-width: 820px;
+  display: flex;
+  flex-direction: column;
+  --chatter-bg: #1c0b3a;
+  --chatter-border: #3d1a7a;
+  --chatter-accent: #f59e0b;
+}
+
+.lobby-chat-wrapper .chatter {
+  background: #1c0b3a;
+  border: 2px solid #3d1a7a;
+  box-shadow: 0 0 30px rgba(124, 58, 237, 0.15) inset;
+  min-height: 520px;
+}
+
+.lobby-chat-wrapper .chatter-header {
+  background: #12082a;
+  border-bottom-color: #3d1a7a;
+}
+
+.lobby-chat-wrapper .chatter-footer {
+  background: #12082a;
+  border-top-color: #3d1a7a;
+}
+
+.lobby-chat-wrapper .chatter-user-badge {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #f59e0b;
+  font-family: "Press Start 2P", "Courier New", monospace;
+  font-size: 0.55rem;
+}
+
+.lobby-chat-wrapper .chatter-code-value {
+  background: #12082a;
+  border-color: #3d1a7a;
+  font-family: "Press Start 2P", "Courier New", monospace;
+  font-size: 0.9rem;
+  color: #f59e0b;
+  letter-spacing: 0.25em;
+}
+
+.lobby-chat-wrapper .chatter-start-btn--ready {
+  font-family: "Press Start 2P", "Courier New", monospace;
+  font-size: 0.6rem;
+  border-color: #f59e0b;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.lobby-chat-wrapper .chatter-lobby {
+  background: transparent;
+  padding: 1rem 0;
+}
+
+.lobby-chat-wrapper .room-creator,
+.lobby-chat-wrapper .room-joiner {
+  background: #12082a;
+  border-color: #3d1a7a;
+}
+
+.lobby-chat-wrapper .room-field input {
+  background: #0a0518;
+  border-color: #3d1a7a;
+  color: #e8d5ff;
+  font-family: "Press Start 2P", "Courier New", monospace;
+  font-size: 0.65rem;
+}
+
+.lobby-chat-wrapper .room-field input:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.lobby-chat-wrapper .room-field label,
+.lobby-chat-wrapper .room-card-header p {
+  font-family: "Press Start 2P", "Courier New", monospace;
+  font-size: 0.5rem;
+  color: #7c3aed;
+}
+
+.lobby-chat-wrapper .room-card-header h3 {
+  font-family: "Press Start 2P", "Courier New", monospace;
+  font-size: 0.72rem;
+  color: #f5f3ff;
+}
+
+.lobby-chat-wrapper .room-card-header p {
+  font-size: 0.48rem;
+  line-height: 1.8;
+}

@@ -3,8 +3,8 @@ import mongoose, { Schema } from 'mongoose';
 const gameSchema = new Schema({
     game: { type: String, enum: ['PUZZLE','BRICKBLAST'], required: true },
     playedAt: { type: Date, required: true },
-    mode: { type: String, enum: ['solo', 'duplicate'], required: true },
-    difficulty: { type: String, enum: ['easy', 'normal','hard'], required: true },
+    mode: { type: String, enum: ['SOLO', 'DUPLICATE'], required: true },
+    difficulty: { type: String, required: false }, // easy, medium, hard for puzzle, null for brickblast
     points: { type: Number, required: true },
     earnedAt: { type: Date, required: true },
     expiresAt: { type: Date, required: true },
@@ -18,7 +18,6 @@ const playerSchema = new Schema({
     games: [gameSchema], default: []
 });
 
-playerSchema.index({ 'linkedPHPId': 1 });
 playerSchema.index({ 'games.expiresAt': 1 });
 playerSchema.index({ sessionToken: 1 });
 playerSchema.index({ lastConnectedAt: 1 }, { expireAfterSeconds: 31536000 });

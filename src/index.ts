@@ -11,7 +11,7 @@ import cors from 'cors';
 import connectDB from './db';
 import { initWebSocketServer } from './ws/roomManager'
 import playerRouter from './routes/player';
-import endgameRouter from './routes/engame';
+import endgameRouter from './routes/endgame';
 
 const PORT = parseInt(process.env.PORT ?? '2025', 10);
 
@@ -27,9 +27,8 @@ async function main() {
   app.use(express.json());
 
   // we define routes of our app
-
-  app.use('/player', playerRouter);
-  app.use('/endgame', endgameRouter);
+  app.use('/api-node/player', playerRouter);
+  app.use('/api-node/endgame', endgameRouter);
 
 
   app.get('/health', (_req, res) => {

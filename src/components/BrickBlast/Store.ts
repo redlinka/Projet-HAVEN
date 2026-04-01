@@ -3,6 +3,13 @@ import * as THREE from "three";
 import { placePieceOnBoard } from "./logic.ts";
 import { persist } from "zustand/middleware";
 
+export interface Explosion {
+	id: string;
+	x: number;
+	y: number;
+	color: string;
+}
+
 interface GameState {
 	setScore: (score: number) => void;
 	score: number;
@@ -41,14 +48,24 @@ interface GameState {
 		gridY: number,
 		colorIndex: number,
 	) => void;
+
+	//
+	explosions: Explosion[];
+	addExplosions: (explosions: Explosion[]) => void;
+	removeExplosion: (id: string) => void;
 }
 
 export const useGameStore = create<
 	GameState,
-	[["zustand/persist", Omit<GameState, "setHoveredMeshes" | "setIsDraggingGlobal" | "setActivePiece" | "setIsValidDrop" | "placePiece" | "setNextPieces" | "setGrid" | "setScore" | "hoverCoords" | "hoveredMeshes" | "isDraggingGlobal" | "activePiece" | "isValidDrop" | "setIsGameOver">]]
+	[["zustand/persist", Omit<GameState, "setHoveredMeshes" | "setIsDraggingGlobal" | "setActivePiece" | "setIsValidDrop" | "placePiece" | "setNextPieces" | "setGrid" | "setScore" | "hoverCoords" | "hoveredMeshes" | "isDraggingGlobal" | "activePiece" | "isValidDrop" | "setIsGameOver" | "explosions" | "addExplosions" | "removeExplosion">]]
+
 >(
 	persist(
 		(set) => ({
+			explosions: [],
+			addExplosions: (newExplosions) => set((state) => ({ explosions: [...state.explosions, ...newExplosions] })),
+			removeExplosion: (id) => set((state) => ({ explosions: state.explosions.filter(e => e.id !== id) })),
+
 			score: 0,
 			hoverCoords: null,
 			grid: [

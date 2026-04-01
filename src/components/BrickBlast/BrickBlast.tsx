@@ -68,7 +68,7 @@ export const Scene = () => {
 	return (
 		<div style={{ width: "100%", height: "100%" }}>
 			<Canvas
-				camera={{ fov: 80, near: 0.1, far: 1000, position: [0, -500, 100] }}
+				camera={{ fov: 80, near: 0.1, far: 1000, position: [0, -400, 100] }}
 			>
 				<Stats />
 				<CameraController />

@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { useRef, useState } from "react";
 import { useGameStore } from "./Store.ts";
 import {ASPECT_COEFF} from "./logic.ts";
-import {toggleBGM} from "./audio.ts";
+import {playSFX, toggleBGM} from "./audio.ts";
 
 export const CameraController = () => {
 	const { size } = useThree();
@@ -147,8 +147,8 @@ export const GameOverScreen = () => {
 				GAME OVER
 			</Text>
 
-			<MenuButton position={[-25, -15, 0]} size={22} imageSrc="/img/brickblast/replay.png" onClick={handleRetry} color="none" />
-			<MenuButton position={[25, -15, 0]} size={25} imageSrc="/img/brickblast/exit.png" onClick={handleQuit} color="none" />
+			<MenuButton position={[-25, -15, 0]} size={22} imageSrc="/img/brickblast/replay.png" musicSrc={"/sounds/brickblast/nice.mp3"} onClick={handleRetry} color="none" />
+			<MenuButton position={[25, -15, 0]} size={25} imageSrc="/img/brickblast/exit.png" musicSrc={"/sounds/brickblast/nice.mp3"} onClick={handleQuit} color="none" />
 		</group>
 	);
 };
@@ -158,6 +158,7 @@ const MenuButton = ({
 						position,
 						size,
 						imageSrc,
+						musicSrc,
 						color,
 						hoverTint = "red",
 						onClick
@@ -165,6 +166,7 @@ const MenuButton = ({
 	position: [number, number, number],
 	size: number,
 	imageSrc: string,
+	musicSrc?: string,
 	color: string,
 	hoverTint?: string,
 	onClick: () => void
@@ -178,7 +180,13 @@ const MenuButton = ({
 	return (
 		<group
 			position={position}
-			onClick={(e) => { e.stopPropagation(); onClick(); }}
+			onClick={(e) => {
+				e.stopPropagation(); onClick();
+				if (musicSrc) {
+					playSFX(musicSrc, 0.5);
+				}
+			}}
+
 			onPointerEnter={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = "pointer"; }}
 			onPointerLeave={(e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = "default"; }}
 		>
@@ -228,6 +236,7 @@ export const MusicButton = () => {
 			size={10}
 			// Swap the image based on state (make sure you have these images!)
 			imageSrc={isMuted ? "/img/brickblast/music_off.png" : "/img/brickblast/music_on.png"}
+			musicSrc={"/sounds/brickblast/nice.mp3"}
 			color="none"
 			hoverTint="#44ff44"
 			onClick={handleToggle}
@@ -262,6 +271,7 @@ export const RestartButton = () => {
 			size={10}
 			// Swap the image based on state (make sure you have these images!)
 			imageSrc={"/img/brickblast/replay.png"}
+			musicSrc={"/sounds/brickblast/nice.mp3"}
 			color="none"
 			hoverTint="red"
 			onClick={handleRestart}

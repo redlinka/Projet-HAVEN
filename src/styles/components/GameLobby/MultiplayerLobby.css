@@ -57,8 +57,9 @@
 
 .lobby-chat-wrapper .room-creator,
 .lobby-chat-wrapper .room-joiner {
-  background: #12082a;
-  border-color: #3d1a7a;
+  background-color: transparent;
+  border: 1px solid var(--purple);
+  backdrop-filter: blur(5px);
 }
 
 .lobby-chat-wrapper .room-field input {
@@ -76,18 +77,18 @@
 
 .lobby-chat-wrapper .room-field label,
 .lobby-chat-wrapper .room-card-header p {
-  font-family: "Press Start 2P", "Courier New", monospace;
-  font-size: 0.5rem;
-  color: #7c3aed;
+  font: 600 clamp(.5rem, 1.3vw, 1rem) var(--text-font);
+  color: var(--white);
 }
 
 .lobby-chat-wrapper .room-card-header h3 {
-  font-family: "Press Start 2P", "Courier New", monospace;
-  font-size: 0.72rem;
+  font-family: var(--title-font);
+  font-size: clamp(1.2rem, 2vw, 1.5rem);
+  letter-spacing: 0.1em;
   color: #f5f3ff;
 }
 
 .lobby-chat-wrapper .room-card-header p {
-  font-size: 0.48rem;
-  line-height: 1.8;
+  font: 700 clamp(0.7rem, 1.5vw, 1rem) var(--text-font);
+  color: var(--white);
 }

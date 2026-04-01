@@ -1,6 +1,14 @@
 @import './_room-shared.css';
 
-/* Surcharges spécifiques à RoomCreator si nécessaire */
 .room-creator {
-  border-top: 3px solid rgba(245, 200, 66, 0.4);
+  border-radius: 16px 0 0 16px;
+  border-right: none;
+}
+
+@media (max-width: 680px) {
+  .room-creator {
+    border-radius: 14px 14px 0 0;
+    border-right: 1px solid rgba(160, 88, 190, 0.25);
+    border-bottom: none;
+  }
 }

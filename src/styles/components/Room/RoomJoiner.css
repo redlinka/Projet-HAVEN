@@ -1,6 +1,14 @@
 @import './_room-shared.css';
 
-/* Surcharges spécifiques à RoomJoiner si nécessaire */
 .room-joiner {
-  border-top: 3px solid rgba(59, 130, 246, 0.4);
+  border-radius: 0 16px 16px 0;
+  border-left: none;
+}
+
+@media (max-width: 680px) {
+  .room-joiner {
+    border-radius: 0 0 14px 14px;
+    border-left: 1px solid rgba(160, 88, 190, 0.25);
+    border-top: none;
+  }
 }

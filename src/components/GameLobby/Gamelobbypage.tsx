@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import type { Game } from "../../types/types";
 import { useRoomService } from "../../contexts/RoomServiceContext";
+import BackgroundStars from "../BackgroundStars";
 
 import ModeSelector from "./ModeSelector";
 import MultiplayerLobby from "./MultiplayerLobby";
@@ -33,33 +34,35 @@ export default function GameLobbyPage({ games }: { games: Game[] }) {
   };
 
   return (
-    <div className="lobby-screen">
-      <div className="lobby-scanlines" aria-hidden="true" />
-      <div className="lobby-inner">
-        <header className="lobby-header">
-          <h1 className="lobby-game-title">{gameSelected.title}</h1>
-          <p className="lobby-subtitle">
-            {lobbyState === "select" ? "SELECT MODE" : "WAITING ROOM"}
-          </p>
-        </header>
-
-        {lobbyState === "select" && (
-          <ModeSelector
-            onSolo={() => navigate(`/game/${id}`)}
-            onMultiplayer={() => setLobbyState("multiplayer")}
-          />
-        )}
-
-        {lobbyState === "multiplayer" && (
-          <MultiplayerLobby initialRoomId={initialRoomId} />
-        )}
-
-        <footer className="lobby-footer">
-          <button className="lobby-back-btn" onClick={handleBack}>
-            ◀ RETOUR
+    <BackgroundStars>
+      <div className="glp-screen">
+        <div className="glp-inner">
+          <button className="glp-back-btn" onClick={handleBack}>
+            &lt; Back
           </button>
-        </footer>
+
+          <header className="glp-header">
+            <span className="glp-eyebrow">
+              {lobbyState === "select" ? "Choose a mode" : "Waiting Room"}
+            </span>
+            <h1 className="glp-title">{gameSelected.title}</h1>
+            <div className="glp-title-line" aria-hidden="true" />
+          </header>
+
+          <main className="glp-content">
+            {lobbyState === "select" && (
+              <ModeSelector
+                onSolo={() => navigate(`/game/${id}`)}
+                onMultiplayer={() => setLobbyState("multiplayer")}
+              />
+            )}
+
+            {lobbyState === "multiplayer" && (
+              <MultiplayerLobby initialRoomId={initialRoomId} />
+            )}
+          </main>
+        </div>
       </div>
-    </div>
+    </BackgroundStars>
   );
 }

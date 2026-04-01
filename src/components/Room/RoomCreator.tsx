@@ -39,15 +39,17 @@ export default function RoomCreator({
   };
 
   return (
-    <RoomForm
-      title="Créer une partie"
-      icon="👑"
-      description="Générez un code et invitez votre adversaire"
-      userName={userName}
-      onUserNameChange={setUserName}
-      isLoading={isLoading}
-      onSubmit={handleSubmit}
-      submitButtonText="Créer la partie"
-    />
+    <div className="room-creator">
+      <RoomForm
+        title="Créer une partie"
+        icon="👑"
+        description="Générez un code et invitez votre adversaire"
+        userName={userName}
+        onUserNameChange={setUserName}
+        isLoading={isLoading}
+        onSubmit={handleSubmit}
+        submitButtonText="Créer la partie"
+      />
+    </div>
   );
 }

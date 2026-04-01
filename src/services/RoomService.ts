@@ -1,12 +1,21 @@
-import type { Message } from '../components/Chat/ChatDisplayer';
+import type { Message } from "../components/Chat/ChatDisplayer";
 
 /**
  * Interface définissant le contrat d'un gestionnaire de chat.
  * Toute implémentation (WebSocket, Mock, etc.) doit respecter ce contrat.
  */
-export interface ChatManager {
+export interface RoomService {
+  // ── État ──────────────────────────────────────────────────────
+  /** Messages accumulés depuis le début de la session */
+  readonly messages: Message[];
+  /** Identifiant du salon actif, null si non connecté */
+  readonly roomId: string | null;
+  /** True si l'utilisateur est actuellement dans un salon */
+  readonly isInRoom: boolean;
+
   /**
    * Crée un nouveau salon et retourne son identifiant.
+   * Met à jour roomId et isInRoom en cas de succès.
    * Lance une exception en cas d'échec de connexion.
    */
   createRoom(userName: string): Promise<string>;
@@ -21,12 +30,17 @@ export interface ChatManager {
   /**
    * Définit le listener appelé à chaque message reçu (ou système).
    */
-  setMessageListener(listener: (message: Message) => void): void;
+  setMessageListener(listener: (message: Message) => void | null): void;
 
   /**
    * Définit le listener appelé quand la liste des joueurs change (join/leave).
    */
   setRoomUpdateListener(listener: (users: string[]) => void): void;
+
+  /**
+   * Définit le listener appelé quand l'admin ferme le salon.
+   */
+  setRoomClosedListener(listener: () => void): void;
 
   /**
    * Définit le listener appelé quand la partie est lancée par l'admin.
@@ -47,4 +61,10 @@ export interface ChatManager {
    * Ferme proprement la connexion.
    */
   close(): void;
+
+  /**
+   * Quitte le salon actuel sans fermer la connexion WebSocket.
+   * Permet de rejoindre un autre salon ou d'en créer un nouveau.
+   */
+  leaveRoom(): void;
 }

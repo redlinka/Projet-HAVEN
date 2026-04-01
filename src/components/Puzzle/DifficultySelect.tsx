@@ -38,6 +38,13 @@ export default function DifficultySelect({
         cols: DIFFICULTIES[selected].cols,
         rows: DIFFICULTIES[selected].rows,
       });
+      // if (multiplayer && isAdmin) {
+      //   handleSelectPuzzleDifficulty({
+      //     cols: DIFFICULTIES[selected].cols,
+      //     rows: DIFFICULTIES[selected].rows,
+      //   });
+      //   console.log("Dificulte envoye a la room");
+      // }
     }, 400);
   };
 

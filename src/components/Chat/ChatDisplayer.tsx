@@ -1,3 +1,4 @@
+import { formatMessageDate } from "../../utils/dateFormatter";
 import "../../styles/components/Chat/ChatDisplayer.css";
 
 export interface Message {
@@ -7,53 +8,60 @@ export interface Message {
   date: Date;
 }
 
-const ChatMessage = (props: { message: Message }) => {
-  const css = props.message.kind === "received_message" ? "received" : "send";
+interface ChatMessageProps {
+  message: Message;
+}
 
-  let newDate = props.message.date;
-  let date = newDate.getDate();
-  let month = newDate.getMonth() + 1;
-  let year = newDate.getFullYear();
-  let hour = newDate.getHours();
-  let min = newDate.getMinutes();
-  let sec = newDate.getSeconds();
+function ChatMessage({ message }: ChatMessageProps) {
+  const isSent = message.kind === "send_message";
+  const messageClass = isSent ? "send" : "received";
 
-  function handleCopyButton() {
-    navigator.clipboard.writeText(props.message.content);
-  }
+  const handleCopyContent = () => {
+    navigator.clipboard.writeText(message.content);
+  };
 
   return (
-    <div className={`message ${css}`}>
-      <p>{props.message.sender}</p>
-      <p>{props.message.content}</p>
-      <p>
-        {css === "send" && (
-          <button className="" onClick={() => handleCopyButton()}>
+    <div className={`message ${messageClass}`}>
+      <p className="message-sender">{message.sender}</p>
+      <p className="message-content">{message.content}</p>
+      <div className="message-footer">
+        {isSent && (
+          <button
+            className="message-copy-btn"
+            onClick={handleCopyContent}
+            title="Copier le message"
+          >
             copy
           </button>
         )}
-        {` ${year}:${month < 10 ? `0${month}` : `${month}`}:${date} à ${hour}:${min < 10 ? `0${min}` : min}:${sec < 10 ? `0${sec}` : sec} `}
-        {css === "received" && (
-          <button className="" onClick={() => handleCopyButton()}>
+        <time className="message-time">{formatMessageDate(message.date)}</time>
+        {!isSent && (
+          <button
+            className="message-copy-btn"
+            onClick={handleCopyContent}
+            title="Copier le message"
+          >
             copy
           </button>
         )}
-      </p>
+      </div>
     </div>
   );
-};
+}
 
-export default function ChatDisplayer(props: { listMessage: Message[] }) {
+interface ChatDisplayerProps {
+  listMessage: Message[];
+}
+
+export default function ChatDisplayer({ listMessage }: ChatDisplayerProps) {
   return (
     <div className="chat-message-displayer">
       <div className="chat-container">
-        {props.listMessage.map((message, index) => (
+        {listMessage.map((message, index) => (
           <ChatMessage
-            key={index}
+            key={`${message.sender}-${index}`}
             message={{
-              kind: message.kind,
-              sender: message.sender,
-              content: message.content,
+              ...message,
               date: new Date(message.date),
             }}
           />

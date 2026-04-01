@@ -1,8 +1,8 @@
 import "./App.css";
-import { BrowserRouter, Routes, Route} from "react-router-dom";
-import { useEffect} from "react"
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { ToyBrick, Puzzle } from "lucide-react";
-import {getSession} from "./api/session";
+import { getSession } from "./api/session";
 
 import Navbar from "./layouts/Navbar";
 import BackgroundStars from "./components/BackgroundStars";
@@ -12,54 +12,51 @@ import GamePage from "./components/GamePage";
 import HomePage from "./components/HomePage";
 
 // Games
-import Scene from "./components/BrickBlast/BrickBlast.tsx";
+import BrickScene from "./components/BrickBlast/BrickBlast";
 import PuzzleGame from "./components/Puzzle/PuzzleGame";
 
 // Game lobby
-import GameLobbyPage from "./components/Gamelobbypage";
+import GameLobbyPage from "./components/GameLobby/Gamelobbypage";
+
+// Context
+import { RoomServiceContext } from "./contexts/RoomServiceContext";
+import { WebSocketRoomService } from "./services/WebSocketRoomService";
+import { RoomProvider } from "./contexts/RoomContext";
+
+const games = [
+  {
+    game: <PuzzleGame />,
+    description: "",
+    title: "PuzzleGame",
+    icon: <Puzzle />,
+    img: "/img/LegoPuzzle.png",
+  },
+  {
+    game: <BrickScene />,
+    description: "",
+    title: "Brick Blast",
+    icon: <ToyBrick />,
+    img: "/img/BrickBlast.png",
+  },
+];
 
 function App() {
+  const [user, setUser] = useState<{ id: number; username: string } | null>(
+    null,
+  );
+
+  // Création d'un seul ChatManager partagé pour tout l'app
+  const [chatManager] = useState(() => new WebSocketRoomService());
 
   useEffect(() => {
-    getSession().then(data => {
-      console.log(data);
-      localStorage.setItem("SQLid", JSON.stringify(data?.id ?? null));
-
-      // we retrive player infos 
-      if (data?.id) {
-
-        fetch(`/api-node/player?SQLid=${data.id}`)
-        .then(r => r.json())
-        .then(player => {
-          if (player) {
-            // we only store his token
-            localStorage.setItem("sessionToken", player.sessionToken);
-
-          }
-          // if we cannot find one, we will create his account after he end a game (so generate his sessionToken)
-        });
-      }
-    
-    })
-      .catch(err => console.error("Erreur fetch session:", err));
+    getSession()
+      .then((data) => setUser(data))
+      .catch((err) => console.error("Erreur fetch session:", err));
   }, []);
 
-  const games = [
-    {
-      game: <PuzzleGame />,
-      description: "lorem ipsum",
-      title: "PuzzleGame",
-      icon: <Puzzle />,
-      img: "/img/LegoPuzzle.png",
-    },
-    {
-      game: <Scene />,
-      description: "lorem ipsum",
-      title: "Brick Blast",
-      icon: <ToyBrick />,
-      img: "/img/BrickBlast.png",
-    },
-  ];
+  useEffect(() => {
+    localStorage.setItem("user", JSON.stringify(user));
+  }, [user]);
 
   return (
     <BrowserRouter>
@@ -67,11 +64,18 @@ function App() {
         <Navbar games={games} />
 
         <div className="app-content">
-          <Routes>
-            <Route path="/" element={<HomePage games={games} />} />
-            <Route path="/game/:id" element={<GamePage games={games} />} />
-            <Route path="/game/:id/lobby" element={<GameLobbyPage games={games} />} />
-          </Routes>
+          <RoomServiceContext.Provider value={chatManager}>
+            <RoomProvider>
+              <Routes>
+                <Route path="/" element={<HomePage games={games} />} />
+                <Route path="/game/:id" element={<GamePage games={games} />} />
+                <Route
+                  path="/game/:id/lobby"
+                  element={<GameLobbyPage games={games} />}
+                />
+              </Routes>
+            </RoomProvider>
+          </RoomServiceContext.Provider>
         </div>
       </BackgroundStars>
     </BrowserRouter>

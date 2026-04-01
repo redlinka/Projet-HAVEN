@@ -5,6 +5,11 @@
   padding-right: 10px;
   flex: 1;
   color: var(--white);
+  max-height: 325px;
+  position: relative;
+  display: flex;
+  flex-direction: column-reverse;
+  margin-top: auto;
 }
 
 .chat-container {
@@ -16,7 +21,14 @@
   min-height: 20px;
   display: flex;
   flex-direction: column;
+  text-align: end;
   gap: 2px;
+}
+.message-content {
+  overflow-wrap: break-word; 
+  word-wrap: break-word;    
+  word-break: break-word;
+  white-space: normal;
 }
 
 .received {
@@ -28,7 +40,7 @@
 }
 
 .message p:nth-child(1) {
-  color: var(--yellow);
+  color: var(--purple);
   font-size: 0.8rem;
 }
 
@@ -36,12 +48,16 @@
   max-width: 300px;
 }
 
-.message p:nth-child(3) {
-  font-size: 0.7rem;
-  padding: 0;
+.message .message-footer {
+  display: flex;
+  gap: 5px;
+}
+
+.message .message-footer .message-time {
+  font-size: 0.6rem;
   color: gray;
 }
-.message p:nth-child(3) button {
+.message .message-footer button {
   color: white;
   font-weight: bold;
   font-size: 0.7rem;

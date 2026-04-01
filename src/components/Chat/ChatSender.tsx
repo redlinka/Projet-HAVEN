@@ -1,16 +1,20 @@
-import { useState, type SyntheticEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Send } from "lucide-react";
 import "../../styles/components/Chat/ChatSender.css";
 
-export default function ChatSender(props: {
-  onMessageEntered: (messageSend: string) => void;
-}) {
+interface ChatSenderProps {
+  onMessageEntered: (message: string) => void;
+}
+
+export default function ChatSender({ onMessageEntered }: ChatSenderProps) {
   const [messageInput, setMessageInput] = useState("");
 
-  const handleSubmit = (e: SyntheticEvent) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    props.onMessageEntered(messageInput);
-    setMessageInput("");
+    if (messageInput.trim()) {
+      onMessageEntered(messageInput);
+      setMessageInput("");
+    }
   };
 
   return (
@@ -20,8 +24,13 @@ export default function ChatSender(props: {
         placeholder="Message"
         value={messageInput}
         onChange={(e) => setMessageInput(e.target.value)}
+        aria-label="Nouveau message"
       />
-      <button type="submit">
+      <button
+        type="submit"
+        disabled={!messageInput.trim()}
+        aria-label="Envoyer le message"
+      >
         <Send size={20} />
       </button>
     </form>

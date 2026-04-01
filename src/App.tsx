@@ -1,6 +1,6 @@
 import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { ToyBrick, Puzzle } from "lucide-react";
 import { getSession } from "./api/session";
 
@@ -12,7 +12,7 @@ import GamePage from "./components/GamePage";
 import HomePage from "./components/HomePage";
 
 // Games
-import BlockScene from "./components/BrickBlast/BlockBlast";
+import BrickScene from "./components/BrickBlast/BrickBlast";
 import PuzzleGame from "./components/Puzzle/PuzzleGame";
 
 // Game lobby
@@ -32,7 +32,7 @@ const games = [
     img: "/img/LegoPuzzle.png",
   },
   {
-    game: <BlockScene />,
+    game: <BrickScene />,
     description: "",
     title: "Brick Blast",
     icon: <ToyBrick />,

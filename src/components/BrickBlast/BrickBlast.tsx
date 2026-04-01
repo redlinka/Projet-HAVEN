@@ -1,5 +1,5 @@
 import {Canvas, useFrame} from "@react-three/fiber";
-import {Suspense, useEffect, useRef, useState} from "react";
+import {Suspense, useRef, useState} from "react";
 import {
 	Background,
 	BlockHolder,
@@ -57,28 +57,18 @@ const GlobalEffects = () => {
 				kernelSize={1}
 			/>
 			<Pixelation granularity={pixelSize} />
-			<Scanline opacity={0.4} density={10} />
+			<Scanline opacity={0.2} density={10} />
 		</EffectComposer>
 	);
 };
 
 //main scene
-export const BlockScene = () => {
-	const [fov, setFov] = useState(80);
-
-	useEffect(() => {
-		const update = () => {
-			setFov(80);
-		};
-		update();
-		window.addEventListener("resize", update);
-		return () => window.removeEventListener("resize", update);
-	}, []);
+export const Scene = () => {
 
 	return (
 		<div style={{ width: "100%", height: "100%" }}>
 			<Canvas
-				camera={{ fov: fov, near: 0.1, far: 1000, position: [0, -15, 100] }}
+				camera={{ fov: 80, near: 0.1, far: 1000, position: [0, -500, 100] }}
 			>
 				<Stats />
 				<CameraController />
@@ -96,4 +86,4 @@ export const BlockScene = () => {
 		</div>
 	);
 };
-export default BlockScene;
+export default Scene;

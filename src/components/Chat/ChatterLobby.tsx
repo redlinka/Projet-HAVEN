@@ -36,9 +36,7 @@ export default function ChatterLobby({
           onError={onError}
           onConnecting={onConnecting}
         />
-        <div className="chatter-lobby-separator">
-          <span>ou</span>
-        </div>
+        
         <RoomJoiner
           onRoomJoined={handleRoomJoined}
           onError={onError}

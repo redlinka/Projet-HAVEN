@@ -47,18 +47,20 @@ export default function RoomJoiner({
   };
 
   return (
-    <RoomForm
-      title="Rejoindre une partie"
-      icon="🎯"
-      description="Entrez le code transmis par votre adversaire"
-      userName={userName}
-      onUserNameChange={setUserName}
-      roomCode={roomId}
-      onRoomCodeChange={setRoomId}
-      isLoading={isLoading}
-      onSubmit={handleSubmit}
-      submitButtonText="Rejoindre la partie"
-      showRoomCode
-    />
+    <div className="room-joiner">
+      <RoomForm
+        title="Rejoindre une partie"
+        icon="🎯"
+        description="Entrez le code transmis par votre adversaire"
+        userName={userName}
+        onUserNameChange={setUserName}
+        roomCode={roomId}
+        onRoomCodeChange={setRoomId}
+        isLoading={isLoading}
+        onSubmit={handleSubmit}
+        submitButtonText="Rejoindre la partie"
+        showRoomCode
+      />
+    </div>
   );
 }

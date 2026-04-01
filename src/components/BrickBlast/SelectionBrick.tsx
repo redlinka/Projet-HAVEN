@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { CELL_SIZE, checkGameOver, clearFullLines, COLORS, getRandomColor } from "./logic.ts";
+import {ASPECT_COEFF, CELL_SIZE, checkGameOver, clearFullLines, COLORS, getRandomColor} from "./logic.ts";
 import { getRandomPiece } from "./Shapes.ts";
 import { useGameStore } from "./Store.ts";
 import { BrickUnit } from "./BrickUnit.tsx";
@@ -15,11 +15,23 @@ const SELECTION_SIZE = CELL_SIZE / SCALE_FACTOR;
 const SCALE_BIG = SCALE_NORMAL.clone().multiplyScalar(SCALE_FACTOR);
 const LERP_ALPHA = 0.15;
 
-const INITIAL_POSITIONS = [
-    new THREE.Vector3(55, 30, Math.ceil(SELECTION_SIZE / SCALE_FACTOR) + 1),
-    new THREE.Vector3(55, 0, Math.ceil(SELECTION_SIZE / SCALE_FACTOR) + 1),
-    new THREE.Vector3(55, -30, Math.ceil(SELECTION_SIZE / SCALE_FACTOR) + 1),
-];
+const getInitialPositions = (isPortrait: boolean) => {
+    const z = Math.ceil(SELECTION_SIZE / SCALE_FACTOR) + 1;
+    if (isPortrait) {
+        // Portrait Mode: Spaced horizontally under the grid (Centered around X = -30)
+        return [
+            new THREE.Vector3(-65, -75, z),
+            new THREE.Vector3(-30, -75, z),
+            new THREE.Vector3(5, -75, z),
+        ];
+    }
+    // Landscape Mode: Spaced vertically to the right of the grid
+    return [
+        new THREE.Vector3(55, 30, z),
+        new THREE.Vector3(55, 0, z),
+        new THREE.Vector3(55, -30, z),
+    ];
+};
 
 // brick component representing the pieces in the selection area
 export const SelectionBrick = ({
@@ -68,10 +80,9 @@ export const SelectionBrick = ({
     const computeBbox = (s: number[][]) => {
         const cols = s.map(([c]) => c);
         const rows = s.map(([, r]) => r);
-        const minCol = Math.min(...cols),
-            maxCol = Math.max(...cols);
-
+        const minCol = Math.min(...cols), maxCol = Math.max(...cols);
         const minRow = Math.min(...rows), maxRow = Math.max(...rows);
+
         return {
             w: (maxCol - minCol + 1) * SELECTION_SIZE,
             h: (maxRow - minRow + 1) * SELECTION_SIZE,
@@ -181,7 +192,7 @@ export const SelectionBrick = ({
 
                     // 5. If all 3 slots are empty, fetch a brand new batch
                     if (updatedPieces.every(p => p === null)) {
-                        const newBatch = INITIAL_POSITIONS.map(() => ({
+                        const newBatch = Array.from({ length: 3 }).map(() => ({
                             color: getRandomColor(),
                             shape: getRandomPiece(),
                         }));
@@ -196,7 +207,7 @@ export const SelectionBrick = ({
                     const isOver = checkGameOver(latestGrid, piecesToCheck);
 
                     if (isOver) {
-                        console.log("💀 GAME OVER 💀");
+                        console.log("GAME OVER");
                         store.setIsGameOver(true);
                     }
 
@@ -240,9 +251,13 @@ export default function BlocksGeneration() {
     const nextPieces = useGameStore((state) => state.nextPieces);
     const setNextPieces = useGameStore((state) => state.setNextPieces);
 
+    const { size } = useThree();
+    const isPortrait = size.width * ASPECT_COEFF < size.height;
+    const positions = getInitialPositions(isPortrait);
+
     useMemo(() => {
         if (nextPieces.length === 0) {
-            const initialPieces = INITIAL_POSITIONS.map(() => ({
+            const initialPieces = Array.from({ length: 3 }).map(() => ({
                 color: getRandomColor(),
                 shape: getRandomPiece(),
             }));
@@ -252,9 +267,8 @@ export default function BlocksGeneration() {
 
     return (
         <>
-            {INITIAL_POSITIONS.map((pos, i) => {
+            {positions.map((pos, i) => {
                 const piece = nextPieces[i];
-
                 if (!piece) return null;
 
                 const uniqueKey = `piece-${i}-${piece.color}-${JSON.stringify(piece.shape)}`;

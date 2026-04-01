@@ -1,18 +1,16 @@
 import React, { useRef, useEffect } from "react";
 import Legra from "legra";
 
-import type { Brick } from "./PuzzleGame";
 import "../../styles/components/Puzzle/Brick.css";
 
-export default function Brick({
-  b,
-  boardSize,
-  onPointerDown,
-}: {
-  b: Brick;
-  boardSize: number;
-  onPointerDown?: (e: React.PointerEvent<HTMLCanvasElement>) => void;
-}) {
+export interface Brick {
+  id: number;
+  w: number;
+  h: number;
+  color: string;
+}
+
+export default function Brick({b, boardSize, onPointerDown,}: { b: Brick; boardSize: number; onPointerDown?: (e: React.PointerEvent<HTMLCanvasElement>) => void;}) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {

@@ -50,6 +50,7 @@ export default function Navbar({ games }: { games: Game[] }) {
                 to={`/game/${index}/lobby`}
                 className="option"
                 onClick={() => setIsOpen(false)}
+                key={index}
               >
                 {game.icon}
                 <p>{game.title}</p>

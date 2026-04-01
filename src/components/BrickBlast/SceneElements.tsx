@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { useRef, useState } from "react";
 import { useGameStore } from "./Store.ts";
 import {ASPECT_COEFF} from "./logic.ts";
+import {toggleBGM} from "./audio.ts";
 
 export const CameraController = () => {
 	const { size } = useThree();
@@ -67,59 +68,6 @@ export const Score = () => {
 	);
 };
 
-export const RestartButton = () => {
-	const [hovered, setHovered] = useState(false);
-	const { size } = useThree();
-	const isPortrait = size.width * ASPECT_COEFF < size.height;
-
-	// Shift the button above the grid instead of the far-right corner in portrait
-	const buttonX = isPortrait ? 15 : 70;
-
-	const handleRestart = () => {
-		useGameStore.setState({
-			score: 0,
-			grid: Array(9).fill(0).map(() => Array(9).fill(0)),
-			isGameOver: false,
-			hoverCoords: null,
-			hoveredMeshes: [],
-			activePiece: null,
-			isValidDrop: false,
-			nextPieces: [],
-		});
-	};
-
-	const texture = useLoader(
-		THREE.TextureLoader,
-		"/img/brickblast/replay.png",
-	);
-
-	return (
-		<group
-			position={[buttonX, 60, 5]}
-			onClick={(e) => {
-				e.stopPropagation();
-				handleRestart();
-			}}
-			onPointerEnter={(e) => {
-				e.stopPropagation();
-				setHovered(true);
-				document.body.style.cursor = "pointer";
-			}}
-			onPointerLeave={(e) => {
-				e.stopPropagation();
-				setHovered(false);
-				document.body.style.cursor = "default";
-			}}
-		>
-			<mesh>
-				<planeGeometry args={[7, 7]} />
-				<meshStandardMaterial color={hovered ? "#ff4444" : "#ffffff"} map={texture} transparent/>
-				<Edges color={hovered ? "#ff4444" : "#ffffff"} lineWidth={3} scale={new THREE.Vector3( 1.5, 1.5, 1.5 )}/>
-			</mesh>
-		</group>
-	);
-};
-
 export const BlockHolder = () => {
 	const { size } = useThree();
 	const isPortrait = size.width * ASPECT_COEFF < size.height;
@@ -131,7 +79,7 @@ export const BlockHolder = () => {
 
 	return (
 		<group>
-			<Line points={points as any} color="#ffffff" lineWidth={6} />
+			<Line points={points as never} color="#ffffff" lineWidth={6} />
 		</group>
 	);
 };
@@ -239,7 +187,7 @@ const MenuButton = ({
 				<mesh position={[0, 0, -0.1]}>
 					<planeGeometry args={[size, size]} />
 					<meshStandardMaterial color={hovered ? color : "#222222"} />
-					<Edges color={hovered ? "white" : color} lineWidth={5} />
+					<Edges color={hovered ? "white" : color} lineWidth={5} scale={1.5} />
 				</mesh>
 			)}
 
@@ -254,5 +202,69 @@ const MenuButton = ({
 				/>
 			</mesh>
 		</group>
+	);
+};
+
+export const MusicButton = () => {
+	// Start muted by default
+	const [isMuted, setIsMuted] = useState(true);
+	const { size } = useThree();
+
+	// Shift it slightly to the left of the Restart Button
+	const isPortrait = size.width * (1) < size.height; // Assuming ASPECT_COEFF is 1
+	const buttonX = isPortrait ? 5 : 55;
+
+	const handleToggle = () => {
+		const nextMutedState = !isMuted;
+		setIsMuted(nextMutedState);
+
+		// Pass the path to your music file, the volume, and whether it should be muted
+		toggleBGM("/sounds/brickblast/background.mp3", 0.3, nextMutedState);
+	};
+
+	return (
+		<MenuButton
+			position={[buttonX, 60, 5]}
+			size={10}
+			// Swap the image based on state (make sure you have these images!)
+			imageSrc={isMuted ? "/img/brickblast/music_off.png" : "/img/brickblast/music_on.png"}
+			color="none"
+			hoverTint="#44ff44"
+			onClick={handleToggle}
+		/>
+	);
+};
+
+export const RestartButton = () => {
+
+	const { size } = useThree();
+	const isPortrait = size.width * ASPECT_COEFF < size.height;
+
+	// Shift the button above the grid instead of the far-right corner in portrait
+	const buttonX = isPortrait ? 15 : 70;
+
+	const handleRestart = () => {
+		useGameStore.setState({
+			score: 0,
+			grid: Array(9).fill(0).map(() => Array(9).fill(0)),
+			isGameOver: false,
+			hoverCoords: null,
+			hoveredMeshes: [],
+			activePiece: null,
+			isValidDrop: false,
+			nextPieces: [],
+		});
+	};
+
+	return (
+		<MenuButton
+			position={[buttonX, 60, 5]}
+			size={10}
+			// Swap the image based on state (make sure you have these images!)
+			imageSrc={"/img/brickblast/replay.png"}
+			color="none"
+			hoverTint="red"
+			onClick={handleRestart}
+		/>
 	);
 };

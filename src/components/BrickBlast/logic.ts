@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { useGameStore } from "./Store";
+import {playSFX} from "./audio.ts";
 
 export const CELL_SIZE = 100 / 9;
 export const GRID_WORLD_X = -30;
@@ -190,6 +191,7 @@ export function clearFullLines(grid: number[][], colorMode: boolean = true) {
 
 	// Send them to the Zustand store
 	if (explosionMap.size > 0) {
+		playSFX("/sounds/brickblast/explosion.mp3", 0.5);
 		store.addExplosions(Array.from(explosionMap.values()));
 	}
 

@@ -6,7 +6,7 @@ import {
 	CameraController,
 	RestartButton,
 	Score,
-	GameOverScreen,
+	GameOverScreen, MusicButton,
 } from "./SceneElements.tsx";
 import BlocksGeneration from "./SelectionBrick.tsx";
 import { Grid } from "./Grid.tsx";
@@ -75,7 +75,7 @@ export const Scene = () => {
 				<Suspense fallback={null}>
 					<GameOverScreen />
 					<Score />
-					<RestartButton />
+					<RestartButton /> <MusicButton />
 					<Grid /> <GridRenderer /> <GhostPreview />
 					<BlockHolder />
 					<BlocksGeneration />

@@ -15,7 +15,10 @@ const playerSchema = new Schema({
     SQL_id: { type: Number, default: -1 },
     sessionToken: { type: String, default: null },
     lastConnectedAt: { type: Date },
-    games: [gameSchema], default: []
+    games:{
+        type:[gameSchema],
+        default: []
+    }
 });
 
 playerSchema.index({ 'games.expiresAt': 1 });

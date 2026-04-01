@@ -7,7 +7,7 @@ import { useGameStore } from "./Store.ts";
 export const CameraController = () => {
 	const { size } = useThree();
 	const ASPECT = size.width / size.height;
-	const FACTOR = 2.5;
+	const FACTOR = 3.5;
 
 	useFrame((state) => {
 		// Scale the lookAt target based on aspect ratio
@@ -41,8 +41,7 @@ export const Score = () => {
 	useFrame(() => {
 		if (scoreRef.current) {
 			const score = useGameStore.getState().score;
-			const gamestate = useGameStore.getState().isGameOver;
-			scoreRef.current.text = "Scores: " + score + gamestate;
+			scoreRef.current.text = "Score: " + score;
 		}
 	});
 
@@ -51,9 +50,11 @@ export const Score = () => {
 			ref={scoreRef}
 			fontSize={10}
 			font={"/font/silkscreen/Silkscreen.ttf"}
-			position={[0, 60, 5]}
+			anchorY={"middle"}
+			anchorX={"left"}
+			position={[-75, 60, 5]}
 		>
-			Coords: 0, 0
+			Score:
 		</Text>
 	);
 };
@@ -82,7 +83,7 @@ export const RestartButton = () => {
 
     return (
         <group
-            position={[-73, 75, 5]} // Top left corner
+            position={[70, 60, 5]} // Top left corner
             onClick={(e) => {
                 e.stopPropagation();
                 handleRestart();
@@ -122,6 +123,127 @@ export const BlockHolder = () => {
 				color="#ffffff"
 				lineWidth={6}
 			/>
+		</group>
+	);
+};
+
+export const GameOverScreen = () => {
+	const isGameOver = useGameStore((state) => state.isGameOver);
+	const groupRef = useRef<THREE.Group>(null!);
+	const overlayRef = useRef<THREE.MeshBasicMaterial>(null!);
+
+	useFrame(() => {
+		if (!groupRef.current || !overlayRef.current) return;
+
+		if (isGameOver) {
+			groupRef.current.visible = true;
+			// Lerp the background darkness in
+			overlayRef.current.opacity = THREE.MathUtils.lerp(overlayRef.current.opacity, 1, 0.03);
+			// Lerp the scale from 0 to 1 for a "pop-in" effect
+			groupRef.current.scale.lerp(new THREE.Vector3(1, 1, 1), 0.02);
+		} else {
+			// Deflate and hide when the game restarts
+			overlayRef.current.opacity = 0;
+			groupRef.current.scale.set(0, 0, 0);
+			groupRef.current.visible = false;
+		}
+	});
+
+	const handleRetry = () => {
+		useGameStore.setState({
+			score: 0,
+			grid: Array(9).fill(0).map(() => Array(9).fill(0)),
+			isGameOver: false,
+			hoverCoords: null,
+			hoveredMeshes: [],
+			activePiece: null,
+			isValidDrop: false,
+			nextPieces: [],
+		});
+	};
+
+	const handleQuit = () => {
+		console.log("Quit clicked");
+		// Does nothing for now, just logs!
+	};
+
+	return (
+		<group ref={groupRef} position={[0, 0, 20]} visible={false}>
+			{/* The Dark Shield - swallows clicks so the board behind it is disabled */}
+			<mesh
+				position={[0, 0, -5]}
+				onPointerDown={(e) => e.stopPropagation()}
+				onPointerMove={(e) => e.stopPropagation()}
+			>
+				<planeGeometry args={[1000, 1000]} />
+				<meshBasicMaterial ref={overlayRef} color="black" transparent opacity={0} depthWrite={false} />
+			</mesh>
+
+			<Text
+				fontSize={22}
+				font={"/font/silkscreen/Silkscreen.ttf"}
+				color="#ff2222"
+				position={[0, 25, 0]}
+				outlineWidth={0}
+				outlineColor="black"
+			>
+				GAME OVER
+			</Text>
+
+			<MenuButton position={[-25, -15, 0]} size={22} imageSrc="/img/brickblast/replay.png" onClick={handleRetry} color="none" />
+			<MenuButton position={[25, -15, 0]} size={25} imageSrc="/img/brickblast/exit.png" onClick={handleQuit} color="none" />
+		</group>
+	);
+};
+
+// A reusable 3D interactive button just for the Menu
+const MenuButton = ({
+						position,
+						size,
+						imageSrc,
+						color,
+						hoverTint = "red",
+						onClick
+					}: {
+	position: [number, number, number],
+	size: number,
+	imageSrc: string,
+	color: string,
+	hoverTint?: string,
+	onClick: () => void
+}) => {
+	const [hovered, setHovered] = useState(false);
+	const texture = useLoader(THREE.TextureLoader, imageSrc);
+
+	// Check if the user wants a transparent background
+	const isTransparent = color === "none" || color === "transparent";
+
+	return (
+		<group
+			position={position}
+			onClick={(e) => { e.stopPropagation(); onClick(); }}
+			onPointerEnter={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = "pointer"; }}
+			onPointerLeave={(e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = "default"; }}
+		>
+			{/* Optional Background Plane */}
+			{!isTransparent && (
+				<mesh position={[0, 0, -0.1]}>
+					<planeGeometry args={[size, size]} />
+					<meshStandardMaterial color={hovered ? color : "#222222"} />
+					<Edges color={hovered ? "white" : color} lineWidth={5} />
+				</mesh>
+			)}
+
+			{/* Foreground Image Mesh */}
+			<mesh>
+				<planeGeometry args={[size, size]} />
+				<meshStandardMaterial
+					color={hovered ? hoverTint : "#ffffff"}
+					map={texture}
+					transparent={true}
+					depthWrite={false}
+				/>
+			</mesh>
 		</group>
 	);
 };

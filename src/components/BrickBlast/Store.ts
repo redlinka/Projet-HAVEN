@@ -45,7 +45,7 @@ interface GameState {
 
 export const useGameStore = create<
 	GameState,
-	[["zustand/persist", Omit<GameState, "setHoveredMeshes" | "setIsDraggingGlobal" | "setActivePiece" | "setIsValidDrop" | "placePiece" | "setNextPieces" | "setGrid" | "setScore" | "hoverCoords" | "hoveredMeshes" | "isDraggingGlobal" | "activePiece" | "isValidDrop" | "isGameOver" | "setIsGameOver">]]
+	[["zustand/persist", Omit<GameState, "setHoveredMeshes" | "setIsDraggingGlobal" | "setActivePiece" | "setIsValidDrop" | "placePiece" | "setNextPieces" | "setGrid" | "setScore" | "hoverCoords" | "hoveredMeshes" | "isDraggingGlobal" | "activePiece" | "isValidDrop" | "setIsGameOver">]]
 >(
 	persist(
 		(set) => ({
@@ -97,6 +97,7 @@ export const useGameStore = create<
 				score: state.score,
 				grid: state.grid,
 				nextPieces: state.nextPieces,
+				isGameOver: state.isGameOver,
 			}),
 		},
 	),

@@ -9,7 +9,7 @@ export const COLORS = {
 	1: "red",
 	2: "green",
 	3: "blue",
-	4: "yellow",
+	4: "orange",
 };
 
 export const getRandomColor = () => {
@@ -140,7 +140,7 @@ function clearLines(rowsToClear: number[], colsToClear: number[], grid: number[]
 }
 
 // function to clear full lines of the same color
-export function clearFullLines(grid: number[][]) {
+export function clearFullLines(grid: number[][], colorMode: boolean = true) {
     const store = useGameStore.getState();
     let linesCleared = 0;
     const rowsToClear: number[] = [];
@@ -151,10 +151,10 @@ export function clearFullLines(grid: number[][]) {
         if (grid[y].every((cell) => cell !== 0)) {
             // all non-zero AND same color.
             const firstColor = grid[y][0];
-            if (grid[y].every((cell) => cell === firstColor)) {
-                linesCleared++;
-                rowsToClear.push(y);
-            }
+			if (!colorMode || grid[y].every((cell) => cell === firstColor)) {
+				linesCleared++;
+				rowsToClear.push(y);
+			}
         }
     }
 
@@ -163,10 +163,10 @@ export function clearFullLines(grid: number[][]) {
         if (grid.every((row) => row[x] !== 0)) {
             // all non-zero AND same color.
             const firstColor = grid[0][x];
-            if (grid.every((row) => row[x] === firstColor)) {
-                linesCleared++;
-                colsToClear.push(x);
-            }
+			if (!colorMode || grid.every((row) => row[x] === firstColor)) {
+				linesCleared++;
+				colsToClear.push(x);
+			}
         }
     }
 	const scoreGained = calculateScore(linesCleared);

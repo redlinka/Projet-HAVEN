@@ -43,7 +43,6 @@
   font-size: clamp(1.2rem, 3vw, 1.7rem);
   letter-spacing: 0.06em;
   color: var(--white);
-  text-shadow: 2px 2px 0 var(--purple);
 }
 
 .room-card-header p {

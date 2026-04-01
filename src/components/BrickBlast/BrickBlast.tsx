@@ -1,5 +1,5 @@
 import {Canvas, useFrame} from "@react-three/fiber";
-import {Suspense, useEffect, useRef, useState} from "react";
+import {Suspense, useRef, useState} from "react";
 import {
 	Background,
 	BlockHolder,
@@ -28,11 +28,11 @@ const GlobalEffects = () => {
 
 	const hoveredMeshes = useGameStore((state) => state.hoveredMeshes);
 	const isGameOver = useGameStore((state) => state.isGameOver);
-	const [pixelSize, setPixelSize] = useState(4);
-	const floatSize = useRef(4);
+	const [pixelSize, setPixelSize] = useState(3);
+	const floatSize = useRef(3);
 
 	useFrame(() => {
-		const target = isGameOver ? 15 : 4;
+		const target = isGameOver ? 15 : 3;
 		if (Math.abs(floatSize.current - target) > 0.1) {
 			floatSize.current = THREE.MathUtils.lerp(
 				floatSize.current,
@@ -63,22 +63,12 @@ const GlobalEffects = () => {
 };
 
 //main scene
-export const BlockScene = () => {
-	const [fov, setFov] = useState(80);
-
-	useEffect(() => {
-		const update = () => {
-			setFov(80);
-		};
-		update();
-		window.addEventListener("resize", update);
-		return () => window.removeEventListener("resize", update);
-	}, []);
+export const Scene = () => {
 
 	return (
 		<div style={{ width: "100%", height: "100%" }}>
 			<Canvas
-				camera={{ fov: fov, near: 0.1, far: 1000, position: [0, -15, 100] }}
+				camera={{ fov: 80, near: 0.1, far: 1000, position: [0, -500, 100] }}
 			>
 				<Stats />
 				<CameraController />
@@ -96,4 +86,4 @@ export const BlockScene = () => {
 		</div>
 	);
 };
-export default BlockScene;
+export default Scene;

@@ -12,7 +12,7 @@ import GamePage from "./components/GamePage";
 import HomePage from "./components/HomePage";
 
 // Games
-import BlockScene from "./components/BrickBlast/BlockBlast";
+import Scene from "./components/BrickBlast/BrickBlast.tsx";
 import PuzzleGame from "./components/Puzzle/PuzzleGame";
 
 // Game lobby
@@ -53,7 +53,7 @@ function App() {
       img: "/img/LegoPuzzle.png",
     },
     {
-      game: <BlockScene />,
+      game: <Scene />,
       description: "lorem ipsum",
       title: "Brick Blast",
       icon: <ToyBrick />,

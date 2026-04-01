@@ -4,6 +4,7 @@ import { useGameStore } from "./Store";
 export const CELL_SIZE = 100 / 9;
 export const GRID_WORLD_X = -30;
 export const GRID_WORLD_Y = 0;
+export const ASPECT_COEFF = 1
 
 export const COLORS = {
 	1: "red",

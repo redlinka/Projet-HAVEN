@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { User, ChevronUp } from "lucide-react";
+import {ChevronUp } from "lucide-react";
 import "../styles/layout/Navbar.css";
 
 import type { Game } from "../types/types";
@@ -61,10 +61,10 @@ export default function Navbar({ games }: { games: Game[] }) {
       </nav>
 
       <div className="user">
-        <p>Guest</p>
-        <div className="user-icon">
-          <User />
-        </div>
+         <Link to={`/history`} className="history-link">
+            <p>My history</p>
+          </Link>
+
       </div>
     </div>
   );

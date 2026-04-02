@@ -10,6 +10,8 @@ import BackgroundStars from "./components/BackgroundStars";
 // Pages
 import GamePage from "./components/GamePage";
 import HomePage from "./components/HomePage";
+import History from "./components/History";
+
 
 // Games
 import BrickScene from "./components/BrickBlast/BrickBlast";
@@ -69,10 +71,9 @@ function App() {
               <Routes>
                 <Route path="/" element={<HomePage games={games} />} />
                 <Route path="/game/:id" element={<GamePage games={games} />} />
-                <Route
-                  path="/game/:id/lobby"
-                  element={<GameLobbyPage games={games} />}
-                />
+                <Route path="/game/:id/lobby" element={<GameLobbyPage games={games} />}/>
+                <Route path="/history" element={<History/>}/>
+
               </Routes>
             </RoomProvider>
           </RoomServiceContext.Provider>

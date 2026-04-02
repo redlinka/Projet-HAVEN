@@ -74,6 +74,12 @@
   align-items: center;
   gap: clamp(8px, 2vw, 20px);
   color: white;
+  font-family: "Michroma";
+
+}
+
+.user p:hover{
+  cursor: pointer;
 }
 
 .navbar .user .user-icon {
@@ -87,4 +93,10 @@
   padding: 10px;
   color: black;
   flex-shrink: 0;
+}
+
+.history-link {
+  text-decoration: none; 
+  color: inherit;   
+  display: inline-block;
 }

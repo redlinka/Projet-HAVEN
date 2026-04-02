@@ -7,30 +7,29 @@ const router = Router();
 router.get('/', async (req, res) => {
   try {
     const { SQLid } = req.query;
-
-    // Get token from headers if it exists
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
 
     let player = null;
 
-    if (SQLid) {
+    // We try to find bricksy player first
+    if (SQLid && SQLid !== "-1") {
       player = await Player.findOne({ SQL_id: Number(SQLid) });
     } 
-
+    // Try to find by token (Guest user)
     else if (token) {
       player = await Player.findOne({ sessionToken: token });
     }
 
     if (!player) return res.json(null);
 
-    // Update lastConnectedAt
+    // Update last connected date
     player.lastConnectedAt = new Date();
 
-    // if player token expired, we regenerate and store it in db
+    // If player token is missing, we regenerate it
     if (!player.sessionToken) {
       const newToken = jwt.sign(
-        { SQL_id: player.SQL_id || 'guest' },
+        { id: player.SQL_id || 'guest' },
         process.env.JWT_SECRET as string,
         { expiresIn: '7d' }
       );

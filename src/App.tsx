@@ -38,13 +38,16 @@ const games = [
 ];
 
 function App() {
-  const [user, setUser] = useState<{ id: number; username: string } | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [chatManager] = useState(() => new WebSocketRoomService());
 
   useEffect(() => {
     getSession()
       .then(async (phpData) => {
-        if (phpData?.id) {
+        const localToken = localStorage.getItem("sessionToken");
+
+        if (phpData) {
+          //USER CONNECTED AT BRICKSY
           try {
             const response = await fetch(`/api-node/player?SQLid=${phpData.id}`);
             const mongoPlayer = await response.json();
@@ -58,7 +61,21 @@ function App() {
           } catch (err) {
             setUser(phpData);
           }
-        } else {
+        } 
+        else if (localToken) {
+          // GUEST WITH TOKEN
+          try {
+            const response = await fetch(`/api-node/player`, {
+              headers: { 'Authorization': `Bearer ${localToken}` }
+            });
+            const guestData = await response.json();
+            if (guestData) setUser(guestData);
+          } catch (err) {
+            setUser(null);
+          }
+        } 
+        // GUEST FIRST TIME
+        else {
           setUser(null);
         }
       })
@@ -76,7 +93,7 @@ function App() {
   return (
     <BrowserRouter>
       <BackgroundStars>
-        <Navbar games={games} />
+        <Navbar games={games} user={user} />
         <div className="app-content">
           <RoomServiceContext.Provider value={chatManager}>
             <RoomProvider>

@@ -1,0 +1,240 @@
+.history-page {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 60px 20px;
+  min-height: 100vh;
+  color: var(--white);
+}
+
+.history-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.history-title {
+  font-family: var(--title-font);
+  font-size: 6rem;
+  color: var(--white);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  line-height: 0.8;
+}
+
+.history-subtitle {
+  color: var(--purple);
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  font-weight: bold;
+}
+
+.history-stats {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+  margin: 40px auto 0;
+  max-width: 600px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 25px;
+  border-radius: 8px;
+  border: 1px dashed var(--gray);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 50px;
+  background: var(--gray);
+  opacity: 0.3;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--gray);
+  letter-spacing: 2px;
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  font-family: var(--title-font);
+  font-size: 2.5rem;
+  color: var(--white);
+  line-height: 1;
+}
+
+.stat-value small {
+  font-size: 0.9rem;
+  color: var(--gray);
+}
+
+.stat-item.highlight .stat-value {
+  color: var(--purple);
+  text-shadow: 0 0 15px rgba(160, 88, 190, 0.5);
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(94, 96, 106, 0.2);
+  padding: 20px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 4px;
+  transition: all 0.2s ease-out;
+}
+
+.history-card.is-active:hover {
+  background: rgba(160, 88, 190, 0.08);
+  border-color: var(--purple);
+  transform: translateX(10px);
+}
+
+.card-left {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex: 1;
+  gap: 40px;
+}
+
+.game-name {
+  font-family: var(--title-font);
+  font-size: 2rem;
+  color: var(--white);
+  min-width: 180px;
+}
+
+.game-details {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+}
+
+.detail-tag {
+  font-size: 0.8rem;
+  color: var(--gray);
+  text-transform: uppercase;
+}
+
+.detail-tag b {
+  color: var(--white);
+  margin-left: 5px;
+}
+
+.game-date {
+  font-size: 0.8rem;
+  color: var(--gray);
+  min-width: 120px;
+  text-align: right;
+}
+
+.card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 120px;
+}
+
+.points-container {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.points-nb {
+  font-family: var(--title-font);
+  font-size: 2.8rem;
+  line-height: 1;
+}
+
+.is-active .points-nb {
+  color: var(--purple);
+  text-shadow: 0 0 10px rgba(160, 88, 190, 0.4);
+}
+
+.points-unit {
+  font-size: 0.9rem;
+  color: var(--gray);
+  font-weight: bold;
+}
+
+.status-label {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.5rem;
+  color: var(--gray);
+  margin-top: 5px;
+  letter-spacing: 1px;
+}
+
+.is-disabled {
+  opacity: 0.4;
+  border-style: dashed;
+}
+
+.is-disabled .points-nb {
+  color: var(--gray);
+}
+
+.status-msg {
+  text-align: center;
+  padding: 50px;
+  color: var(--gray);
+  font-family: var(--title-font);
+  font-size: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .history-title { font-size: 4rem; }
+  .card-left { gap: 20px; }
+  .game-name { min-width: 120px; }
+}
+
+@media (max-width: 768px) {
+    .history-stats { 
+        flex-direction: column;
+        gap: 20px; 
+    }
+
+    .stat-divider {
+         display: none; 
+    }
+
+    .history-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px; 
+    }
+
+    .card-left {
+        flex-direction: column; 
+        align-items: flex-start; 
+        gap: 10px; 
+        width: 100%; 
+    }
+
+    .game-date { 
+        text-align: left; 
+    }
+
+    .card-right { 
+        width: 100%; 
+        flex-direction: row; 
+        justify-content: space-between; 
+        align-items: center; 
+        border-top: 1px solid rgba(94, 96, 106, 0.1);
+        padding-top: 10px; 
+    }
+}

@@ -5,9 +5,10 @@ import "../styles/layout/Navbar.css";
 
 import type { Game } from "../types/types";
 
-export default function Navbar({ games }: { games: Game[] }) {
+export default function Navbar({ games, user }: { games: Game[]; user:any}) {
   const [isOpen, setIsOpen] = useState(false);
   const navbarRef = useRef<HTMLDivElement>(null);
+  const [totalPoints, setTotalPoints] = useState(0);
 
   useEffect(() => {
     const handleNavBar = () => {
@@ -28,6 +29,18 @@ export default function Navbar({ games }: { games: Game[] }) {
       window.removeEventListener("scroll", handleNavBar);
     };
   }, []);
+
+  // Use effect to calculate user points
+  useEffect(() => {
+    if (user && user.games && Array.isArray(user.games)) {
+      const sum = user.games.reduce((acc: number, g: any) => acc + (g.points || 0), 0);
+      setTotalPoints(sum);
+    } else {
+      setTotalPoints(0); 
+    }
+  }, [user]); 
+  
+
 
   return (
     <div className="navbar" ref={navbarRef}>
@@ -62,7 +75,7 @@ export default function Navbar({ games }: { games: Game[] }) {
 
       <div className="user">
          <Link to={`/history`} className="history-link">
-            <p>My history</p>
+            <p>{totalPoints} Points</p>
           </Link>
 
       </div>

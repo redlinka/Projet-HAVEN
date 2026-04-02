@@ -9,14 +9,13 @@ interface Props {
 
 export default function EndGameScreen({ score, nbPieces, mod, onModeMenu }: Props) {
   const perfect = score === nbPieces;
-  const diff = mod.cols === 8 ? 'easy' : mod.cols === 16 ? 'medium' : 'hard';
+  const diff = mod.cols === 16 ? 'easy' : mod.cols === 32 ? 'medium' : 'hard';
 
   useEffect(() => {
     const token = localStorage.getItem("sessionToken");
     const storedUser = localStorage.getItem("user");
-
     const parsedUser = storedUser ? JSON.parse(storedUser) : null;
-    const sqlIdValue = parsedUser?.id ?? -1;
+    const sqlIdValue = parsedUser?.SQL_id ?? -1;
 
     fetch('/api-node/endgame', {
       method: 'POST',

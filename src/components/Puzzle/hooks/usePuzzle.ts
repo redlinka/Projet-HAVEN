@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from "react";
 
 import type { Brick } from "../Brick";
 
-
 import {getGameData,addBrick,checkPlacementValid,shuffleArray,initPuzzleBoard,calculScore,} from "../utils/puzzleEngine";
-
 import {LS_ANSWER, LS_BOARD, LS_BRICKS, LS_CURRENT_BRICK, LS_IMAGE, LS_MOD, LS_NB_PIECES, lsClear, lsGet,} from "../utils/puzzleStorage";
+
+
+// INTERFACES
 
 export interface PuzzleState {
     mod: { cols: number; rows: number };
@@ -41,6 +42,8 @@ interface UsePuzzleOptions {
     playOnDrop: () => void;
     playWrongPlacement: () => void;
 }
+
+//MAIN FUNCTION
 
 export function usePuzzle({ playOnDrag, playOnDrop, playWrongPlacement}: UsePuzzleOptions): PuzzleState {
     const savedMod = lsGet<{ cols: number; rows: number }>(LS_MOD);
@@ -235,6 +238,7 @@ export function usePuzzle({ playOnDrag, playOnDrop, playWrongPlacement}: UsePuzz
     // SCORE
     useEffect(() => {
         if (board.length > 0 && answerBoard.length > 0) {
+            console.log(board);
             const newScore = calculScore(board, answerBoard);
             setScore(newScore);
         }

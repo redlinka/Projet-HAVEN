@@ -1,4 +1,4 @@
-import type { Brick } from "../PuzzleGame";
+import type { Brick } from "../Brick";
 
 export function randint(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -110,6 +110,7 @@ export async function readBrickFile(filePath: string): Promise<Brick[]> {
     if (index !== 0) {
         const [sizeColor, rota] = line.split(",");
         const [size, colorHex] = sizeColor.split("/");
+        console.log(colorHex);
         const [w, h] = size.split("-");
         const rotaInt = parseInt(rota);
         bricksArray.push({
@@ -124,6 +125,7 @@ export async function readBrickFile(filePath: string): Promise<Brick[]> {
 }
 
 export async function readPavageFile(filePath: string): Promise<string[]> {
+  console.log(filePath);
   const response = await fetch(filePath);
   const text = await response.text();
   const lines = text.split(/\r?\n/);

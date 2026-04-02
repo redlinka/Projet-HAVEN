@@ -16,27 +16,35 @@ export default function History() {
   const [history, setHistory] = useState<GameEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const storedUser = localStorage.getItem('user');
-  const parsedUser = storedUser ? JSON.parse(storedUser) : null;
-  const SQLid = parsedUser?.id || (typeof parsedUser === 'number' ? parsedUser : null);
-
   useEffect(() => {
-    if (!SQLid) {
+    const token = localStorage.getItem('sessionToken');
+    if (!token) {
       setLoading(false);
       return;
     }
 
-    fetch('/api-node/history?SQLid=' + SQLid)
-      .then(response => response.json())
-      .then(data => {
-        setHistory(Array.isArray(data) ? data.reverse() : []);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error("Error:", err);
-        setLoading(false);
-      });
-  }, [SQLid]);
+  
+    fetch('/api-node/history', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+  
+    .then(response => {
+      if (!response.ok) throw new Error("Auth failed");
+      return response.json();
+    })
+  
+    .then(data => {
+      setHistory(Array.isArray(data) ? [...data].reverse() : []);
+      setLoading(false);
+    })
+    
+    .catch(err => {
+      console.error("History Fetch Error:", err);
+      setLoading(false);
+    });
+  }, []);
 
   const totalEarned = history.reduce((acc, curr) => acc + curr.points, 0);
   const totalRemaining = history.reduce((acc, curr) => {

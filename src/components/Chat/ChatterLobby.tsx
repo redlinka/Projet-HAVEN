@@ -3,6 +3,7 @@ import RoomJoiner from "../Room/RoomJoiner";
 
 import "../../styles/components/Chat/ChatterLobby.css";
 import { useRoom } from "../../contexts/RoomContext";
+import { X } from "lucide-react";
 
 export default function ChatterLobby({
   initialRoomId,
@@ -26,7 +27,7 @@ export default function ChatterLobby({
         <div className="chatter-error" role="alert">
           <span>⚠️ {error}</span>
           <button className="chatter-error-close" onClick={onDismissError}>
-            ✕
+            <X />
           </button>
         </div>
       )}
@@ -36,7 +37,7 @@ export default function ChatterLobby({
           onError={onError}
           onConnecting={onConnecting}
         />
-        
+
         <RoomJoiner
           onRoomJoined={handleRoomJoined}
           onError={onError}

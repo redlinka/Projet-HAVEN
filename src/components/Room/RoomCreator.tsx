@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useRoomService } from "../../contexts/RoomServiceContext";
 import RoomForm from "./RoomForm";
 import "../../styles/components/Room/RoomCreator.css";
+import { useParams } from "react-router-dom";
 
 interface RoomCreatorProps {
   /** Appelé quand le salon est créé avec succès */
@@ -20,13 +21,14 @@ export default function RoomCreator({
   const roomService = useRoomService();
   const [userName, setUserName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { id: gameId } = useParams();
 
   const handleSubmit = async ({ userName: name }: { userName: string }) => {
     setIsLoading(true);
     onConnecting();
 
     try {
-      const roomId = await roomService.createRoom(name);
+      const roomId = await roomService.createRoom(name, gameId || "");
       onRoomCreated(name, roomId);
     } catch (err) {
       const message =

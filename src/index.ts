@@ -12,6 +12,7 @@ import connectDB from './db';
 import { initWebSocketServer } from './ws/roomManager'
 import playerRouter from './routes/player';
 import endgameRouter from './routes/endgame';
+import mergeRouter from './routes/merge';
 
 const PORT = parseInt(process.env.PORT ?? '2025', 10);
 
@@ -29,6 +30,8 @@ async function main() {
   // we define routes of our app
   app.use('/api-node/player', playerRouter);
   app.use('/api-node/endgame', endgameRouter);
+  app.use('/api-node/merge', mergeRouter);
+
 
 
   app.get('/health', (_req, res) => {

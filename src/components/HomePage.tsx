@@ -27,7 +27,7 @@ export default function HomePage({ games }: { games: Game[] }) {
 
 const GAME_TAGLINES: Record<string, string> = {
   default: "Step up and play!",
-  puzzle: "Piece it together, brick by brick!",
+  puzzlegame: "Piece it together, brick by brick!",
   brickblast: "The ultimate 3D block-busting challenge!",
 };
 

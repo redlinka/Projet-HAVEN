@@ -83,7 +83,7 @@
   display: flex;
   align-items: stretch;
   gap: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: transparent;
   border: 1px solid rgba(160, 88, 190, 0.3);
   border-radius: 14px;
   overflow: hidden;

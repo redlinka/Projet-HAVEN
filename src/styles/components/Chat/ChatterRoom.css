@@ -1,14 +1,19 @@
+/* ── Conteneur principal ───────────────────────────────────────────────────── */
+
 .chatter {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #0d1b2a;
-  border-radius: 12px;
+  min-height: 520px;
+  background: rgba(12, 4, 26, 0.82);
+  border-radius: 16px;
   overflow: hidden;
-  border: 1px solid #1e3450;
+  border: 1px solid rgba(160, 88, 190, 0.28);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
-/* ── Header ──────────────────────────────────────────────────────────────── */
+/* ── Header ────────────────────────────────────────────────────────────────── */
 
 .chatter-header {
   display: flex;
@@ -16,9 +21,9 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.75rem;
-  padding: 0.75rem 1.25rem;
-  background: #111f33;
-  border-bottom: 1px solid #1e3450;
+  padding: 0.85rem 1.25rem;
+  background: rgba(8, 2, 18, 0.6);
+  border-bottom: 1px solid rgba(160, 88, 190, 0.2);
 }
 
 .chatter-header-left,
@@ -30,12 +35,15 @@
 }
 
 .chatter-label {
-  font-size: 0.7rem;
+  font-family: var(--text-font);
+  font-size: 0.62rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #4a6580;
+  color: rgba(238, 238, 240, 0.4);
 }
+
+/* ── Badges joueurs ────────────────────────────────────────────────────────── */
 
 .chatter-users {
   display: flex;
@@ -44,35 +52,31 @@
 }
 
 .chatter-user-badge {
-  padding: 0.25rem 0.6rem;
+  padding: 0.25rem 0.7rem;
   border-radius: 20px;
-  background: rgba(245, 200, 66, 0.12);
-  border: 1px solid rgba(245, 200, 66, 0.3);
-  color: #f5c842;
-  font-size: 0.8rem;
+  background: rgba(160, 88, 190, 0.15);
+  border: 1px solid rgba(160, 88, 190, 0.4);
+  color: var(--white);
+  font-family: var(--text-font);
+  font-size: 0.78rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
 }
 
 .chatter-user-badge--waiting {
-  background: rgba(74, 101, 128, 0.2);
-  border-color: rgba(74, 101, 128, 0.4);
-  color: #4a6580;
+  background: rgba(94, 96, 106, 0.15);
+  border-color: rgba(94, 96, 106, 0.35);
+  color: var(--gray);
   font-style: italic;
   animation: pulse 2s ease-in-out infinite;
 }
 
 @keyframes pulse {
-  0%,
-  100% {
-    opacity: 0.6;
-  }
-  50% {
-    opacity: 1;
-  }
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1; }
 }
 
-/* ── Code de la partie ───────────────────────────────────────────────────── */
+/* ── Code de la partie ─────────────────────────────────────────────────────── */
 
 .chatter-room-code {
   display: flex;
@@ -81,64 +85,70 @@
 }
 
 .chatter-code-value {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 1rem;
+  font-family: "Press Start 2P", "Courier New", monospace;
+  font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: 0.2em;
-  color: #e8edf2;
-  background: #0d1b2a;
-  border: 1px solid #2a3f58;
-  padding: 0.2rem 0.5rem;
-  border-radius: 6px;
+  letter-spacing: 0.25em;
+  color: var(--white);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(160, 88, 190, 0.35);
+  padding: 0.3rem 0.65rem;
+  border-radius: 7px;
 }
 
 .chatter-copy-btn {
-  padding: 0.3rem 0.65rem;
+  padding: 0.3rem 0.7rem;
   border-radius: 6px;
-  border: 1px solid #2a3f58;
-  background: #1b2d45;
-  color: #8aaccc;
-  font-size: 0.78rem;
+  border: 1px solid rgba(160, 88, 190, 0.3);
+  background: rgba(160, 88, 190, 0.1);
+  color: rgba(238, 238, 240, 0.6);
+  font-family: var(--text-font);
+  font-size: 0.72rem;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
   white-space: nowrap;
 }
 
 .chatter-copy-btn:hover {
-  border-color: #f5c842;
-  color: #f5c842;
+  border-color: var(--purple);
+  color: var(--white);
+  background: rgba(160, 88, 190, 0.2);
 }
+
 .chatter-copy-btn--copied {
-  border-color: #4caf7d;
-  color: #4caf7d;
+  border-color: rgba(76, 175, 125, 0.6);
+  color: #6ee7b7;
   background: rgba(76, 175, 125, 0.1);
 }
 
+/* ── Bouton quitter ────────────────────────────────────────────────────────── */
+
 .chatter-quit-btn {
-  padding: 0.35rem 0.8rem;
+  padding: 0.3rem 0.75rem;
   border-radius: 6px;
-  border: 1px solid #2a3f58;
+  border: 1px solid rgba(94, 96, 106, 0.35);
   background: transparent;
-  color: #4a6580;
-  font-size: 0.8rem;
+  color: rgba(238, 238, 240, 0.4);
+  font-family: var(--text-font);
+  font-size: 0.75rem;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .chatter-quit-btn:hover {
-  border-color: #dc3545;
-  color: #dc3545;
+  border-color: rgba(220, 53, 69, 0.55);
+  color: #ff8a98;
   background: rgba(220, 53, 69, 0.08);
 }
 
-/* ── Body ────────────────────────────────────────────────────────────────── */
+/* ── Body ──────────────────────────────────────────────────────────────────── */
 
 .chatter-body {
   flex: 1;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: end;
+  justify-content: flex-end;
   position: relative;
 }
 
@@ -148,20 +158,21 @@
   top: 0;
   left: 0;
   width: 100%;
-  height: 20px;
-  background: linear-gradient(to bottom, #140928, transparent);
-  z-index: 100;
+  height: 40px;
+  background: linear-gradient(to bottom, rgba(8, 2, 18, 0.7), transparent);
+  z-index: 10;
+  pointer-events: none;
 }
 
-/* ── Footer ──────────────────────────────────────────────────────────────── */
+/* ── Footer ────────────────────────────────────────────────────────────────── */
 
 .chatter-footer {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border-top: 1px solid #1e3450;
-  background: #0f2035;
+  padding: 0.85rem 1rem;
+  border-top: 1px solid rgba(160, 88, 190, 0.2);
+  background: rgba(8, 2, 18, 0.6);
 }
 
 .chatter-footer > form,
@@ -169,39 +180,61 @@
   flex: 1;
 }
 
+/* ── Bouton lancer la partie ───────────────────────────────────────────────── */
+
 .chatter-start-btn {
   flex-shrink: 0;
   padding: 0.55rem 1.1rem;
   border-radius: 8px;
-  border: 2px solid #2a3f58;
-  background: #1b2d45;
-  color: #4a6580;
-  font-size: 0.85rem;
-  font-weight: 600;
+  border: 1px solid rgba(94, 96, 106, 0.3);
+  background: transparent;
+  color: rgba(238, 238, 240, 0.3);
+  font-family: var(--text-font);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   cursor: not-allowed;
   white-space: nowrap;
   transition: all 0.2s ease;
 }
 
 .chatter-start-btn--ready {
-  border-color: #f5c842;
-  background: rgba(245, 200, 66, 0.1);
-  color: #f5c842;
+  border-color: var(--purple);
+  background: rgba(160, 88, 190, 0.18);
+  color: var(--white);
   cursor: pointer;
   animation: glowPulse 2.5s ease-in-out infinite;
 }
 
 .chatter-start-btn--ready:hover {
-  background: rgba(245, 200, 66, 0.2);
-  box-shadow: 0 0 16px rgba(245, 200, 66, 0.3);
+  background: rgba(160, 88, 190, 0.32);
+  box-shadow: 0 0 20px rgba(160, 88, 190, 0.35);
 }
 
 @keyframes glowPulse {
-  0%,
-  100% {
-    box-shadow: 0 0 4px rgba(245, 200, 66, 0.2);
+  0%, 100% { box-shadow: 0 0 6px rgba(160, 88, 190, 0.2); }
+  50%       { box-shadow: 0 0 16px rgba(160, 88, 190, 0.45); }
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 560px) {
+  .chatter-header {
+    padding: 0.75rem 1rem;
   }
-  50% {
-    box-shadow: 0 0 12px rgba(245, 200, 66, 0.4);
+
+  .chatter-header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .chatter-start-btn {
+    font-size: 0.7rem;
+    padding: 0.5rem 0.85rem;
+  }
+
+  .chatter-code-value {
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
   }
 }

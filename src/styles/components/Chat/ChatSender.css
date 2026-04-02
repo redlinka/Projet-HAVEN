@@ -1,25 +1,57 @@
 .sender-form {
   width: 100%;
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 0.6rem;
 }
+
 .sender-form input[type="text"] {
+  flex: 1;
   color: var(--white);
-  width: 100%;
-  padding: 10px;
-  border: none;
-  background-color: transparent;
-  border-radius: 5px;
-  border: 1px solid var(--gray);
+  padding: 0.6rem 0.9rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(160, 88, 190, 0.28);
+  border-radius: 8px;
+  font-family: var(--text-font);
+  font-size: 0.88rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sender-form input[type="text"]::placeholder {
+  color: rgba(238, 238, 240, 0.25);
+}
+
+.sender-form input[type="text"]:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px rgba(160, 88, 190, 0.12);
 }
 
 .sender-form button[type="submit"] {
-  width: 50px;
+  flex-shrink: 0;
+  width: 40px;
   height: 40px;
-  background-color: var(--purple);
-  border-radius: 5px;
-  color: vvar(--black);
+  background: rgba(160, 88, 190, 0.25);
+  border: 1px solid rgba(160, 88, 190, 0.45);
+  border-radius: 8px;
+  color: var(--white);
   display: flex;
   justify-content: center;
   align-items: center;
+  cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.sender-form button[type="submit"]:not(:disabled):hover {
+  background: rgba(160, 88, 190, 0.42);
+  box-shadow: 0 0 12px rgba(160, 88, 190, 0.3);
+  transform: translateY(-1px);
+}
+
+.sender-form button[type="submit"]:not(:disabled):active {
+  transform: translateY(0);
+}
+
+.sender-form button[type="submit"]:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }

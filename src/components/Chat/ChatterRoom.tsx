@@ -4,6 +4,7 @@ import ChatDisplayer from "./ChatDisplayer";
 import ChatSender from "./ChatSender";
 import "../../styles/components/Chat/ChatterRoom.css";
 import { useNavigate, useParams } from "react-router-dom";
+import { Copy, Check, LogOut } from "lucide-react";
 
 function RoomCodeDisplay() {
   const { roomId, isAdmin } = useRoom();
@@ -28,7 +29,11 @@ function RoomCodeDisplay() {
         onClick={handleCopyCode}
         title="Copier le code"
       >
-        {codeCopied ? "✓ Copié" : "📋 Copier"}
+        {codeCopied ? (
+          <><Check size={11} /> Copié</>
+        ) : (
+          <><Copy size={11} /> Copier</>
+        )}
       </button>
     </div>
   );
@@ -60,6 +65,7 @@ function StartGameButton() {
   const { id: gameId } = useParams();
 
   if (!isAdmin) return null;
+
   const onStartGame = () => {
     if (isAdmin) {
       navigate(`/game/${gameId}`);
@@ -73,7 +79,7 @@ function StartGameButton() {
       disabled={!canStart}
       title={canStart ? "Lancer la partie" : "En attente du 2ème joueur"}
     >
-      {canStart ? "🎮 Lancer la partie" : "⏳ En attente du 2ème joueur…"}
+      {canStart ? "🎮 Lancer" : "⏳ En attente..."}
     </button>
   );
 }
@@ -91,7 +97,8 @@ export default function ChatterRoom() {
         </div>
         <div className="chatter-header-right">
           <RoomCodeDisplay />
-          <button className="chatter-quit-btn" onClick={handleDisconnect}>
+          <button className="chatter-quit-btn" onClick={handleDisconnect} title="Quitter la partie">
+            <LogOut size={13} />
             Quitter
           </button>
         </div>

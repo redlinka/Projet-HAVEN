@@ -83,7 +83,7 @@ export function checkPlacementValid (board: string[], cols: number, brick: Brick
 };
 
 export async function getGameData (cols: number, rows: number) {
-    const path = "/bricks/";
+    const path = `${import.meta.env.BASE_URL}bricks/`;
     const difficulty = `${cols}x${rows}`;
     const folder = randint(1, 3);
     const pavagePath = `${path}${difficulty}/${folder}/pavage.txt`;

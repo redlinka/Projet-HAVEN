@@ -58,7 +58,7 @@ export const Score = () => {
 		<Text
 			ref={scoreRef}
 			fontSize={10}
-			font={"/font/silkscreen/Silkscreen.ttf"}
+			font={`${import.meta.env.BASE_URL}font/silkscreen/Silkscreen.ttf`}
 			anchorY={"middle"}
 			anchorX={"left"}
 			position={[-75, 60, 5]}
@@ -138,7 +138,7 @@ export const GameOverScreen = () => {
 
 			<Text
 				fontSize={22}
-				font={"/font/silkscreen/Silkscreen.ttf"}
+				font={`${import.meta.env.BASE_URL}font/silkscreen/Silkscreen.ttf`}
 				color="#ff2222"
 				position={[0, 25, 0]}
 				outlineWidth={0}
@@ -147,8 +147,23 @@ export const GameOverScreen = () => {
 				GAME OVER
 			</Text>
 
-			<MenuButton position={[-25, -15, 0]} size={22} imageSrc="/img/brickblast/replay.png" musicSrc={"/sounds/brickblast/nice.mp3"} onClick={handleRetry} color="none" />
-			<MenuButton position={[25, -15, 0]} size={25} imageSrc="/img/brickblast/exit.png" musicSrc={"/sounds/brickblast/nice.mp3"} onClick={handleQuit} color="none" />
+			<MenuButton
+				position={[-25, -15, 0]}
+				size={22}
+				imageSrc={`${import.meta.env.BASE_URL}img/brickblast/replay.png`}
+				musicSrc={`${import.meta.env.BASE_URL}sounds/brickblast/nice.mp3`}
+				onClick={handleRetry}
+				color="none"
+			/>
+
+			<MenuButton
+				position={[25, -15, 0]}
+				size={25}
+				imageSrc={`${import.meta.env.BASE_URL}img/brickblast/exit.png`}
+				musicSrc={`${import.meta.env.BASE_URL}sounds/brickblast/nice.mp3`}
+				onClick={handleQuit}
+				color="none"
+			/>
 		</group>
 	);
 };
@@ -227,7 +242,7 @@ export const MusicButton = () => {
 		setIsMuted(nextMutedState);
 
 		// Pass the path to your music file, the volume, and whether it should be muted
-		toggleBGM("/sounds/brickblast/background.mp3", 0.25, nextMutedState);
+		toggleBGM(`${import.meta.env.BASE_URL}sounds/brickblast/background.mp3`, 0.25, nextMutedState);
 	};
 
 	return (
@@ -235,8 +250,8 @@ export const MusicButton = () => {
 			position={[buttonX, 60, 5]}
 			size={10}
 			// Swap the image based on state (make sure you have these images!)
-			imageSrc={isMuted ? "/img/brickblast/music_off.png" : "/img/brickblast/music_on.png"}
-			musicSrc={"/sounds/brickblast/nice.mp3"}
+			imageSrc={isMuted ? `${import.meta.env.BASE_URL}img/brickblast/music_off.png` : `${import.meta.env.BASE_URL}img/brickblast/music_on.png`}
+			musicSrc={`${import.meta.env.BASE_URL}imgsounds/brickblast/nice.mp3`}
 			color="none"
 			hoverTint="#44ff44"
 			onClick={handleToggle}
@@ -270,8 +285,8 @@ export const RestartButton = () => {
 			position={[buttonX, 60, 5]}
 			size={10}
 			// Swap the image based on state (make sure you have these images!)
-			imageSrc={"/img/brickblast/replay.png"}
-			musicSrc={"/sounds/brickblast/nice.mp3"}
+			imageSrc={`${import.meta.env.BASE_URL}img/brickblast/replay.png`}
+			musicSrc={`${import.meta.env.BASE_URL}sounds/brickblast/nice.mp3`}
 			color="none"
 			hoverTint="red"
 			onClick={handleRestart}

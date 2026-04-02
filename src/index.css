@@ -1,15 +1,17 @@
 @font-face {
   font-family: "Inter";
-  src: url("/font/inter/Inter-VariableFont.ttf") format("truetype");
+  /* Remove the leading slash to make it relative */
+  src: url("/public/font/inter/Inter-VariableFont.ttf") format("truetype");
 }
 
 @font-face {
   font-family: "Press Start 2P";
-  src: url("/font/Press_Start_2P/PressStart2P-Regular.ttf") format("TrueType");
+  src: url("/public/font/Press_Start_2P/PressStart2P-Regular.ttf") format("truetype");
 }
+
 @font-face {
   font-family: "Gameria";
-  src: url("/font/gameria/GAMERIA.ttf") format("TrueType");
+  src: url("/public/font/gameria/GAMERIA.ttf") format("truetype");
 }
 
 :root {

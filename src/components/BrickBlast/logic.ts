@@ -191,7 +191,7 @@ export function clearFullLines(grid: number[][], colorMode: boolean = true) {
 
 	// Send them to the Zustand store
 	if (explosionMap.size > 0) {
-		playSFX("/sounds/brickblast/explosion.mp3", 0.5);
+		playSFX(`${import.meta.env.BASE_URL}sounds/brickblast/explosion.mp3`, 0.5);
 		store.addExplosions(Array.from(explosionMap.values()));
 	}
 

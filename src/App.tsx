@@ -26,14 +26,14 @@ const games = [
     description: "",
     title: "PuzzleGame",
     icon: <Puzzle />,
-    img: "/img/LegoPuzzle.png",
+    img: `${import.meta.env.BASE_URL}img/LegoPuzzle.png`,
   },
   {
     game: <BrickScene />,
     description: "",
     title: "Brick Blast",
     icon: <ToyBrick />,
-    img: "/img/BrickBlast.png",
+    img: `${import.meta.env.BASE_URL}img/BrickBlast.png`,
   },
 ];
 
@@ -93,7 +93,7 @@ function App() {
   console.log(user);
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/games">
       <BackgroundStars>
         <Navbar games={games} user={user} />
         <div className="app-content">

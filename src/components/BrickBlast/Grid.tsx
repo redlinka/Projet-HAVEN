@@ -8,7 +8,7 @@ export const Grid = () => {
 	//We load the grid texture from the images folder
 	const texture = useLoader(
 		THREE.TextureLoader,
-		"/img/brickblast/grid_asset3.png",
+		`${import.meta.env.BASE_URL}img/brickblast/grid_asset3.png`,
 	);
 
 	return (

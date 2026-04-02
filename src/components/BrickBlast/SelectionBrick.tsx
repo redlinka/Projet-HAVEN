@@ -154,7 +154,7 @@ export const SelectionBrick = ({
             onPointerDown={(e) => {
                 e.stopPropagation();
                 (e.target as Element).setPointerCapture(e.pointerId);
-                playSFX("/sounds/brickblast/pop.wav", 0.5);
+                playSFX(`${import.meta.env.BASE_URL}sounds/brickblast/pop.wav`, 0.5);
                 isDragged.current = true;
                 isPoppingIn.current = false;
                 pointerDownTime.current = Date.now();
@@ -172,7 +172,7 @@ export const SelectionBrick = ({
 
                 if (dropValid && dropCoords) {
 
-                    playSFX("/sounds/brickblast/pop.wav", 0.5);
+                    playSFX(`${import.meta.env.BASE_URL}sounds/brickblast/pop.wav`, 0.5);
 
                     const colorIndex = Number(Object.keys(COLORS).find(
                         key => COLORS[Number(key) as keyof typeof COLORS] === color
@@ -211,7 +211,7 @@ export const SelectionBrick = ({
                     const isOver = checkGameOver(latestGrid, piecesToCheck);
 
                     if (isOver) {
-                        playSFX("/sounds/brickblast/game_over_2.mp3", 0.5);
+                        playSFX(`${import.meta.env.BASE_URL}sounds/brickblast/game_over_2.mp3`, 0.5);
                         store.setIsGameOver(true);
                         console.log("GAME OVER");
                     }

@@ -182,7 +182,7 @@ export const SelectionBrick = ({
                     store.placePiece(currentShape.current, dropCoords.x, dropCoords.y, colorIndex);
 
                     // 2. Clear any full lines
-                    const newBoard = clearFullLines(useGameStore.getState().grid);
+                    const newBoard = clearFullLines(useGameStore.getState().grid, false);
                     store.setGrid(newBoard);
 
                     isConsumed.current = true;

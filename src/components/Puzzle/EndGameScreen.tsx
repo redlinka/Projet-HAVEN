@@ -39,6 +39,8 @@ export default function EndGameScreen({ score, nbPieces, mod, onModeMenu }: Prop
     .catch(err => console.error("Erreur enregistrement score:", err));
   }, []);
 
+  
+
   return (
     <div className="ending-overlay">
       <div className={perfect ? "ending-title-win" : "ending-title-lose"}>

@@ -15,14 +15,13 @@ export default function EndGameScreen({ score, nbPieces, mod, difficulty, onMode
 
   useEffect(() => {
     const token = localStorage.getItem("sessionToken");
-    const SQLid = localStorage.getItem("SQLid");
-
+    const SQLid = localStorage.getItem("user");
     fetch('/api-node/endgame', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         token,
-        SQLid: SQLid ? JSON.parse(SQLid) : null,
+        SQLid: SQLid ? JSON.parse(SQLid) : -1,
         game: 'PUZZLE',
         mode: 'SOLO',
         difficulty: diff,
@@ -36,6 +35,8 @@ export default function EndGameScreen({ score, nbPieces, mod, difficulty, onMode
       }
     });
   }, []);
+
+  
 
   return (
     <div className="ending-overlay">

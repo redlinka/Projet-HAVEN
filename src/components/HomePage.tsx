@@ -25,17 +25,33 @@ export default function HomePage({ games }: { games: Game[] }) {
   );
 }
 
+const GAME_TAGLINES: Record<string, string> = {
+  default: "Step up and play!",
+  puzzle: "Piece it together, brick by brick!",
+  brickblast: "The ultimate 3D block-busting challenge!",
+};
+
+function getTagline(title: string): string {
+  const key = title.toLowerCase().replace(/\s+/g, "");
+  return GAME_TAGLINES[key] ?? GAME_TAGLINES.default;
+}
+
 const GameList = ({ games }: { games: Game[] }) => {
   return (
     <ul className="game-list">
       {games.map((game, index) => (
-        <Link key={index} to={`/game/${index}/lobby`} className="list-link">
-          <img src={game.img} alt="" />
-
-          <div className="info">
-            <p>{game.title}</p>
-            <p>{game.description}</p>
+        <Link key={index} to={`/game/${index}/lobby`} className="game-card">
+          <div className="game-card__image-wrap">
+            <img src={game.img} alt={game.title} className="game-card__img" />
+            <div className="game-card__img-overlay" />
           </div>
+          <div className="game-card__body">
+            <span className="game-card__index">{getTagline(game.title)}</span>
+            <p className="game-card__title">{game.title}</p>
+            <p className="game-card__desc">{game.description}</p>
+            <span className="game-card__cta">Jouer →</span>
+          </div>
+          <div className="game-card__glow" />
         </Link>
       ))}
     </ul>

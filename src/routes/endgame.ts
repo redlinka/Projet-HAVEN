@@ -20,30 +20,29 @@ router.post('/', async (req, res) => {
       used: false
     };
 
-
     // LOGGED USER (in bricksy)
     if (!isNaN(numericSQLid) && numericSQLid !== -1) {
       let player = await Player.findOne({ SQL_id: numericSQLid });
 
-      //player not logged in haven yet, we create a new entry for them
+      const freshToken = jwt.sign(
+        { SQL_id: numericSQLid },
+        process.env.JWT_SECRET as string,
+        { expiresIn: '30d' }
+      );
+
       if (!player) {
-        try {
-          const newToken = jwt.sign(
-            { SQL_id: numericSQLid },
-            process.env.JWT_SECRET as string,
-            { expiresIn: '30d' }
-          );
-          player = await Player.create({
-            SQL_id: numericSQLid,
-            sessionToken: newToken,
-            lastConnectedAt: new Date(),
-            games: [gameEntry]
-          });
-        } catch (createError) {
-          throw createError;
-        }
+        // player not logged in haven yet, we create a new doc
+        player = await Player.create({
+          SQL_id: numericSQLid, 
+          sessionToken: freshToken,
+          lastConnectedAt: new Date(),
+          games: [gameEntry]
+        });
       } else {
+        // We updt existing player with new game and token
         player.games.push(gameEntry);
+        player.sessionToken = freshToken; 
+        player.lastConnectedAt = new Date();
         await player.save();
       }
 
@@ -67,7 +66,7 @@ router.post('/', async (req, res) => {
       { expiresIn: '7d' }
     );
     const newGuest = await Player.create({
-      SQL_id: -1,
+      SQL_id: -1, // Guest identifier
       sessionToken: guestToken,
       lastConnectedAt: new Date(),
       games: [gameEntry]
@@ -76,6 +75,7 @@ router.post('/', async (req, res) => {
     res.json(newGuest);
 
   } catch (error) {
+    console.error("Endgame Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });

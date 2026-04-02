@@ -4,25 +4,26 @@ interface Props {
   score: number;
   nbPieces: number;
   mod: { cols: number; rows: number };
-  difficulty: string;
   onModeMenu: () => void;
 }
 
-export default function EndGameScreen({ score, nbPieces, mod, difficulty, onModeMenu }: Props) {
+export default function EndGameScreen({ score, nbPieces, mod, onModeMenu }: Props) {
   const perfect = score === nbPieces;
   const diff = mod.cols === 8 ? 'easy' : mod.cols === 16 ? 'medium' : 'hard';
-  console.log(diff);
 
   useEffect(() => {
     const token = localStorage.getItem("sessionToken");
-    const SQLid = localStorage.getItem("SQLid");
+    const storedUser = localStorage.getItem("user");
+
+    const parsedUser = storedUser ? JSON.parse(storedUser) : null;
+    const sqlIdValue = parsedUser?.id ?? -1;
 
     fetch('/api-node/endgame', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         token,
-        SQLid: SQLid ? JSON.parse(SQLid) : null,
+        SQLid: sqlIdValue,
         game: 'PUZZLE',
         mode: 'SOLO',
         difficulty: diff,
@@ -34,7 +35,8 @@ export default function EndGameScreen({ score, nbPieces, mod, difficulty, onMode
       if (player?.sessionToken) {
         localStorage.setItem("sessionToken", player.sessionToken);
       }
-    });
+    })
+    .catch(err => console.error("Erreur enregistrement score:", err));
   }, []);
 
   return (
@@ -49,7 +51,7 @@ export default function EndGameScreen({ score, nbPieces, mod, difficulty, onMode
         {perfect && <div className="ending-hi">★ NEW RECORD ★</div>}
       </div>
       <div style={{ fontSize: 6, color: "#4a3060" }}>
-        {mod.cols}×{mod.rows} — {nbPieces} PIECES
+        {mod.cols}×{mod.rows} - {nbPieces} PIECES
       </div>
       <button className="retry-btn" onClick={onModeMenu}>
         MODE MENU

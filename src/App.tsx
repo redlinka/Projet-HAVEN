@@ -7,20 +7,15 @@ import { getSession } from "./api/session";
 import Navbar from "./layouts/Navbar";
 import BackgroundStars from "./components/BackgroundStars";
 
-// Pages
 import GamePage from "./components/GamePage";
 import HomePage from "./components/HomePage";
 import History from "./components/History";
 
-
-// Games
 import BrickScene from "./components/BrickBlast/BrickBlast";
 import PuzzleGame from "./components/Puzzle/PuzzleGame";
 
-// Game lobby
 import GameLobbyPage from "./components/GameLobby/Gamelobbypage";
 
-// Context
 import { RoomServiceContext } from "./contexts/RoomServiceContext";
 import { WebSocketRoomService } from "./services/WebSocketRoomService";
 import { RoomProvider } from "./contexts/RoomContext";
@@ -43,37 +38,53 @@ const games = [
 ];
 
 function App() {
-  const [user, setUser] = useState<{ id: number; username: string } | null>(
-    null,
-  );
-
-  // Création d'un seul ChatManager partagé pour tout l'app
+  const [user, setUser] = useState<{ id: number; username: string } | null>(null);
   const [chatManager] = useState(() => new WebSocketRoomService());
 
   useEffect(() => {
     getSession()
-      .then((data) => setUser(data))
-      .catch((err) => console.error("Erreur fetch session:", err));
+      .then(async (phpData) => {
+        if (phpData?.id) {
+          try {
+            const response = await fetch(`/api-node/player?SQLid=${phpData.id}`);
+            const mongoPlayer = await response.json();
+
+            if (mongoPlayer?.sessionToken) {
+              localStorage.setItem("sessionToken", mongoPlayer.sessionToken);
+              setUser({ ...phpData, ...mongoPlayer });
+            } else {
+              setUser(phpData);
+            }
+          } catch (err) {
+            setUser(phpData);
+          }
+        } else {
+          setUser(null);
+        }
+      })
+      .catch(() => setUser(null));
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("user", JSON.stringify(user));
+    if (user) {
+      localStorage.setItem("user", JSON.stringify(user));
+    } else {
+      localStorage.removeItem("user");
+    }
   }, [user]);
 
   return (
     <BrowserRouter>
       <BackgroundStars>
         <Navbar games={games} />
-
         <div className="app-content">
           <RoomServiceContext.Provider value={chatManager}>
             <RoomProvider>
               <Routes>
                 <Route path="/" element={<HomePage games={games} />} />
                 <Route path="/game/:id" element={<GamePage games={games} />} />
-                <Route path="/game/:id/lobby" element={<GameLobbyPage games={games} />}/>
-                <Route path="/history" element={<History/>}/>
-
+                <Route path="/game/:id/lobby" element={<GameLobbyPage games={games} />} />
+                <Route path="/history" element={<History />} />
               </Routes>
             </RoomProvider>
           </RoomServiceContext.Provider>

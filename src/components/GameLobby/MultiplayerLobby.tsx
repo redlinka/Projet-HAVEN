@@ -11,7 +11,7 @@ export default function MultiplayerLobby({
 }: MultiplayerLobbyProps) {
   return (
     <div className="lobby-chat-wrapper">
-      <Chatter initialRoomId={initialRoomId} keepAlive />
+      <Chatter initialRoomId={initialRoomId} />
     </div>
   );
 }

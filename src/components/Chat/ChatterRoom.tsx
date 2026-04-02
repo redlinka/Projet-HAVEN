@@ -3,6 +3,7 @@ import { useRoom } from "../../contexts/RoomContext";
 import ChatDisplayer from "./ChatDisplayer";
 import ChatSender from "./ChatSender";
 import "../../styles/components/Chat/ChatterRoom.css";
+import { useNavigate, useParams } from "react-router-dom";
 
 function RoomCodeDisplay() {
   const { roomId, isAdmin } = useRoom();
@@ -55,13 +56,20 @@ function UsersList() {
 function StartGameButton() {
   const { isAdmin, connectedUsers, handleStartGame } = useRoom();
   const canStart = isAdmin && connectedUsers.length >= 2;
+  const navigate = useNavigate();
+  const { id: gameId } = useParams();
 
   if (!isAdmin) return null;
+  const onStartGame = () => {
+    if (isAdmin) {
+      navigate(`/game/${gameId}`);
+    }
+  };
 
   return (
     <button
       className={`chatter-start-btn ${canStart ? "chatter-start-btn--ready" : ""}`}
-      onClick={handleStartGame}
+      onClick={() => handleStartGame(onStartGame)}
       disabled={!canStart}
       title={canStart ? "Lancer la partie" : "En attente du 2ème joueur"}
     >
@@ -71,7 +79,8 @@ function StartGameButton() {
 }
 
 export default function ChatterRoom() {
-  const { messages, handleSendMessage, handleDisconnect } = useRoom();
+  const { messages, gameStarted, handleSendMessage, handleDisconnect } =
+    useRoom();
 
   return (
     <div className="chatter">
@@ -94,7 +103,7 @@ export default function ChatterRoom() {
 
       <footer className="chatter-footer">
         <ChatSender onMessageEntered={handleSendMessage} />
-        <StartGameButton />
+        {!gameStarted && <StartGameButton />}
       </footer>
     </div>
   );

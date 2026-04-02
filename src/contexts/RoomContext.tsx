@@ -31,7 +31,7 @@ interface RoomContextValue {
   handleRoomJoined: (userName: string, existingUsers: string[]) => void;
   handleSendMessage: (content: string) => void;
   handleDisconnect: () => void;
-  handleStartGame: () => void;
+  handleStartGame: (onStartGame: () => void) => void;
 }
 
 const RoomContext = createContext<RoomContextValue | null>(null);
@@ -65,6 +65,12 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
     });
     roomService.setRoomClosedListener(() => {
       setRoomClosed(true);
+      setState("idle");
+      setMessages([]);
+      setConnectedUsers([]);
+      setRoomId(null);
+      setIsAdmin(false);
+      setError(null);
     });
   }, [roomService]);
 
@@ -111,9 +117,14 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
     setRoomClosed(false);
   }, [roomService]);
 
-  const handleStartGame = useCallback(() => {
-    roomService.startGame();
-  }, [roomService]);
+  const handleStartGame = useCallback(
+    (onStartGame: () => void) => {
+      setGameStarted(true);
+      roomService.startGame();
+      onStartGame();
+    },
+    [roomService],
+  );
 
   return (
     <RoomContext.Provider

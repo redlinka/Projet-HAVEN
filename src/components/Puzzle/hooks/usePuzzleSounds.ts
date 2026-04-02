@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import useSound from "use-sound";
 
-import bgMusic from "/sounds/Puzzle/bg2.mp3";
-import dropSound from "/sounds/Puzzle/drop2.mp3";
-import dragSound from "/sounds/Puzzle/drag.wav";
-import wrongPlacementSound from "/sounds/Puzzle/wrong.mp3";
+import bgMusic from "/sounds/puzzle/bg2.mp3";
+import dropSound from "/sounds/puzzle/drop2.mp3";
+import dragSound from "/sounds/puzzle/drag.wav";
+import wrongPlacementSound from "/sounds/puzzle/wrong.mp3";
 
 export interface PuzzleSounds {
     isPlayingMusic: boolean;

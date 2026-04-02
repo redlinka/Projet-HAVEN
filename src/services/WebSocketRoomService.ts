@@ -43,18 +43,27 @@ export class WebSocketRoomService implements RoomService {
   }
 
   // ─── Connexion ─────────────────────────────────────────────────
-  async createRoom(userName: string): Promise<string> {
+  async createRoom(userName: string, gameId: string): Promise<string> {
     const data = await this.establishConnection(
-      { kind: "create_room", user_name: userName },
+      { kind: "create_room", user_name: userName, game_id: gameId },
       "room_created",
     );
     this.currentUsers = [userName];
     return data.room_id as string;
   }
 
-  async joinRoom(userName: string, roomId: string): Promise<string[]> {
+  async joinRoom(
+    userName: string,
+    roomId: string,
+    gameId: string,
+  ): Promise<string[]> {
     const data = await this.establishConnection(
-      { kind: "join_room", user_name: userName, room_id: roomId },
+      {
+        kind: "join_room",
+        user_name: userName,
+        room_id: roomId,
+        game_id: gameId,
+      },
       "room_joined",
     );
     const existingUsers = (data.users as string[]) ?? [];

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useRoomService } from "../../contexts/RoomServiceContext";
 import RoomForm from "./RoomForm";
 import "../../styles/components/Room/RoomJoiner.css";
+import { useParams } from "react-router-dom";
 
 interface RoomJoinerProps {
   /** Appelé quand le salon est rejoint avec succès ; users = joueurs déjà présents */
@@ -24,6 +25,7 @@ export default function RoomJoiner({
   const [userName, setUserName] = useState("");
   const [roomId, setRoomId] = useState(initialRoomId);
   const [isLoading, setIsLoading] = useState(false);
+  const { id: gameId } = useParams();
 
   const handleSubmit = async ({
     userName: name,
@@ -36,7 +38,11 @@ export default function RoomJoiner({
     onConnecting();
 
     try {
-      const existingUsers = await roomService.joinRoom(name, roomCode || "");
+      const existingUsers = await roomService.joinRoom(
+        name,
+        roomCode || "",
+        gameId || "",
+      );
       onRoomJoined(name, existingUsers);
     } catch (err) {
       const message =

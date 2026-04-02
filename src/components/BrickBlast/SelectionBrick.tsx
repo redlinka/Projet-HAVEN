@@ -6,6 +6,7 @@ import { getRandomPiece } from "./Shapes.ts";
 import { useGameStore } from "./Store.ts";
 import { BrickUnit } from "./BrickUnit.tsx";
 import { rotateShape } from "./logic.ts";
+import {playSFX} from "./audio.ts";
 
 // Constants
 const SCALE_NORMAL = new THREE.Vector3(1, 1, 1);
@@ -153,6 +154,7 @@ export const SelectionBrick = ({
             onPointerDown={(e) => {
                 e.stopPropagation();
                 (e.target as Element).setPointerCapture(e.pointerId);
+                playSFX("/sounds/brickblast/pop.wav", 0.5);
                 isDragged.current = true;
                 isPoppingIn.current = false;
                 pointerDownTime.current = Date.now();
@@ -169,6 +171,8 @@ export const SelectionBrick = ({
                 (e.target as Element).releasePointerCapture(e.pointerId);
 
                 if (dropValid && dropCoords) {
+
+                    playSFX("/sounds/brickblast/pop.wav", 0.5);
 
                     const colorIndex = Number(Object.keys(COLORS).find(
                         key => COLORS[Number(key) as keyof typeof COLORS] === color
@@ -207,8 +211,9 @@ export const SelectionBrick = ({
                     const isOver = checkGameOver(latestGrid, piecesToCheck);
 
                     if (isOver) {
-                        console.log("GAME OVER");
+                        playSFX("/sounds/brickblast/game_over_2.mp3", 0.5);
                         store.setIsGameOver(true);
+                        console.log("GAME OVER");
                     }
 
                 } else {

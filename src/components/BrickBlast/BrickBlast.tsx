@@ -1,12 +1,12 @@
 import {Canvas, useFrame} from "@react-three/fiber";
-import {Suspense, useRef, useState} from "react";
+import {Suspense, useEffect, useRef, useState} from "react";
 import {
 	Background,
 	BlockHolder,
 	CameraController,
 	RestartButton,
 	Score,
-	GameOverScreen,
+	GameOverScreen, MusicButton,
 } from "./SceneElements.tsx";
 import BlocksGeneration from "./SelectionBrick.tsx";
 import { Grid } from "./Grid.tsx";
@@ -22,6 +22,7 @@ import { GridRenderer } from "./GridRenderer.tsx";
 import { GhostPreview } from "./GhostPreview.tsx";
 import { Stats } from "@react-three/drei";
 import * as THREE from "three";
+import {stopBGM} from "./audio.ts";
 
 // manager of all postprocessing effects
 const GlobalEffects = () => {
@@ -65,17 +66,23 @@ const GlobalEffects = () => {
 //main scene
 export const Scene = () => {
 
+	useEffect(() => {
+		return () => {
+			stopBGM();
+		};
+	}, []);
+
 	return (
 		<div style={{ width: "100%", height: "100%" }}>
 			<Canvas
-				camera={{ fov: 80, near: 0.1, far: 1000, position: [0, -500, 100] }}
+				camera={{ fov: 80, near: 0.1, far: 1000, position: [0, -400, 100] }}
 			>
 				<Stats />
 				<CameraController />
 				<Suspense fallback={null}>
 					<GameOverScreen />
 					<Score />
-					<RestartButton />
+					<RestartButton /> <MusicButton />
 					<Grid /> <GridRenderer /> <GhostPreview />
 					<BlockHolder />
 					<BlocksGeneration />

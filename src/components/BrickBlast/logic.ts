@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { useGameStore } from "./Store";
+import {playSFX} from "./audio.ts";
 
 export const CELL_SIZE = 100 / 9;
 export const GRID_WORLD_X = -30;
@@ -170,6 +171,30 @@ export function clearFullLines(grid: number[][], colorMode: boolean = true) {
 			}
         }
     }
+
+	const explosionMap = new Map();
+	const addExp = (x: number, y: number) => {
+		const key = `${x}-${y}`;
+		if (!explosionMap.has(key) && grid[y][x] !== 0) {
+			explosionMap.set(key, {
+				id: key + Date.now(), // Unique ID
+				x,
+				y,
+				color: COLORS[grid[y][x] as keyof typeof COLORS]
+			});
+		}
+	};
+
+	// Scrape all the rows and columns that are about to be destroyed
+	rowsToClear.forEach(y => { for(let x=0; x<9; x++) addExp(x, y) });
+	colsToClear.forEach(x => { for(let y=0; y<9; y++) addExp(x, y) });
+
+	// Send them to the Zustand store
+	if (explosionMap.size > 0) {
+		playSFX("/sounds/brickblast/explosion.mp3", 0.5);
+		store.addExplosions(Array.from(explosionMap.values()));
+	}
+
 	const scoreGained = calculateScore(linesCleared);
 	// console.log(`Cleared ${linesCleared} lines, gained ${scoreGained} points!`);
 	store.setScore(store.score + scoreGained);

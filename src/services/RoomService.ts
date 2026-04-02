@@ -18,14 +18,14 @@ export interface RoomService {
    * Met à jour roomId et isInRoom en cas de succès.
    * Lance une exception en cas d'échec de connexion.
    */
-  createRoom(userName: string): Promise<string>;
+  createRoom(userName: string, gameId: string): Promise<string>;
 
   /**
    * Rejoint un salon existant via son identifiant.
    * Retourne la liste des utilisateurs déjà connectés.
    * Lance une exception si le salon est introuvable ou complet.
    */
-  joinRoom(userName: string, roomId: string): Promise<string[]>;
+  joinRoom(userName: string, roomId: string, gameId: string): Promise<string[]>;
 
   /**
    * Définit le listener appelé à chaque message reçu (ou système).

@@ -20,7 +20,7 @@ router.post('/', async (req, res) => {
       used: false
     };
 
-    // LOGGED USER (in bricksy)
+    // LOGGED USER (in bricksy), it's not a guest
     if (!isNaN(numericSQLid) && numericSQLid !== -1) {
       let player = await Player.findOne({ SQL_id: numericSQLid });
 
@@ -49,7 +49,8 @@ router.post('/', async (req, res) => {
       return res.json(player);
     }
 
-    // GUEST CASE
+    // GUEST CASES,
+    //first we look if it's not a new guest
     if (token) {
       const guest = await Player.findOne({ sessionToken: token });
       if (guest) {

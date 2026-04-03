@@ -118,8 +118,8 @@ export const checkGameOver = (
 };
 
 
-function calculateScore(linesCleared: number): number {
-    return linesCleared *(linesCleared+1)/2;
+function calculateScore(props : {linesClearedOfSameColor : number, linesClearedWithDiffColors:number}): number {
+    return (props.linesClearedWithDiffColors *(props.linesClearedWithDiffColors+1)/2) + ((props.linesClearedOfSameColor*2) * (props.linesClearedOfSameColor+1)/2);
 }
 
 // function to clear lines based on the rows and columns to clear
@@ -142,9 +142,10 @@ function clearLines(rowsToClear: number[], colsToClear: number[], grid: number[]
 }
 
 // function to clear full lines of the same color
-export function clearFullLines(grid: number[][], colorMode: boolean = true) {
+export function clearFullLines(grid: number[][]): number[][] {
     const store = useGameStore.getState();
-    let linesCleared = 0;
+    let linesClearedOfSameColor = 0;
+	let linesClearedWithDiffColors = 0
     const rowsToClear: number[] = [];
     const colsToClear: number[] = [];
 
@@ -153,8 +154,12 @@ export function clearFullLines(grid: number[][], colorMode: boolean = true) {
         if (grid[y].every((cell) => cell !== 0)) {
             // all non-zero AND same color.
             const firstColor = grid[y][0];
-			if (!colorMode || grid[y].every((cell) => cell === firstColor)) {
-				linesCleared++;
+			if (grid[y].every((cell) => cell === firstColor)) {
+				linesClearedOfSameColor++;
+				rowsToClear.push(y);
+			}
+			else {
+				linesClearedWithDiffColors++
 				rowsToClear.push(y);
 			}
         }
@@ -165,8 +170,12 @@ export function clearFullLines(grid: number[][], colorMode: boolean = true) {
         if (grid.every((row) => row[x] !== 0)) {
             // all non-zero AND same color.
             const firstColor = grid[0][x];
-			if (!colorMode || grid.every((row) => row[x] === firstColor)) {
-				linesCleared++;
+			if (grid.every((row) => row[x] === firstColor)) {
+				linesClearedOfSameColor++;
+				colsToClear.push(x);
+			}
+			else {
+				linesClearedWithDiffColors++
 				colsToClear.push(x);
 			}
         }
@@ -189,15 +198,14 @@ export function clearFullLines(grid: number[][], colorMode: boolean = true) {
 	rowsToClear.forEach(y => { for(let x=0; x<9; x++) addExp(x, y) });
 	colsToClear.forEach(x => { for(let y=0; y<9; y++) addExp(x, y) });
 
-	// Send them to the Zustand store
+	// Send them to the Zustand store & play SFX if we have any explosions to show
 	if (explosionMap.size > 0) {
 		playSFX(`${import.meta.env.BASE_URL}sounds/brickblast/explosion.mp3`, 0.5);
 		store.addExplosions(Array.from(explosionMap.values()));
 	}
 
-	const scoreGained = calculateScore(linesCleared);
-	// console.log(`Cleared ${linesCleared} lines, gained ${scoreGained} points!`);
+	const scoreGained = calculateScore({linesClearedOfSameColor, linesClearedWithDiffColors});
+	// console.log(`Cleared ${linesClearedOfSameColor} + ${linesClearedWithDiffColors} lines, gained ${scoreGained} points!`);
 	store.setScore(store.score + scoreGained);
-    // possibility to add audio feedback here based on scoreGained (e.g. more points = more intense sound)
     return clearLines(rowsToClear, colsToClear, grid);
 }

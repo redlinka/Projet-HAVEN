@@ -16,12 +16,12 @@ export default function EndGameScreen({ score, nbPieces, mod, onModeMenu }: Prop
     const storedUser = localStorage.getItem("user");
     const parsedUser = storedUser ? JSON.parse(storedUser) : null;
     const sqlIdValue = parsedUser?.SQL_id ?? -1;
-
+    
     fetch('/api-node/endgame', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        token,
+        token : token,
         SQLid: sqlIdValue,
         game: 'PUZZLE',
         mode: 'SOLO',

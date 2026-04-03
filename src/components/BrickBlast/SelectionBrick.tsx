@@ -227,6 +227,20 @@ export const SelectionBrick = ({
                 store.setHoveredMeshes([]);
             }}
 
+            onPointerCancel={(e) => {
+                e.stopPropagation();
+                try {
+                    (e.target as Element).releasePointerCapture(e.pointerId);
+                } catch (err) {
+                    //ignore
+                }
+                isDragged.current = false;
+                setIsDraggingGlobal(false);
+                setActivePiece(null);
+                useGameStore.getState().setIsValidDrop(false);
+                useGameStore.getState().setHoveredMeshes([]);
+            }}
+
             onPointerEnter={() => {
                 if (!isDraggingGlobal) onHover(meshRefs.current);
             }}

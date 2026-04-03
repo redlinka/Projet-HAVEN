@@ -13,6 +13,20 @@ export class WebSocketRoomService implements RoomService {
   private roomUpdateListener: ((users: string[]) => void) | null = null;
   private gameStartedListener: (() => void) | null = null;
   private roomClosedListener: (() => void) | null = null;
+  private difficultyListener:
+    | ((mod: { cols: number; rows: number }) => void)
+    | null = null;
+
+  private webRTCOfferListener:
+    | ((sdp: RTCSessionDescriptionInit) => void)
+    | null = null;
+  private webRTCAnswerListener:
+    | ((sdp: RTCSessionDescriptionInit) => void)
+    | null = null;
+  private webRTCIceCandidateListener:
+    | ((candidate: RTCIceCandidateInit) => void)
+    | null = null;
+  private webRTCReadyListener: (() => void) | null = null;
 
   private currentUsers: string[] = [];
   private _messages: Message[] = [];
@@ -41,7 +55,23 @@ export class WebSocketRoomService implements RoomService {
   setGameStartedListener(listener: () => void): void {
     this.gameStartedListener = listener;
   }
-
+  setDifficultyListener(
+    listener: (mod: { cols: number; rows: number }) => void,
+  ): void {
+    this.difficultyListener = listener;
+  }
+  setWebRTCOfferListener(l: (sdp: RTCSessionDescriptionInit) => void) {
+    this.webRTCOfferListener = l;
+  }
+  setWebRTCAnswerListener(l: (sdp: RTCSessionDescriptionInit) => void) {
+    this.webRTCAnswerListener = l;
+  }
+  setWebRTCIceCandidateListener(l: (c: RTCIceCandidateInit) => void) {
+    this.webRTCIceCandidateListener = l;
+  }
+  setWebRTCReadyListener(l: () => void) {
+    this.webRTCReadyListener = l;
+  }
   // ─── Connexion ─────────────────────────────────────────────────
   async createRoom(userName: string, gameId: string): Promise<string> {
     const data = await this.establishConnection(
@@ -137,6 +167,26 @@ export class WebSocketRoomService implements RoomService {
       case "game_started":
         this.gameStartedListener?.();
         break;
+      case "difficulty_selected":
+        this.difficultyListener?.({
+          cols: data.cols as number,
+          rows: data.rows as number,
+        });
+        break;
+      case "webrtc_offer":
+        this.webRTCOfferListener?.(data.sdp as RTCSessionDescriptionInit);
+        break;
+      case "webrtc_answer":
+        this.webRTCAnswerListener?.(data.sdp as RTCSessionDescriptionInit);
+        break;
+      case "webrtc_ice_candidate":
+        this.webRTCIceCandidateListener?.(
+          data.candidate as RTCIceCandidateInit,
+        );
+        break;
+      case "webrtc_ready":
+        this.webRTCReadyListener?.();
+        break;
       case "error":
         console.error("[WebSocketChatManager] Erreur serveur :", data.message);
         break;
@@ -194,6 +244,18 @@ export class WebSocketRoomService implements RoomService {
   }
 
   // ─── Actions ───────────────────────────────────────────────────
+  sendWebRTCOffer(sdp: RTCSessionDescriptionInit): void {
+    this.ws?.send(JSON.stringify({ kind: "webrtc_offer", sdp }));
+  }
+  sendWebRTCAnswer(sdp: RTCSessionDescriptionInit): void {
+    this.ws?.send(JSON.stringify({ kind: "webrtc_answer", sdp }));
+  }
+  sendWebRTCIceCandidate(candidate: RTCIceCandidateInit): void {
+    this.ws?.send(JSON.stringify({ kind: "webrtc_ice_candidate", candidate }));
+  }
+  sendWebRTCReady(): void {
+    this.ws?.send(JSON.stringify({ kind: "webrtc_ready" }));
+  }
   sendMessage(content: string): void {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ kind: "send_message", content }));
@@ -201,6 +263,12 @@ export class WebSocketRoomService implements RoomService {
       console.warn(
         "[WebSocketChatManager] sendMessage : connexion non ouverte",
       );
+    }
+  }
+
+  selectDifficulty(mod: { cols: number; rows: number }): void {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({ kind: "select_difficulty", ...mod }));
     }
   }
 

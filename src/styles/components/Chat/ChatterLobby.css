@@ -41,7 +41,12 @@
   content: "";
   flex: 1;
   width: 1px;
-  background: linear-gradient(to bottom, transparent, var(--purple), transparent);
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--purple),
+    transparent
+  );
 }
 
 .chatter-error {
@@ -89,7 +94,6 @@
 @media (max-width: 640px) {
   .chatter-lobby-cards {
     flex-direction: column;
-
   }
 
   .chatter-lobby-separator {

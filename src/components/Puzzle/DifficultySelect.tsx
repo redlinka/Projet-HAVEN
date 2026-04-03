@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import "../../styles/components/Puzzle/DifficultySelect.css";
+import { useRoom } from "../../contexts/RoomContext";
 
 const DIFFICULTIES = [
   { label: "EASY", cols: 16, rows: 16, stars: 1 },
@@ -15,6 +16,8 @@ export default function DifficultySelect({
   const [selected, setSelected] = useState(1);
   const [blink, setBlink] = useState(true);
   const [confirmed, setConfirmed] = useState(false);
+
+  const { isAdmin, connectedUsers, handleSelectDifficulty } = useRoom();
 
   useEffect(() => {
     const t = setInterval(() => setBlink((b) => !b), 500);
@@ -34,17 +37,15 @@ export default function DifficultySelect({
   const handleConfirm = () => {
     setConfirmed(true);
     setTimeout(() => {
-      setMod({
+      const mod = {
         cols: DIFFICULTIES[selected].cols,
         rows: DIFFICULTIES[selected].rows,
-      });
-      // if (multiplayer && isAdmin) {
-      //   handleSelectPuzzleDifficulty({
-      //     cols: DIFFICULTIES[selected].cols,
-      //     rows: DIFFICULTIES[selected].rows,
-      //   });
-      //   console.log("Dificulte envoye a la room");
-      // }
+      };
+      setMod(mod);
+      if (connectedUsers?.length > 1 && isAdmin) {
+        handleSelectDifficulty(mod);
+        console.log("Difficulté envoyé à la room");
+      }
     }, 400);
   };
 

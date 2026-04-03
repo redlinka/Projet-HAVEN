@@ -48,6 +48,13 @@ export interface RoomService {
   setGameStartedListener(listener: () => void): void;
 
   /**
+   * Définit le listener appelé quand l'admin sélectionne la difficulté de la partie.
+   */
+  setDifficultyListener(
+    listener: (mod: { cols: number; rows: number }) => void,
+  ): void;
+
+  /**
    * Envoie un message texte dans le salon.
    */
   sendMessage(content: string): void;
@@ -56,6 +63,11 @@ export interface RoomService {
    * Lance la partie (réservé à l'admin du salon).
    */
   startGame(): void;
+
+  /**
+   * Sélectionne le niveau de difficulté pour la partie.
+   */
+  selectDifficulty(mod: { cols: number; rows: number }): void;
 
   /**
    * Ferme proprement la connexion.
@@ -67,4 +79,19 @@ export interface RoomService {
    * Permet de rejoindre un autre salon ou d'en créer un nouveau.
    */
   leaveRoom(): void;
+
+  sendWebRTCOffer(sdp: RTCSessionDescriptionInit): void;
+  sendWebRTCAnswer(sdp: RTCSessionDescriptionInit): void;
+  sendWebRTCIceCandidate(candidate: RTCIceCandidateInit): void;
+  setWebRTCOfferListener(
+    listener: (sdp: RTCSessionDescriptionInit) => void,
+  ): void;
+  setWebRTCAnswerListener(
+    listener: (sdp: RTCSessionDescriptionInit) => void,
+  ): void;
+  setWebRTCIceCandidateListener(
+    listener: (candidate: RTCIceCandidateInit) => void,
+  ): void;
+  sendWebRTCReady(): void;
+  setWebRTCReadyListener(listener: () => void): void;
 }

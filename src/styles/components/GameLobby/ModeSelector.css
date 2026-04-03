@@ -18,16 +18,23 @@
   cursor: pointer;
   overflow: hidden;
   text-align: left;
-  transition: border-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  transition:
+    border-color 0.3s ease,
+    transform 0.2s ease,
+    box-shadow 0.3s ease;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
 .mode-card::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(160, 88, 190, 0.1) 0%, transparent 60%);
+  background: linear-gradient(
+    135deg,
+    rgba(160, 88, 190, 0.1) 0%,
+    transparent 60%
+  );
   border-radius: 16px;
   z-index: 0;
 }
@@ -50,7 +57,11 @@
   width: 200px;
   height: 200px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(160, 88, 190, 0.22) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(160, 88, 190, 0.22) 0%,
+    transparent 70%
+  );
   opacity: 0;
   transition: opacity 0.4s ease;
   pointer-events: none;
@@ -107,7 +118,9 @@
   color: var(--purple);
   opacity: 0;
   transform: translateX(-6px);
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
 }
 
 .mode-card:hover .mode-card-cta {
@@ -115,11 +128,13 @@
   transform: translateX(0);
 }
 
-.mode-card--solo, .mode-card--multi {
+.mode-card--solo,
+.mode-card--multi {
   background: rgba(10, 0, 18, 0.6);
 }
 
-.mode-card--multi .mode-card-title, .mode-card--solo .mode-card-title {
+.mode-card--multi .mode-card-title,
+.mode-card--solo .mode-card-title {
   background: linear-gradient(90deg, var(--white) 0%, var(--purple) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

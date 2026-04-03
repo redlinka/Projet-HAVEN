@@ -89,6 +89,13 @@ export const GameOverScreen = () => {
 	const groupRef = useRef<THREE.Group>(null!);
 	const overlayRef = useRef<THREE.MeshBasicMaterial>(null!);
 
+	const { size } = useThree();
+	const aspect = (size.width * ASPECT_COEFF) / size.height;
+	const isPortrait = aspect < 1;
+
+	const centerX = isPortrait ? -30 : 0;
+	const centerY = isPortrait ? -5 : 0;
+
 	useFrame(() => {
 		if (!groupRef.current || !overlayRef.current) return;
 
@@ -120,12 +127,11 @@ export const GameOverScreen = () => {
 	};
 
 	const handleQuit = () => {
-		console.log("Quit clicked");
-		// Does nothing for now, just logs!
+		window.location.href = "/";
 	};
 
 	return (
-		<group ref={groupRef} position={[0, 0, 20]} visible={false}>
+		<group ref={groupRef} position={[centerX, centerY, 20]} visible={false}>
 			{/* The Dark Shield - swallows clicks so the board behind it is disabled */}
 			<mesh
 				position={[0, 0, -5]}
@@ -148,8 +154,8 @@ export const GameOverScreen = () => {
 			</Text>
 
 			<MenuButton
-				position={[-25, -15, 0]}
-				size={22}
+				position={isPortrait ? [0, 0, 0] : [-25, -15, 0]}
+				size={isPortrait ? 18 : 22}
 				imageSrc={`${import.meta.env.BASE_URL}img/brickblast/replay.png`}
 				musicSrc={`${import.meta.env.BASE_URL}sounds/brickblast/nice.mp3`}
 				onClick={handleRetry}
@@ -157,8 +163,8 @@ export const GameOverScreen = () => {
 			/>
 
 			<MenuButton
-				position={[25, -15, 0]}
-				size={25}
+				position={isPortrait ? [0, -25, 0] : [25, -15, 0]}
+				size={isPortrait ? 20 : 25}
 				imageSrc={`${import.meta.env.BASE_URL}img/brickblast/exit.png`}
 				musicSrc={`${import.meta.env.BASE_URL}sounds/brickblast/nice.mp3`}
 				onClick={handleQuit}

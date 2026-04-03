@@ -1,11 +1,11 @@
 .glp-screen {
   position: relative;
   width: 100%;
-  min-height: 90vh;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  height: 100%;
 }
 
 .glp-inner {
@@ -92,10 +92,5 @@
 
   .glp-title {
     font-size: clamp(2.2rem, 12vw, 3.5rem);
-  }
-}
-@media (max-height: 900px) {
-  .glp-inner {
-    margin-bottom: 20%;
   }
 }

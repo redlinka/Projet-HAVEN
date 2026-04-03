@@ -4,10 +4,12 @@
   display: flex;
   flex-direction: column;
   gap: 1.8rem;
-  padding: 2.2rem 2rem;
+  padding: 1.5rem;
   backdrop-filter: blur(5px);
   min-width: 0;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .room-creator:hover,
@@ -102,7 +104,9 @@
   outline: none;
   width: 100%;
   box-sizing: border-box;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .room-field input::placeholder {
@@ -111,7 +115,9 @@
 
 .room-field input:focus {
   border-color: var(--purple);
-  box-shadow: 0 0 0 3px rgba(160, 88, 190, 0.15), 0 0 12px rgba(160, 88, 190, 0.15);
+  box-shadow:
+    0 0 0 3px rgba(160, 88, 190, 0.15),
+    0 0 12px rgba(160, 88, 190, 0.15);
 }
 
 .room-field input:disabled {
@@ -140,7 +146,10 @@
   border: 1px solid var(--purple);
   background: rgba(160, 88, 190, 0.18);
   color: var(--white);
-  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
   margin-top: auto;
 }
 
@@ -184,7 +193,7 @@
   }
 }
 
-/* Responsive */ 
+/* Responsive */
 
 @media (max-width: 680px) {
   .room-creator,

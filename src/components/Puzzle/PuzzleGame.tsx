@@ -9,19 +9,53 @@ import HUDBar from "./HUDBar";
 import LoadingScreen from "./LoadingScreen";
 import EndGameScreen from "./EndGameScreen";
 
-
 import { usePuzzle } from "./hooks/usePuzzle";
 import { usePuzzleSound } from "./hooks/usePuzzleSounds";
 
 import "../../styles/components/Puzzle/PuzzleGame.css";
+import { useRoom } from "../../contexts/RoomContext";
+import { useEffect } from "react";
 
 //COMPONENT
 
 export default function PuzzleGame() {
-  const { isPlayingMusic, isPlayingEffect, setIsPlayingEffect, toggleMusic, playOnDrag, playOnDrop, playWrongPlacement} = usePuzzleSound();
-  
-  const { mod, setMod, loading, allBricks, currentBrick, board, score, nbPieces, imagePath, imageZoomed, setImageZoomed, endGame, handleModeMenu,
-    activeBrick, dragPos, isOnBoard, handlePointerDown } = usePuzzle({ playOnDrag, playOnDrop, playWrongPlacement });
+  const { difficulty } = useRoom();
+  const {
+    isPlayingMusic,
+    isPlayingEffect,
+    setIsPlayingEffect,
+    toggleMusic,
+    playOnDrag,
+    playOnDrop,
+    playWrongPlacement,
+  } = usePuzzleSound();
+
+  const {
+    mod,
+    setMod,
+    loading,
+    allBricks,
+    currentBrick,
+    board,
+    score,
+    nbPieces,
+    imagePath,
+    imageZoomed,
+    setImageZoomed,
+    endGame,
+    handleModeMenu,
+    activeBrick,
+    dragPos,
+    isOnBoard,
+    handlePointerDown,
+  } = usePuzzle({ playOnDrag, playOnDrop, playWrongPlacement });
+
+  useEffect(() => {
+    if (difficulty) {
+      setMod(difficulty);
+      console.log("Difficulté reçue du lobby :", difficulty);
+    }
+  }, [difficulty]);
 
   const soundsButtons = () => (
     <div className="sounds-container">
@@ -55,19 +89,38 @@ export default function PuzzleGame() {
       {imageZoomed &&
         createPortal(
           <div className="div-portal" onClick={() => setImageZoomed(false)}>
-
-            <button onClick={() => setImageZoomed(false)} >
+            <button onClick={() => setImageZoomed(false)}>
               <X size={32} />
             </button>
-          
-            <img src={imagePath} alt="Puzzle reference" onClick={(e) => e.stopPropagation()} />
-          </div>, document.body,)
-      }
+
+            <img
+              src={imagePath}
+              alt="Puzzle reference"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>,
+          document.body,
+        )}
 
       {/* End screen / Mode select / Game */}
-      {endGame ? ( <EndGameScreen score={score} nbPieces={nbPieces} mod={mod} difficulty={`${mod.cols}x${mod.rows}`} onModeMenu={handleModeMenu} /> ) : !mod.cols || !mod.rows ? ( <DifficultySelect setMod={setMod} /> ) : (
+      {endGame ? (
+        <EndGameScreen
+          score={score}
+          nbPieces={nbPieces}
+          mod={mod}
+          difficulty={`${mod.cols}x${mod.rows}`}
+          onModeMenu={handleModeMenu}
+        />
+      ) : !mod.cols || !mod.rows ? (
+        <DifficultySelect setMod={setMod} />
+      ) : (
         <div className="puzzle-game-container">
-          <HUDBar score={score} placed={nbPieces - allBricks.length} total={total} remaining={allBricks.length} />
+          <HUDBar
+            score={score}
+            placed={nbPieces - allBricks.length}
+            total={total}
+            remaining={allBricks.length}
+          />
 
           <div className="puzzle-game">
             {/* Board */}
@@ -85,20 +138,34 @@ export default function PuzzleGame() {
                 <div className="piece-random">
                   {currentBrick ? (
                     <div style={{ opacity: activeBrick ? 0.3 : 1 }}>
-                      <Brick b={currentBrick} boardSize={16} onPointerDown={(e) => handlePointerDown(currentBrick, e)}/>
+                      <Brick
+                        b={currentBrick}
+                        boardSize={16}
+                        onPointerDown={(e) =>
+                          handlePointerDown(currentBrick, e)
+                        }
+                      />
                     </div>
                   ) : (
-                    <div style={{ fontSize: 7, color: "#3a2d5c" }}>-</div>)
-                  }
-
+                    <div style={{ fontSize: 7, color: "#3a2d5c" }}>-</div>
+                  )}
                 </div>
                 <div className="piece-grab-hint">DRAG TO BOARD</div>
               </div>
 
-              <div className="panel-card image-card" style={{ backgroundImage: `url(${imagePath})` }} onClick={() => setImageZoomed(true)} title="Click to zoom"/>
+              <div
+                className="panel-card image-card"
+                style={{ backgroundImage: `url(${imagePath})` }}
+                onClick={() => setImageZoomed(true)}
+                title="Click to zoom"
+              />
 
               <div className="panel-card">
-                <button onClick={() => {handleModeMenu();}}>
+                <button
+                  onClick={() => {
+                    handleModeMenu();
+                  }}
+                >
                   Restart
                 </button>
               </div>
@@ -106,25 +173,29 @@ export default function PuzzleGame() {
           </div>
 
           {/* Dragging ghost */}
-          {activeBrick && dragPos && createPortal(
-            <div
-              style={{
-                position: "fixed",
-                left: dragPos.x,
-                top: dragPos.y,
-                transform: "translate(-50%, -50%)",
-                pointerEvents: "none",
-                zIndex: 9999,
-                opacity: isOnBoard ? 0.85 : 1,
-                filter: isOnBoard
-                  ? "drop-shadow(0 0 12px rgba(68,255,136,.9))"
-                  : "drop-shadow(0 0 10px rgba(255,140,0,.7))",
-                transition: "filter .1s",
-              }}
+          {activeBrick &&
+            dragPos &&
+            createPortal(
+              <div
+                style={{
+                  position: "fixed",
+                  left: dragPos.x,
+                  top: dragPos.y,
+                  transform: "translate(-50%, -50%)",
+                  pointerEvents: "none",
+                  zIndex: 9999,
+                  opacity: isOnBoard ? 0.85 : 1,
+                  filter: isOnBoard
+                    ? "drop-shadow(0 0 12px rgba(68,255,136,.9))"
+                    : "drop-shadow(0 0 10px rgba(255,140,0,.7))",
+                  transition: "filter .1s",
+                }}
               >
                 <Brick b={activeBrick} boardSize={mod.cols} />
-              </div>,document.body,)}
-          </div>
+              </div>,
+              document.body,
+            )}
+        </div>
       )}
     </MonitorShell>
   );

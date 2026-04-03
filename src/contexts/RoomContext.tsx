@@ -21,10 +21,13 @@ interface RoomContextValue {
   error: string | null;
   gameStarted: boolean; // ← GameLobbyPage écoute ce flag
   roomClosed: boolean; // ← GamePage écoute ce flag
+  difficulty: { cols: number; rows: number } | null;
+  isCanvasReady: boolean; // ← Canvas du jeu est prêt
 
   // ── Setters nécessaires à Chatter ────────────────────────────
   setState: (s: ConnectionState) => void;
   setError: (e: string | null) => void;
+  setIsCanvasReady: (ready: boolean) => void; // ← Appelé quand le canvas est initialisé
 
   // ── Handlers ─────────────────────────────────────────────────
   handleRoomCreated: (userName: string, id: string) => void;
@@ -32,13 +35,14 @@ interface RoomContextValue {
   handleSendMessage: (content: string) => void;
   handleDisconnect: () => void;
   handleStartGame: (onStartGame: () => void) => void;
+  handleSelectDifficulty: (mod: { cols: number; rows: number }) => void;
 }
 
 const RoomContext = createContext<RoomContextValue | null>(null);
 
 export function RoomProvider({ children }: { children: React.ReactNode }) {
   const roomService = useRoomService();
-  const isGameStarting = useRef(false); // ← privé, pas exposé
+  const isGameStarting = useRef(false);
 
   const [state, setState] = useState<ConnectionState>(
     roomService.isInRoom ? "connected" : "idle",
@@ -50,6 +54,11 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [gameStarted, setGameStarted] = useState(false);
   const [roomClosed, setRoomClosed] = useState(false);
+  const [isCanvasReady, setIsCanvasReady] = useState(false);
+  const [difficulty, setDifficulty] = useState<{
+    cols: number;
+    rows: number;
+  } | null>({ cols: 0, rows: 0 });
 
   // ── Listeners — une seule fois au montage ─────────────────────
   useEffect(() => {
@@ -71,6 +80,13 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
       setRoomId(null);
       setIsAdmin(false);
       setError(null);
+      setDifficulty({ cols: 0, rows: 0 });
+      setGameStarted(false);
+      setIsCanvasReady(false);
+    });
+
+    roomService.setDifficultyListener((mod) => {
+      setDifficulty(mod);
     });
   }, [roomService]);
 
@@ -81,6 +97,8 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
     setConnectedUsers([userName]);
     setState("connected");
     setError(null);
+    setDifficulty({ cols: 0, rows: 0 });
+    setGameStarted(false);
   }, []);
 
   const handleRoomJoined = useCallback(
@@ -89,6 +107,8 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
       setIsAdmin(false);
       setState("connected");
       setError(null);
+      setDifficulty({ cols: 0, rows: 0 });
+      setGameStarted(false);
     },
     [],
   );
@@ -115,6 +135,9 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     setGameStarted(false);
     setRoomClosed(false);
+    setDifficulty({ cols: 0, rows: 0 });
+    setGameStarted(false);
+    setIsCanvasReady(false);
   }, [roomService]);
 
   const handleStartGame = useCallback(
@@ -122,6 +145,14 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
       setGameStarted(true);
       roomService.startGame();
       onStartGame();
+    },
+    [roomService],
+  );
+
+  const handleSelectDifficulty = useCallback(
+    (mod: { cols: number; rows: number }) => {
+      setDifficulty(mod);
+      roomService.selectDifficulty(mod);
     },
     [roomService],
   );
@@ -138,12 +169,16 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
         error,
         setError,
         gameStarted,
+        isCanvasReady,
+        setIsCanvasReady,
         roomClosed,
+        difficulty,
         handleRoomCreated,
         handleRoomJoined,
         handleSendMessage,
         handleDisconnect,
         handleStartGame,
+        handleSelectDifficulty,
       }}
     >
       {children}

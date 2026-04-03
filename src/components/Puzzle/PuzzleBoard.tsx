@@ -1,11 +1,12 @@
 import { useEffect, useRef } from "react";
 import Legra from "legra";
 import "../../styles/components/Puzzle/PuzzleBoard.css";
+import { useRoom } from "../../contexts/RoomContext";
 
 export default function PuzzleBoard({
   cols,
   rows,
-  board
+  board,
 }: {
   cols: number;
   rows: number;
@@ -14,6 +15,7 @@ export default function PuzzleBoard({
   const gridCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const brickCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const sizeRef = useRef<number>(0);
+  const { setIsCanvasReady } = useRoom();
 
   function setupCanvas() {
     const canvas = gridCanvasRef.current;
@@ -99,6 +101,9 @@ export default function PuzzleBoard({
 
     setupCanvas();
     drawBricks();
+    if (brickCanvasRef.current) {
+      setIsCanvasReady(true);
+    }
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -111,7 +116,7 @@ export default function PuzzleBoard({
   return (
     <div className="puzzle-board">
       <canvas id="cnv" ref={gridCanvasRef} className="grid-layer" />
-      <canvas ref={brickCanvasRef} className="brick-layer" />
+      <canvas ref={brickCanvasRef} id="bricks" className="brick-layer" />
     </div>
   );
 }

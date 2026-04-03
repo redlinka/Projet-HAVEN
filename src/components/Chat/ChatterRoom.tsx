@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRoom } from "../../contexts/RoomContext";
 import ChatDisplayer from "./ChatDisplayer";
 import ChatSender from "./ChatSender";
@@ -85,8 +85,34 @@ function StartGameButton() {
 }
 
 export default function ChatterRoom() {
-  const { messages, gameStarted, handleSendMessage, handleDisconnect } =
-    useRoom();
+  const {
+    isAdmin,
+    messages,
+    difficulty,
+    gameStarted,
+    handleSendMessage,
+    handleDisconnect,
+  } = useRoom();
+
+  const navigate = useNavigate();
+  const { id: gameId } = useParams();
+
+  useEffect(() => {
+    if (!isAdmin && gameStarted) {
+      switch (gameId) {
+        case "0":
+          if (difficulty?.cols !== 0 && difficulty?.rows !== 0) {
+            navigate(`/game/${gameId}`);
+          }
+          break;
+        case "1":
+          navigate(`/game/${gameId}`);
+          break;
+        default:
+          break;
+      }
+    }
+  }, [isAdmin, difficulty, gameStarted]);
 
   return (
     <div className="chatter">

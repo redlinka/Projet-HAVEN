@@ -41,46 +41,49 @@ function App() {
   const [user, setUser] = useState<any>(null);
   const [chatManager] = useState(() => new WebSocketRoomService());
 
-  useEffect(() => {
-    getSession()
-      .then(async (phpData) => {
-        const localToken = localStorage.getItem("sessionToken");
+useEffect(() => {
+  getSession()
+    .then(async (phpData) => {
+      const localToken = localStorage.getItem("sessionToken");
 
-        if (phpData) {
-          //USER CONNECTED AT BRICKSY
-          try {
-            const response = await fetch(`/api-node/player?SQLid=${phpData?.id ?? -1}`);
-            const mongoPlayer = await response.json();
+      // we check if user is connected in bricksy (only valid id != null and -1)
+      if (phpData?.id && phpData.id !== -1) {
+        try {
+          const response = await fetch(`/api-node/player?SQLid=${phpData.id}`);
+          const mongoPlayer = await response.json();
 
-            if (mongoPlayer?.sessionToken) {
-              localStorage.setItem("sessionToken", mongoPlayer.sessionToken);
-              setUser({ ...phpData, ...mongoPlayer });
-            } else {
-              setUser(phpData);
-            }
-          } catch (err) {
-            setUser(phpData);
+          if (mongoPlayer?.sessionToken) {
+            localStorage.setItem("sessionToken", mongoPlayer.sessionToken);
+            setUser({ ...phpData, ...mongoPlayer });
+          } else {
+            setUser({ ...phpData, games: [] });
           }
-        } 
-        else if (localToken) {
-          // GUEST WITH TOKEN
-          try {
-            const response = await fetch(`/api-node/player`, {
-              headers: { 'Authorization': `Bearer ${localToken}` }
-            });
-            const guestData = await response.json();
-            if (guestData) setUser(guestData);
-          } catch (err) {
-            setUser(null);
-          }
-        } 
-        // GUEST FIRST TIME
-        else {
-          setUser(null);
+        } catch {
+          setUser({ ...phpData, games: [] });
         }
-      })
-      .catch(() => setUser(null));
-  }, []);
+
+      } 
+      // we try token connection (so if user alr played a game)
+      else if (localToken) {
+        console.log("Guest avec token");
+        try {
+          const response = await fetch(`/api-node/player`, {
+            headers: { 'Authorization': `Bearer ${localToken}` }
+          });
+          const guestData = await response.json();
+          setUser(guestData || { id: -1, games: [] });
+        } catch {
+          setUser({ id: -1, games: [] });
+        }
+
+      } 
+      // guest first time, we init his user !
+      else {
+        setUser({ id: -1, games: [] });
+      }
+    })
+    .catch(() => setUser({ id: -1, games: [] }));
+}, []);
 
   useEffect(() => {
     if (user) {
@@ -90,10 +93,13 @@ function App() {
     }
   }, [user]);
 
+
+  console.log(user);
+
   return (
     <BrowserRouter basename="/games">
       <BackgroundStars>
-        <Navbar games={games} user={user} />
+        <Navbar games={games} user={user}/>
         <div className="app-content">
           <RoomServiceContext.Provider value={chatManager}>
             <RoomProvider>

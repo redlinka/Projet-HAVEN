@@ -205,7 +205,7 @@ export function clearFullLines(grid: number[][]): number[][] {
 	}
 
 	const scoreGained = calculateScore({linesClearedOfSameColor, linesClearedWithDiffColors});
-	console.log(`Cleared ${linesClearedOfSameColor} + ${linesClearedWithDiffColors} lines, gained ${scoreGained} points!`);
+	// console.log(`Cleared ${linesClearedOfSameColor} + ${linesClearedWithDiffColors} lines, gained ${scoreGained} points!`);
 	store.setScore(store.score + scoreGained);
     return clearLines(rowsToClear, colsToClear, grid);
 }

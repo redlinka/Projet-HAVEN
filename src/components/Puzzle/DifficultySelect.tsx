@@ -5,7 +5,7 @@ import { useRoom } from "../../contexts/RoomContext";
 const DIFFICULTIES = [
   { label: "EASY", cols: 16, rows: 16, stars: 1 },
   { label: "MEDIUM", cols: 32, rows: 32, stars: 2 },
-  { label: "HARD", cols: 64, rows: 64, stars: 3 },
+  { label: "HARD", cols: 48, rows: 48, stars: 3 },
 ];
 
 export default function DifficultySelect({

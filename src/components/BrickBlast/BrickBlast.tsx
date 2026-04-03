@@ -73,8 +73,9 @@ export const Scene = () => {
 	}, []);
 
 	return (
-		<div style={{ width: "100%", height: "100%" }}>
+		<div style={{ width: "100%", height: "100%", overflow: "hidden", touchAction: "none" }}>
 			<Canvas
+				style={{ touchAction: "none" }}
 				camera={{ fov: 80, near: 0.1, far: 1000, position: [0, -400, 100] }}
 			>
 				<Stats />

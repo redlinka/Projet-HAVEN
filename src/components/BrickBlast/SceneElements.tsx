@@ -143,7 +143,7 @@ export const GameOverScreen = () => {
 			</mesh>
 
 			<Text
-				fontSize={22}
+				fontSize={isPortrait ? 14 : 22}
 				font={`${import.meta.env.BASE_URL}font/silkscreen/Silkscreen.ttf`}
 				color="#ff2222"
 				position={[0, 25, 0]}

@@ -34,7 +34,7 @@ const GlobalEffects = () => {
   const floatSize = useRef(4);
 
   useFrame(() => {
-    const target = isGameOver ? 15 : 4;
+    const target = isGameOver ? 13 : 4;
     if (Math.abs(floatSize.current - target) > 0.1) {
       floatSize.current = THREE.MathUtils.lerp(
         floatSize.current,

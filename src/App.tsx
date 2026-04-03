@@ -49,7 +49,7 @@ function App() {
         if (phpData) {
           //USER CONNECTED AT BRICKSY
           try {
-            const response = await fetch(`/api-node/player?SQLid=${phpData.id}`);
+            const response = await fetch(`/api-node/player?SQLid=${phpData?.id ?? -1}`);
             const mongoPlayer = await response.json();
 
             if (mongoPlayer?.sessionToken) {
@@ -89,8 +89,6 @@ function App() {
       localStorage.removeItem("user");
     }
   }, [user]);
-
-  console.log(user);
 
   return (
     <BrowserRouter basename="/games">

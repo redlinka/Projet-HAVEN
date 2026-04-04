@@ -20,6 +20,9 @@ import { RoomServiceContext } from "./contexts/RoomServiceContext";
 import { WebSocketRoomService } from "./services/WebSocketRoomService";
 import { RoomProvider } from "./contexts/RoomContext";
 
+import type {User} from "./types/types";
+import { UserContext } from "./contexts/UserContext";
+
 const games = [
   {
     game: <PuzzleGame />,
@@ -38,7 +41,7 @@ const games = [
 ];
 
 function App() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [chatManager] = useState(() => new WebSocketRoomService());
 
 useEffect(() => {
@@ -46,7 +49,7 @@ useEffect(() => {
     .then(async (phpData) => {
       const localToken = localStorage.getItem("sessionToken");
 
-      // we check if user is connected in bricksy (only valid id != null and -1)
+      // USER CONNECTED IN BRICKSY
       if (phpData?.id && phpData.id !== -1) {
         try {
           const response = await fetch(`/api-node/player?SQLid=${phpData.id}`);
@@ -54,35 +57,41 @@ useEffect(() => {
 
           if (mongoPlayer?.sessionToken) {
             localStorage.setItem("sessionToken", mongoPlayer.sessionToken);
-            setUser({ ...phpData, ...mongoPlayer });
+
+            setUser({id: phpData.id, SQL_id: mongoPlayer.SQL_id ?? phpData.id, sessionToken: mongoPlayer.sessionToken ?? null, games: mongoPlayer.games ?? []});
+
           } else {
-            setUser({ ...phpData, games: [] });
+            setUser({id: phpData.id, SQL_id: phpData.id, sessionToken: null, games: []});
           }
         } catch {
-          setUser({ ...phpData, games: [] });
+          setUser({id: phpData.id, SQL_id: phpData.id, sessionToken: null, games: []});
         }
 
       } 
-      // we try token connection (so if user alr played a game)
+
+      // GUEST WITH TOKEN
       else if (localToken) {
-        console.log("Guest avec token");
         try {
           const response = await fetch(`/api-node/player`, {
-            headers: { 'Authorization': `Bearer ${localToken}` }
+            headers: { Authorization: `Bearer ${localToken}` },
           });
           const guestData = await response.json();
-          setUser(guestData || { id: -1, games: [] });
+
+          setUser({id: -1, SQL_id: guestData?.SQL_id ?? null, sessionToken: guestData?.sessionToken ?? localToken, games: guestData?.games ?? []});
+
         } catch {
-          setUser({ id: -1, games: [] });
+          setUser({ id: -1, SQL_id: -1, sessionToken: localToken, games: []});
         }
 
       } 
-      // guest first time, we init his user !
+      // NEW GUEST 
       else {
-        setUser({ id: -1, games: [] });
+        setUser({id: -1, SQL_id: -1, sessionToken: null, games: [],});
       }
     })
-    .catch(() => setUser({ id: -1, games: [] }));
+    .catch(() =>
+      setUser({id: -1, SQL_id: -1, sessionToken: null, games: []})
+    );
 }, []);
 
   useEffect(() => {
@@ -93,13 +102,15 @@ useEffect(() => {
     }
   }, [user]);
 
-
   console.log(user);
 
+
   return (
+  <UserContext.Provider value={{ user, setUser }}>
     <BrowserRouter basename="/games">
       <BackgroundStars>
-        <Navbar games={games} user={user}/>
+        <Navbar games={games}/>
+  
         <div className="app-content">
           <RoomServiceContext.Provider value={chatManager}>
             <RoomProvider>
@@ -114,6 +125,7 @@ useEffect(() => {
         </div>
       </BackgroundStars>
     </BrowserRouter>
+  </UserContext.Provider>
   );
 }
 

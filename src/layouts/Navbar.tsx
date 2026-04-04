@@ -4,8 +4,11 @@ import {ChevronUp } from "lucide-react";
 import "../styles/layout/Navbar.css";
 
 import type { Game } from "../types/types";
+import { useUser } from "../contexts/UserContext";
 
-export default function Navbar({ games, user }: { games: Game[]; user:any}) {
+
+export default function Navbar({ games }: { games: Game[]}) {
+  const { user } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const navbarRef = useRef<HTMLDivElement>(null);
   const [totalPoints, setTotalPoints] = useState(0);
@@ -32,7 +35,7 @@ export default function Navbar({ games, user }: { games: Game[]; user:any}) {
 
   // Use effect to calculate user points
   useEffect(() => {
-    if (user && user.games && Array.isArray(user.games)) {
+    if (user && user.games) {
       const sum = user.games.reduce((acc: number, g: any) => acc + (g.points || 0), 0);
       setTotalPoints(sum);
     } else {
@@ -73,12 +76,12 @@ export default function Navbar({ games, user }: { games: Game[]; user:any}) {
         </div>
       </nav>
 
-      <div className="user">
-         <Link to={`/history`} className="history-link">
-            <p>{totalPoints} Points</p>
-          </Link>
-
-      </div>
+     <div className="user">
+      <Link to={`/history`} className="history-link">
+        <p>{totalPoints} Points</p>
+        
+      </Link>
+    </div>
     </div>
   );
 }

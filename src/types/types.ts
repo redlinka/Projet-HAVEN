@@ -7,3 +7,10 @@ export interface Game {
   icon: ReactNode;
   img: string;
 }
+
+export interface User{
+  id: number | null;
+  SQL_id: number | null;
+  sessionToken: string | null;
+  games: [];
+}

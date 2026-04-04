@@ -14,11 +14,11 @@ router.get('/', async (req, res) => {
 
     // We try to find bricksy player first
     if (SQLid && SQLid !== "-1") {
-      player = await Player.findOne({ SQL_id: Number(SQLid) });
+      player = await Player.findOne({ SQL_id: Number(SQLid) }).select('SQL_id sessionToken games');
     } 
     // Try to find by token (Guest user)
     else if (token) {
-      player = await Player.findOne({ sessionToken: token });
+      player = await Player.findOne({ sessionToken: token }).select('SQL_id sessionToken games');
     }
 
     if (!player) return res.json(null);

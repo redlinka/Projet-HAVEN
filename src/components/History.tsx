@@ -23,7 +23,7 @@ export default function History() {
         return res.json();
       })
       .then((data) => {
-        setHistory(Array.isArray(data) ? [...data].reverse() : []);
+        setHistory(Array.isArray(data.games) ? [...data.games].reverse() : []);
         setLoading(false);
       })
       .catch((err) => {
@@ -32,7 +32,6 @@ export default function History() {
       });
   }, []);
 
-  // Calcul des stats
   const now = new Date();
 
   const validGames = history.filter(g => !g.used && new Date(g.expiresAt) > now);

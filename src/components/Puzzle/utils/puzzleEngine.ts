@@ -69,7 +69,10 @@ export function checkPlacementValid(
   brick: Brick,
 ): boolean {
   for (let i = 0; i < board.length; i++) {
-    if ((i % cols) + brick.w > cols) continue;
+    const startCol = i % cols;
+
+    // Si le brick dépasse la ligne, on saute
+    if (startCol + brick.w > cols) continue;
 
     let fits = true;
 
@@ -77,6 +80,7 @@ export function checkPlacementValid(
       for (let col = 0; col < brick.w; col++) {
         const idx = i + col + row * cols;
 
+        // Vérifie si on dépasse la taille du board
         if (idx >= board.length || board[idx] !== "") {
           fits = false;
           break;
@@ -85,9 +89,11 @@ export function checkPlacementValid(
       if (!fits) break;
     }
 
+    // Si on a trouvé une place, on renvoie vrai
     if (fits) return true;
   }
 
+  // Aucun emplacement trouvé
   return false;
 }
 

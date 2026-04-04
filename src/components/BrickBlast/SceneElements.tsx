@@ -37,7 +37,7 @@ export const Background = () => {
 				position={[0, 0, 50]}
 			/>
 			<mesh rotation={[0, 0, 0]} position={[0, 0, 0]}>
-				<planeGeometry args={[1000, 1000]} />
+				<planeGeometry args={[10000, 10000]} />
 				<meshStandardMaterial color="#000022" />
 			</mesh>
 		</>
@@ -127,7 +127,7 @@ export const GameOverScreen = () => {
 	};
 
 	const handleQuit = () => {
-		window.location.href = "/";
+		window.location.href = "/games/game/1/lobby";
 	};
 
 	return (
@@ -234,44 +234,16 @@ const MenuButton = ({
 	);
 };
 
-export const MusicButton = () => {
-	// Start muted by default
-	const [isMuted, setIsMuted] = useState(true);
-	const { size } = useThree();
-
-	// Shift it slightly to the left of the Restart Button
-	const isPortrait = size.width * (1) < size.height; // Assuming ASPECT_COEFF is 1
-	const buttonX = isPortrait ? 5 : 55;
-
-	const handleToggle = () => {
-		const nextMutedState = !isMuted;
-		setIsMuted(nextMutedState);
-
-		// Pass the path to your music file, the volume, and whether it should be muted
-		toggleBGM(`${import.meta.env.BASE_URL}sounds/brickblast/background.mp3`, 0.25, nextMutedState);
-	};
-
-	return (
-		<MenuButton
-			position={[buttonX, 60, 5]}
-			size={10}
-			// Swap the image based on state (make sure you have these images!)
-			imageSrc={isMuted ? `${import.meta.env.BASE_URL}img/brickblast/music_off.png` : `${import.meta.env.BASE_URL}img/brickblast/music_on.png`}
-			musicSrc={`${import.meta.env.BASE_URL}imgsounds/brickblast/nice.mp3`}
-			color="none"
-			hoverTint="#44ff44"
-			onClick={handleToggle}
-		/>
-	);
-};
-
-export const RestartButton = () => {
-
+export const TopBarControls = () => {
 	const { size } = useThree();
 	const isPortrait = size.width * ASPECT_COEFF < size.height;
 
-	// Shift the button above the grid instead of the far-right corner in portrait
-	const buttonX = isPortrait ? 15 : 70;
+	// Manage music state
+	const [isMuted, setIsMuted] = useState(false);
+
+	// Calculate the starting position (Restart Button) and the gap between buttons
+	const startX = isPortrait ? -5 : 40;
+	const gap = isPortrait ? 10 : 15;
 
 	const handleRestart = () => {
 		useGameStore.setState({
@@ -286,16 +258,51 @@ export const RestartButton = () => {
 		});
 	};
 
+	const handleToggleMusic = () => {
+		const nextMutedState = !isMuted;
+		setIsMuted(nextMutedState);
+		toggleBGM(`${import.meta.env.BASE_URL}sounds/brickblast/background.mp3`, 0.25, nextMutedState);
+	};
+
+	const handleQuit = () => {
+		window.location.href = "/games/game/1/lobby";
+	};
+
+	// Shared props so we don't repeat ourselves 3 times
+	const commonProps = {
+		size: 10,
+		musicSrc: `${import.meta.env.BASE_URL}sounds/brickblast/nice.mp3`,
+		color: "none",
+	};
+
 	return (
-		<MenuButton
-			position={[buttonX, 60, 5]}
-			size={10}
-			// Swap the image based on state (make sure you have these images!)
-			imageSrc={`${import.meta.env.BASE_URL}img/brickblast/replay.png`}
-			musicSrc={`${import.meta.env.BASE_URL}sounds/brickblast/nice.mp3`}
-			color="none"
-			hoverTint="red"
-			onClick={handleRestart}
-		/>
+		// Group anchors the Y and Z axes globally for all 3 buttons
+		<group position={[0, 60, 5]}>
+
+			<MenuButton
+				{...commonProps}
+				position={[startX, 0, 0]}
+				imageSrc={`${import.meta.env.BASE_URL}img/brickblast/replay.png`}
+				hoverTint="orange"
+				onClick={handleRestart}
+			/>
+
+			<MenuButton
+				{...commonProps}
+				position={[startX + gap, 0, 0]}
+				imageSrc={isMuted ? `${import.meta.env.BASE_URL}img/brickblast/music_off.png` : `${import.meta.env.BASE_URL}img/brickblast/music_on.png`}
+				hoverTint="#44ff44"
+				onClick={handleToggleMusic}
+			/>
+
+			<MenuButton
+				{...commonProps}
+				position={[startX + (gap * 2), 0, 0]}
+				imageSrc={`${import.meta.env.BASE_URL}img/brickblast/exit.png`}
+				hoverTint="red"
+				onClick={handleQuit}
+			/>
+
+		</group>
 	);
 };

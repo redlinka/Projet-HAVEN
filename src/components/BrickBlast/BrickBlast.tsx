@@ -1,13 +1,12 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Suspense, useEffect, useRef, useState } from "react";
 import {
-  Background,
-  BlockHolder,
-  CameraController,
-  RestartButton,
-  Score,
-  GameOverScreen,
-  MusicButton,
+    Background,
+    BlockHolder,
+    CameraController,
+    Score,
+    GameOverScreen,
+    TopBarControls,
 } from "./SceneElements.tsx";
 import BlocksGeneration from "./SelectionBrick.tsx";
 import { Grid } from "./Grid.tsx";
@@ -23,7 +22,7 @@ import { GridRenderer } from "./GridRenderer.tsx";
 import { GhostPreview } from "./GhostPreview.tsx";
 import { Stats } from "@react-three/drei";
 import * as THREE from "three";
-import { stopBGM } from "./audio.ts";
+import {stopBGM, toggleBGM} from "./audio.ts";
 import { useRoom } from "../../contexts/RoomContext.tsx";
 
 // manager of all postprocessing effects
@@ -68,6 +67,7 @@ const GlobalEffects = () => {
 export const Scene = () => {
   const { setIsCanvasReady } = useRoom();
   useEffect(() => {
+      toggleBGM(`${import.meta.env.BASE_URL}sounds/brickblast/background.mp3`, 0.25);
     return () => {
       stopBGM();
     };
@@ -79,14 +79,14 @@ export const Scene = () => {
               style={{ touchAction: "none" }}
               id="cnv"
               onCreated={() => setIsCanvasReady(true)}
-              camera={{ fov: 80, near: 0.1, far: 1000, position: [0, -400, 100] }}
+              camera={{ fov: 80, near: 0.1, far: 1000, position: [0, -110, 100] }}
       >
               <Stats />
               <CameraController />
               <Suspense fallback={null}>
                   <GameOverScreen />
                   <Score />
-                  <RestartButton /> <MusicButton />
+                  <TopBarControls />
                   <Grid /> <GridRenderer /> <GhostPreview />
                   <BlockHolder />
                   <BlocksGeneration />

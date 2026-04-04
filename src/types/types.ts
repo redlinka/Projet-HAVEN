@@ -14,3 +14,14 @@ export interface User{
   sessionToken: string | null;
   games: [];
 }
+
+export interface GameEntry {
+  _id: string;
+  game: "PUZZLE" | "BRICKBLAST" | string;
+  mode: string;
+  difficulty: string;
+  points: number;
+  playedAt: string;
+  expiresAt: string;
+  used: boolean;
+}

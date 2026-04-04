@@ -1,16 +1,6 @@
 import { useEffect, useState } from "react";
 import "../styles/components/history.css";
-
-interface GameEntry {
-  _id: string;
-  game: string;
-  mode: string;
-  difficulty: string;
-  points: number;
-  playedAt: string;
-  expiresAt: string;
-  used: boolean;
-}
+import type { GameEntry } from "../types/types";
 
 export default function History() {
   const [history, setHistory] = useState<GameEntry[]>([]);
@@ -28,27 +18,36 @@ export default function History() {
         Authorization: `Bearer ${token}`,
       },
     })
-      .then((response) => {
-        if (!response.ok) throw new Error("Auth failed");
-        return response.json();
+      .then((res) => {
+        if (!res.ok) throw new Error("Auth failed");
+        return res.json();
       })
-
       .then((data) => {
         setHistory(Array.isArray(data) ? [...data].reverse() : []);
         setLoading(false);
       })
-
       .catch((err) => {
         console.error("History Fetch Error:", err);
         setLoading(false);
       });
   }, []);
 
-  const totalEarned = history.reduce((acc, curr) => acc + curr.points, 0);
-  const totalRemaining = history.reduce((acc, curr) => {
-    const isExpired = new Date() > new Date(curr.expiresAt);
-    return !curr.used && !isExpired ? acc + curr.points : acc;
-  }, 0);
+  // Calcul des stats
+  const now = new Date();
+
+  const validGames = history.filter(g => !g.used && new Date(g.expiresAt) > now);
+  const usedGames = history.filter(g => g.used);
+
+  const totalRemaining = validGames.reduce((acc, g) => acc + g.points, 0);
+  const totalUsed = usedGames.reduce((acc, g) => acc + g.points, 0);
+
+  const bestScorePuzzle = history
+    .filter(g => g.game === "PUZZLE")
+    .reduce((max, g) => Math.max(max, g.points), 0);
+
+  const bestScoreBrickBlast = history
+    .filter(g => g.game === "BRICKBLAST")
+    .reduce((max, g) => Math.max(max, g.points), 0);
 
   return (
     <div className="history-page">
@@ -61,16 +60,27 @@ export default function History() {
         {!loading && history.length > 0 && (
           <div className="history-stats">
             <div className="stat-item">
-              <span className="stat-label">TOTAL EARNED</span>
-              <span className="stat-value">
-                {totalEarned} <small>PTS</small>
-              </span>
-            </div>
-            <div className="stat-divider"></div>
-            <div className="stat-item highlight">
-              <span className="stat-label">AVAILABLE TO USE</span>
+              <span className="stat-label">TOTAL AVAILABLE</span>
               <span className="stat-value">
                 {totalRemaining} <small>PTS</small>
+              </span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">PUZZLE HIGHEST</span>
+              <span className="stat-value">
+                {bestScorePuzzle} <small>PTS</small>
+              </span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">BRICKBLAST HIGHEST</span>
+              <span className="stat-value">
+                {bestScoreBrickBlast} <small>PTS</small>
+              </span>
+            </div>
+            <div className="stat-item highlight">
+              <span className="stat-label">TOTAL USED</span>
+              <span className="stat-value">
+                {totalUsed} <small>PTS</small>
               </span>
             </div>
           </div>

@@ -33,15 +33,18 @@ export default function Navbar({ games }: { games: Game[]}) {
     };
   }, []);
 
-  // Use effect to calculate user points
+  // Use effect to calculate user points (valide uniquement)
   useEffect(() => {
-    if (user && user.games) {
-      const sum = user.games.reduce((acc: number, g: any) => acc + (g.points || 0), 0);
+    if (user && user.games && Array.isArray(user.games)) {
+      const now = new Date();
+      const sum = user.games
+        .filter((g: any) => !g.used && new Date(g.expiresAt) > now)
+        .reduce((acc: number, g: any) => acc + (g.points || 0), 0);
       setTotalPoints(sum);
     } else {
-      setTotalPoints(0); 
+      setTotalPoints(0);
     }
-  }, [user]); 
+  }, [user]);
   
 
 

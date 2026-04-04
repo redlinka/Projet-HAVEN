@@ -69,9 +69,9 @@ export function checkPlacementValid(
   brick: Brick,
 ): boolean {
   for (let i = 0; i < board.length; i++) {
+
     const startCol = i % cols;
 
-    // Si le brick dépasse la ligne, on saute
     if (startCol + brick.w > cols) continue;
 
     let fits = true;
@@ -80,20 +80,19 @@ export function checkPlacementValid(
       for (let col = 0; col < brick.w; col++) {
         const idx = i + col + row * cols;
 
-        // Vérifie si on dépasse la taille du board
         if (idx >= board.length || board[idx] !== "") {
           fits = false;
           break;
         }
       }
-      if (!fits) break;
+      if (!fits){
+        break;
+      }
     }
 
-    // Si on a trouvé une place, on renvoie vrai
     if (fits) return true;
   }
 
-  // Aucun emplacement trouvé
   return false;
 }
 
@@ -136,11 +135,11 @@ export async function readBrickFile(filePath: string): Promise<Brick[]> {
       });
     }
   });
+  console.log(bricksArray);
   return bricksArray;
 }
 
 export async function readPavageFile(filePath: string): Promise<string[]> {
-  console.log(filePath);
   const response = await fetch(filePath);
   const text = await response.text();
   const lines = text.split(/\r?\n/);

@@ -168,32 +168,25 @@ export function usePuzzle({
             localStorage.setItem(LS_BOARD, JSON.stringify(updatedBoard));
 
             setAllBricks((prevBricks) => {
-              const next = prevBricks.slice(1);
-              const nextCurrent = next[0] ?? null;
+              const remaining = prevBricks.slice(1);
+              const next = prevBricks[0] ?? null;
 
-              setCurrentBrick(nextCurrent);
+              setCurrentBrick(next); 
 
-              localStorage.setItem(LS_BRICKS, JSON.stringify(next));
-              localStorage.setItem(
-                LS_CURRENT_BRICK,
-                JSON.stringify(nextCurrent),
-              );
+              localStorage.setItem(LS_BRICKS, JSON.stringify(remaining));
+              localStorage.setItem(LS_CURRENT_BRICK, JSON.stringify(next));
 
-              if (
-                (next[0] &&
-                  !checkPlacementValid(
-                    updatedBoard,
-                    modRef.current.cols,
-                    next[0],
-                  )) ||
-                next.length === 0
-              ) {
+              if (!next) {
+                setEndGame(true);
+                lsClear();
+              } else if (!checkPlacementValid(updatedBoard, modRef.current.cols, next)) {
                 setEndGame(true);
                 lsClear();
               }
 
-              return next;
+              return remaining;
             });
+
             return updatedBoard;
           } else {
             playWrongPlacement();

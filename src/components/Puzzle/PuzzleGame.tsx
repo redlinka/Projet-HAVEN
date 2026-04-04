@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Disc, Disc3, Volume2, VolumeOff, X } from "lucide-react";
 import { createPortal } from "react-dom";
 
@@ -14,7 +15,6 @@ import { usePuzzleSound } from "./hooks/usePuzzleSounds";
 
 import "../../styles/components/Puzzle/PuzzleGame.css";
 import { useRoom } from "../../contexts/RoomContext";
-import { useEffect } from "react";
 
 //COMPONENT
 
@@ -120,6 +120,11 @@ export default function PuzzleGame() {
             placed={nbPieces - allBricks.length}
             total={total}
             remaining={allBricks.length}
+            isPlayingEffect={isPlayingEffect}
+            isPlayingMusic={isPlayingMusic}
+            onToggleEffect={() => setIsPlayingEffect((prev: any) => !prev)}
+            onToggleMusic={toggleMusic}
+            onRestart={handleModeMenu}
           />
 
           <div className="puzzle-game">
@@ -160,7 +165,8 @@ export default function PuzzleGame() {
                 title="Click to zoom"
               />
 
-              <div className="panel-card">
+              {/* Drop down menu for sounds options */}
+              <div className="panel-card desktop-only">
                 <button
                   onClick={() => {
                     handleModeMenu();

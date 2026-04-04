@@ -1,17 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import {ChevronUp } from "lucide-react";
+import { ChevronUp } from "lucide-react";
 import "../styles/layout/Navbar.css";
 
 import type { Game } from "../types/types";
 import { useUser } from "../contexts/UserContext";
+import { useRoom } from "../contexts/RoomContext";
 
-
-export default function Navbar({ games }: { games: Game[]}) {
+export default function Navbar({ games }: { games: Game[] }) {
   const { user } = useUser();
   const [isOpen, setIsOpen] = useState(false);
-  const navbarRef = useRef<HTMLDivElement>(null);
   const [totalPoints, setTotalPoints] = useState(0);
+  const navbarRef = useRef<HTMLDivElement>(null);
+  const { handleDisconnect, connectedUsers } = useRoom();
+  const isMultiplayer = connectedUsers.length >= 1;
 
   useEffect(() => {
     const handleNavBar = () => {
@@ -45,12 +47,18 @@ export default function Navbar({ games }: { games: Game[]}) {
       setTotalPoints(0);
     }
   }, [user]);
-  
-
 
   return (
     <div className="navbar" ref={navbarRef}>
-      <Link to="/" className="main-title">
+      <Link
+        to="/"
+        className="main-title"
+        onClick={() => {
+          if (isMultiplayer) {
+            handleDisconnect();
+          }
+        }}
+      >
         Haven <span>Games</span>
       </Link>
 
@@ -68,7 +76,12 @@ export default function Navbar({ games }: { games: Game[]}) {
               <Link
                 to={`/game/${index}/lobby`}
                 className="option"
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setIsOpen(false);
+                  if (isMultiplayer) {
+                    handleDisconnect();
+                  }
+                }}
                 key={index}
               >
                 {game.icon}
@@ -79,12 +92,11 @@ export default function Navbar({ games }: { games: Game[]}) {
         </div>
       </nav>
 
-     <div className="user">
-      <Link to={`/history`} className="history-link">
-        <p>{totalPoints} Points</p>
-        
-      </Link>
-    </div>
+      <div className="user">
+        <Link to={`/history`} className="history-link">
+          <p>{totalPoints} Points</p>
+        </Link>
+      </div>
     </div>
   );
 }

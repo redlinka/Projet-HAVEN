@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import "../styles/components/HomePage.css";
 import { ArrowBigDown } from "lucide-react";
+import { useRoom } from "../contexts/RoomContext";
 
 export default function HomePage({ games }: { games: Game[] }) {
   return (

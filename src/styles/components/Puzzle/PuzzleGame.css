@@ -41,6 +41,7 @@
   flex: 1;
   display: flex;
   gap: 14px;
+  min-height: 0;
 }
 
 /* ── Board area ──────────────────────────────────────────── */
@@ -50,6 +51,7 @@
   justify-content: center;
   align-items: center;
   gap: 10px;
+  min-height: 0;
 }
 
 .board-label {
@@ -60,7 +62,6 @@
   margin-left: 2px;
 }
 
-/* The actual canvas / board container */
 .board-container {
   height: 100%;
   width: fit-content;
@@ -114,25 +115,17 @@
 }
 
 .panel-card.image-card {
-  padding: 6px; 
-
+  padding: 6px;
   width: 100%;
-  aspect-ratio: 1 / 1; 
-
+  aspect-ratio: 1 / 1;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-
   border: 1px solid #2a1f4a;
-
   box-shadow:
     inset 0 0 12px rgba(0, 0, 0, 0.6),
     0 0 10px rgba(80, 40, 120, 0.3);
-
-  overflow: hidden; 
-}
-
-.panel-card.image-card {
+  overflow: hidden;
   position: relative;
 }
 
@@ -142,8 +135,8 @@
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(0,0,0,0.1),
-    rgba(0,0,0,0.6)
+    rgba(0, 0, 0, 0.1),
+    rgba(0, 0, 0, 0.6)
   );
 }
 
@@ -154,41 +147,38 @@
   font-family: "Press Start 2P", monospace;
 }
 
-/* ── Portal display ───────────────────────────────────────── */
+/* ── Portal display ──────────────────────────────────────── */
 
-
-.btn-portal{
+.btn-portal {
   position: absolute;
   top: 20;
   right: 20;
-  border:none;
-  color:#fff;
+  border: none;
+  color: #fff;
   cursor: pointer;
   opacity: 0.7;
-
 }
 
-.div-portal{
+.div-portal {
   display: flex;
   align-items: center;
   justify-content: center;
   position: fixed;
   inset: 0;
   z-index: 99999;
-  background: rgba(0,0,0,0.92);
+  background: rgba(0, 0, 0, 0.92);
   cursor: zoom-out;
-  
 }
 
-.div-portal img{
+.div-portal img {
   width: min(85vw, 85vh);
-  height: min(85vw, 85vh);               
+  height: min(85vw, 85vh);
   object-fit: contain;
   image-rendering: pixelated;
-  box-shadow: 0 0 80px rgba(0,0,0,0.8);
+  box-shadow: 0 0 80px rgba(0, 0, 0, 0.8);
 }
 
-.panel-card.image-card{
+.panel-card.image-card {
   cursor: zoom-in;
   image-rendering: pixelated;
 }
@@ -277,7 +267,6 @@
   border: none;
   cursor: pointer;
   letter-spacing: 2px;
-
   transition:
     filter 0.1s,
     transform 0.1s;
@@ -289,13 +278,31 @@
   transform: scale(0.97) translate(2px, 2px);
 }
 
+/* ── Tablette ────────────────────────────────────────────── */
 @media screen and (max-width: 1024px) {
+  .sounds-container {
+    display: none;
+  }
+
+  .desktop-only {
+    display: none;
+  }
+
   .puzzle-game {
     flex-direction: column;
+    justify-content: space-evenly;
+    gap: 8px;
   }
 
   .board-wrap {
     flex-direction: column;
+    flex: 0 0 auto;
+  }
+
+  .board-container {
+    height: auto;
+    width: min(55vw, 55vh);
+    aspect-ratio: 1 / 1;
   }
 
   .side-panel {
@@ -303,27 +310,50 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    flex-shrink: 0;
   }
 
   .panel-card {
-    flex: 0 0 140px; 
-    max-width: 140px;
+    flex: 0 0 120px;
+    max-width: 120px;
+  }
+
+  .panel-card.image-card {
+    width: 120px;
+    height: 120px;
+    flex: 0 0 120px;
   }
 
   .piece-random {
-    min-height: 80px; 
-  }
-
-  .panel-card.image-card {
-    width: 100%;
-    aspect-ratio: 1 / 1;
+    min-height: 65px;
   }
 }
 
+/* ── Mobile ──────────────────────────────────────────────── */
 @media screen and (max-width: 600px) {
-  .panel-card.image-card {
-    width: 90px;
-    height: 90px;
+  .puzzle-game-container {
+    gap: 0;
+  }
+
+  .puzzle-game {
+    gap: clamp(1rem, 2vh, 2rem);
+  }
+
+  .board-container {
+    width: min(70vw, 65vh);
+    padding: 3px;
+  }
+
+  .piece-random {
+    min-height: 50px;
+  }
+
+  .panel-card-title {
+    font-size: 4px;
+  }
+
+  .piece-grab-hint {
+    font-size: 4px;
   }
 }

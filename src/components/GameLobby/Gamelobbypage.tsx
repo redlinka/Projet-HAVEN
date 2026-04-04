@@ -8,15 +8,16 @@ import ModeSelector from "./ModeSelector";
 import MultiplayerLobby from "./MultiplayerLobby";
 
 import "../../styles/components/GameLobby/Gamelobbypage.css";
+import { useRoom } from "../../contexts/RoomContext";
 
 type LobbyState = "select" | "multiplayer";
 
 export default function GameLobbyPage({ games }: { games: Game[] }) {
+  const [lobbyState, setLobbyState] = useState<LobbyState>("select");
   const { id } = useParams();
   const navigate = useNavigate();
+  const { handleDisconnect } = useRoom();
   const [searchParams] = useSearchParams();
-  const [lobbyState, setLobbyState] = useState<LobbyState>("select");
-  const roomService = useRoomService();
 
   const gameSelected = id ? games[Number(id)] : null;
   const initialRoomId = searchParams.get("room") ?? undefined;
@@ -25,7 +26,7 @@ export default function GameLobbyPage({ games }: { games: Game[] }) {
 
   const handleBack = () => {
     if (lobbyState === "multiplayer") {
-      roomService.close();
+      handleDisconnect();
       setLobbyState("select");
     } else {
       navigate(-1);

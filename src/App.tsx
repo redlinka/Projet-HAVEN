@@ -20,7 +20,7 @@ import { RoomServiceContext } from "./contexts/RoomServiceContext";
 import { WebSocketRoomService } from "./services/WebSocketRoomService";
 import { RoomProvider } from "./contexts/RoomContext";
 
-import type {User} from "./types/types";
+import type { User } from "./types/types";
 import { UserContext } from "./contexts/UserContext";
 
 const games = [
@@ -44,55 +44,78 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [chatManager] = useState(() => new WebSocketRoomService());
 
-useEffect(() => {
-  getSession()
-    .then(async (phpData) => {
-      const localToken = localStorage.getItem("sessionToken");
+  useEffect(() => {
+    getSession()
+      .then(async (phpData) => {
+        const localToken = localStorage.getItem("sessionToken");
 
-      // USER CONNECTED IN BRICKSY
-      if (phpData?.id && phpData.id !== -1) {
-        try {
-          const response = await fetch(`/api-node/player?SQLid=${phpData.id}`);
-          const mongoPlayer = await response.json();
+        // USER CONNECTED IN BRICKSY
+        if (phpData?.id && phpData.id !== -1) {
+          try {
+            const response = await fetch(
+              `/api-node/player?SQLid=${phpData.id}`,
+            );
+            const mongoPlayer = await response.json();
 
-          if (mongoPlayer?.sessionToken) {
-            localStorage.setItem("sessionToken", mongoPlayer.sessionToken);
+            if (mongoPlayer?.sessionToken) {
+              localStorage.setItem("sessionToken", mongoPlayer.sessionToken);
 
-            setUser({id: phpData.id, SQL_id: mongoPlayer.SQL_id ?? phpData.id, sessionToken: mongoPlayer.sessionToken ?? null, games: mongoPlayer.games ?? []});
-
-          } else {
-            setUser({id: phpData.id, SQL_id: phpData.id, sessionToken: null, games: []});
+              setUser({
+                id: phpData.id,
+                SQL_id: mongoPlayer.SQL_id ?? phpData.id,
+                sessionToken: mongoPlayer.sessionToken ?? null,
+                games: mongoPlayer.games ?? [],
+              });
+            } else {
+              setUser({
+                id: phpData.id,
+                SQL_id: phpData.id,
+                sessionToken: null,
+                games: [],
+              });
+            }
+          } catch {
+            setUser({
+              id: phpData.id,
+              SQL_id: phpData.id,
+              sessionToken: null,
+              games: [],
+            });
           }
-        } catch {
-          setUser({id: phpData.id, SQL_id: phpData.id, sessionToken: null, games: []});
         }
 
-      } 
+        // GUEST WITH TOKEN
+        else if (localToken) {
+          try {
+            const response = await fetch(`/api-node/player`, {
+              headers: { Authorization: `Bearer ${localToken}` },
+            });
+            const guestData = await response.json();
 
-      // GUEST WITH TOKEN
-      else if (localToken) {
-        try {
-          const response = await fetch(`/api-node/player`, {
-            headers: { Authorization: `Bearer ${localToken}` },
-          });
-          const guestData = await response.json();
-
-          setUser({id: -1, SQL_id: guestData?.SQL_id ?? null, sessionToken: guestData?.sessionToken ?? localToken, games: guestData?.games ?? []});
-
-        } catch {
-          setUser({ id: -1, SQL_id: -1, sessionToken: localToken, games: []});
+            setUser({
+              id: -1,
+              SQL_id: guestData?.SQL_id ?? null,
+              sessionToken: guestData?.sessionToken ?? localToken,
+              games: guestData?.games ?? [],
+            });
+          } catch {
+            setUser({
+              id: -1,
+              SQL_id: -1,
+              sessionToken: localToken,
+              games: [],
+            });
+          }
         }
-
-      } 
-      // NEW GUEST 
-      else {
-        setUser({id: -1, SQL_id: -1, sessionToken: null, games: [],});
-      }
-    })
-    .catch(() =>
-      setUser({id: -1, SQL_id: -1, sessionToken: null, games: []})
-    );
-}, []);
+        // NEW GUEST
+        else {
+          setUser({ id: -1, SQL_id: -1, sessionToken: null, games: [] });
+        }
+      })
+      .catch(() =>
+        setUser({ id: -1, SQL_id: -1, sessionToken: null, games: [] }),
+      );
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -104,28 +127,33 @@ useEffect(() => {
 
   console.log(user);
 
-
   return (
-  <UserContext.Provider value={{ user, setUser }}>
-    <BrowserRouter basename="/games">
-      <BackgroundStars>
-        <Navbar games={games}/>
-  
-        <div className="app-content">
+    <UserContext.Provider value={{ user, setUser }}>
+      <BrowserRouter basename="/games">
+        <BackgroundStars>
           <RoomServiceContext.Provider value={chatManager}>
             <RoomProvider>
-              <Routes>
-                <Route path="/" element={<HomePage games={games} />} />
-                <Route path="/game/:id" element={<GamePage games={games} />} />
-                <Route path="/game/:id/lobby" element={<GameLobbyPage games={games} />} />
-                <Route path="/history" element={<History />} />
-              </Routes>
+              <Navbar games={games} />
+
+              <div className="app-content">
+                <Routes>
+                  <Route path="/" element={<HomePage games={games} />} />
+                  <Route
+                    path="/game/:id"
+                    element={<GamePage games={games} />}
+                  />
+                  <Route
+                    path="/game/:id/lobby"
+                    element={<GameLobbyPage games={games} />}
+                  />
+                  <Route path="/history" element={<History />} />
+                </Routes>
+              </div>
             </RoomProvider>
           </RoomServiceContext.Provider>
-        </div>
-      </BackgroundStars>
-    </BrowserRouter>
-  </UserContext.Provider>
+        </BackgroundStars>
+      </BrowserRouter>
+    </UserContext.Provider>
   );
 }
 

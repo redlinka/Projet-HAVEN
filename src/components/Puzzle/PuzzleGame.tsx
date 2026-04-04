@@ -50,10 +50,10 @@ export default function PuzzleGame() {
     handlePointerDown,
   } = usePuzzle({ playOnDrag, playOnDrop, playWrongPlacement });
 
+  // Multiplayer effect
   useEffect(() => {
     if (difficulty) {
       setMod(difficulty);
-      console.log("Difficulté reçue du lobby :", difficulty);
     }
   }, [difficulty]);
 

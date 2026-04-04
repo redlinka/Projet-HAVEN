@@ -108,7 +108,6 @@ export default function PuzzleGame() {
           score={score}
           nbPieces={nbPieces}
           mod={mod}
-          difficulty={`${mod.cols}x${mod.rows}`}
           onModeMenu={handleModeMenu}
         />
       ) : !mod.cols || !mod.rows ? (

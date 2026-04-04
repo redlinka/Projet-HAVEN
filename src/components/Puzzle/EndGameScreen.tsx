@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useUser } from "../../contexts/UserContext";
 
 interface Props {
   score: number;
@@ -10,33 +11,41 @@ interface Props {
 export default function EndGameScreen({ score, nbPieces, mod, onModeMenu }: Props) {
   const perfect = score === nbPieces;
   const diff = mod.cols === 16 ? 'easy' : mod.cols === 32 ? 'medium' : 'hard';
+  const { user, setUser } = useUser();
 
   useEffect(() => {
     const token = localStorage.getItem("sessionToken");
-    const storedUser = localStorage.getItem("user");
-    const parsedUser = storedUser ? JSON.parse(storedUser) : null;
-    const sqlIdValue = parsedUser?.SQL_id ?? -1;
-    
+
     fetch('/api-node/endgame', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        token : token,
-        SQLid: sqlIdValue,
-        game: 'PUZZLE',
-        mode: 'SOLO',
-        difficulty: diff,
-        points: score
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: token,
+          SQLid: user?.SQL_id ?? -1,
+          game: 'PUZZLE',
+          mode: 'SOLO',
+          difficulty: diff,
+          points: score
+        })
       })
-    })
-    .then(r => r.json())
-    .then(player => {
-      if (player?.sessionToken) {
-        localStorage.setItem("sessionToken", player.sessionToken);
-      }
-    })
-    .catch(err => console.error("Erreur enregistrement score:", err));
-  }, []);
+        
+      .then(r => r.json())
+      .then(player => {
+        if (!player) return;
+
+        localStorage.setItem("sessionToken", player.sessionToken ?? token);
+        localStorage.setItem("user", JSON.stringify(player));
+
+        //we render the user context to make sure points are updated in the navbar
+        setUser({
+          id: player.id ?? user?.id ?? -1,
+          SQL_id: player.SQL_id ?? user?.SQL_id ?? -1,
+          sessionToken: player.sessionToken ?? token,
+          games: player.games ?? []
+        });
+      })
+      .catch(err => console.error("Error saving score:", err));
+    }, []);
 
   
 

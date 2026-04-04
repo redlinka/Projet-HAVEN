@@ -10,7 +10,15 @@ export interface Brick {
   color: string;
 }
 
-export default function Brick({b, boardSize, onPointerDown,}: { b: Brick; boardSize: number; onPointerDown?: (e: React.PointerEvent<HTMLCanvasElement>) => void;}) {
+export default function Brick({
+  b,
+  boardSize,
+  onPointerDown,
+}: {
+  b: Brick;
+  boardSize: number;
+  onPointerDown?: (e: React.PointerEvent<HTMLCanvasElement>) => void;
+}) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -18,7 +26,20 @@ export default function Brick({b, boardSize, onPointerDown,}: { b: Brick; boardS
     if (!myCanvas) return;
 
     const boardCanva = document.getElementById("cnv");
-    const blockSize = boardCanva ? boardCanva.offsetWidth / boardSize : 50;
+    const rawBlockSize = boardCanva ? boardCanva.offsetWidth / boardSize : 50;
+
+    // Get the real size of panel-card (using DOM) to cap the brick size
+    let container: HTMLElement | null = myCanvas.parentElement;
+    while (container && !container.classList.contains("panel-card")) {
+      container = container.parentElement;
+    }
+
+    const maxPx = container
+      ? Math.min(container.clientWidth, container.clientHeight) - 20 // -20 for padding
+      : rawBlockSize * Math.max(b.w, b.h);
+
+    const maxBlockSize = Math.floor(maxPx / Math.max(b.w, b.h));
+    const blockSize = Math.min(rawBlockSize, maxBlockSize);
 
     myCanvas.width = b.w * blockSize;
     myCanvas.height = b.h * blockSize;

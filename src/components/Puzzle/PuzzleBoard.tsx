@@ -15,7 +15,7 @@ export default function PuzzleBoard({
   const gridCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const brickCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const sizeRef = useRef<number>(0);
-  const { setIsCanvasReady } = useRoom();
+  const { setIsCanvasReady, canvasRefs, difficulty } = useRoom();
 
   function setupCanvas() {
     const canvas = gridCanvasRef.current;
@@ -101,17 +101,42 @@ export default function PuzzleBoard({
 
     setupCanvas();
     drawBricks();
-    if (brickCanvasRef.current) {
+
+    const canvasReady =
+      brickCanvasRef.current &&
+      gridCanvasRef.current &&
+      difficulty?.cols !== 0 &&
+      difficulty?.rows !== 0;
+
+    if (canvasReady) {
+      console.log(
+        "2) [PuzzleBoard] Canvas prêt, :",
+        gridCanvasRef.current,
+        brickCanvasRef.current,
+      );
+      canvasRefs.current = [gridCanvasRef.current!, brickCanvasRef.current!];
       setIsCanvasReady(true);
+    } else {
+      setIsCanvasReady(false);
     }
 
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [cols, rows]);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [cols, rows, difficulty]);
 
   useEffect(() => {
     drawBricks();
   }, [board]);
+
+  // Cleanup uniquement au démontage
+  // useEffect(() => {
+  //   return () => {
+  //     canvasRefs.current = [];
+  //     setIsCanvasReady(false);
+  //   };
+  // }, []);
 
   return (
     <div className="puzzle-board">

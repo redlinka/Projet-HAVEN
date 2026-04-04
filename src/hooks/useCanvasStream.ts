@@ -1,126 +1,160 @@
 import { useEffect, useRef } from "react";
 import { useRoomService } from "../contexts/RoomServiceContext";
+import { useRoom } from "../contexts/RoomContext";
 
 const STUN = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
 export function useCanvasStream(isAdmin: boolean, gameId: string | undefined) {
   const roomService = useRoomService();
+  const { canvasRefs, isCanvasReady } = useRoom();
   const peerRef = useRef<RTCPeerConnection | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
-  let animFrameId: number;
+  const animFrameId = useRef<number>(0);
 
   useEffect(() => {
+    if (!isCanvasReady) {
+      console.log("3) [useCanvasStream] Canvas non prêt: isCanvasReady=false");
+      return;
+    }
+
+    const validRefs =
+      canvasRefs.current.length > 0 &&
+      canvasRefs.current.every((ref) => ref !== null && ref !== undefined);
+
+    if (!validRefs) {
+      console.log("3) [useCanvasStream] Refs invalides:", {
+        refsCount: canvasRefs.current.length,
+      });
+      return;
+    }
+
     (async () => {
-      let canvas: HTMLCanvasElement | null | undefined = null;
+      try {
+        let canvas: HTMLCanvasElement | null | undefined = null;
 
-      if (gameId === "1") {
-        const container = document.getElementById("cnv");
-        canvas = container?.querySelector("canvas");
-        console.log("[useCanvasStream] BrickBlast - Canvas recherché:", canvas);
-      } else {
-        const board = document.getElementById("cnv") as HTMLCanvasElement;
-        const bricks = document.getElementById("bricks") as HTMLCanvasElement;
+        if (gameId === "1") {
+          canvas = canvasRefs.current[0] ?? null;
+        } else {
+          const board = canvasRefs.current[0] ?? null;
+          const bricks = canvasRefs.current[1] ?? null;
 
-        console.log("[useCanvasStream] Puzzle - Recherche canvas:", {
-          boardExists: !!board,
-          bricksExists: !!bricks,
-          boardSize: board ? `${board.width}x${board.height}` : "N/A",
-        });
-
-        if (board && bricks) {
-          const finalCanvas = document.createElement("canvas");
-          const ctx = finalCanvas.getContext("2d");
-
-          finalCanvas.width = board.width;
-          finalCanvas.height = board.height;
-
-          function render() {
-            if (!ctx) return;
-            console.log("rendering...");
-            ctx.clearRect(0, 0, finalCanvas.width, finalCanvas.height);
-
-            ctx.drawImage(board, 0, 0);
-            ctx.drawImage(bricks, 0, 0);
-
-            animFrameId = requestAnimationFrame(render);
+          if (!board || !bricks) {
+            console.warn("3) [useCanvasStream] canvasRefs vides");
+            return;
           }
 
-          render();
+          console.log(
+            "3) [useCanvasStream] Puzzle - board:",
+            board.width,
+            board.height,
+          );
 
-          canvas = finalCanvas;
+          if (board && bricks) {
+            await new Promise<void>((resolve) => {
+              const check = () => {
+                if (board.width > 0 && board.height > 0) resolve();
+                else requestAnimationFrame(check);
+              };
+              check();
+            });
+            const finalCanvas = document.createElement("canvas");
+            const ctx = finalCanvas.getContext("2d");
+
+            finalCanvas.width = board.width;
+            finalCanvas.height = board.height;
+
+            const render = () => {
+              if (!ctx) return;
+              ctx.clearRect(0, 0, finalCanvas.width, finalCanvas.height);
+
+              ctx.drawImage(board, 0, 0);
+              ctx.drawImage(bricks, 0, 0);
+
+              animFrameId.current = requestAnimationFrame(render);
+            };
+
+            render();
+            canvas = finalCanvas;
+          }
         }
-      }
-      console.log("[useCanvasStream] Canvas trouvé :", canvas);
 
-      if (!canvas) {
-        console.warn("[useCanvasStream] Aucun canvas trouvé");
-        return;
-      }
-
-      const pc = new RTCPeerConnection(STUN);
-      peerRef.current = pc;
-
-      pc.ontrack = (event) => {
-        console.log("[WebRTC] ontrack reçu !", event.streams);
-        if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = event.streams[0];
+        console.log("4) [useCanvasStream] Canvas trouvé:", canvas);
+        if (!canvas) {
+          console.warn("5) [useCanvasStream] Aucun canvas trouvé");
+          return;
         }
-      };
 
-      pc.onicecandidate = (event) => {
-        console.log("[WebRTC] ICE candidate :", event.candidate);
+        peerRef.current?.close();
 
-        if (event.candidate) {
-          roomService.sendWebRTCIceCandidate(event.candidate.toJSON());
-        }
-      };
+        const pc = new RTCPeerConnection(STUN);
+        peerRef.current = pc;
 
-      // canvas récupéré directement ici
-      const stream = canvas.captureStream(60);
-      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+        pc.ontrack = (event) => {
+          if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = event.streams[0];
+          }
+        };
 
-      roomService.setWebRTCOfferListener(async (sdp) => {
-        console.log("[WebRTC] Offer reçu");
+        pc.onicecandidate = (event) => {
+          if (event.candidate) {
+            roomService.sendWebRTCIceCandidate(event.candidate.toJSON());
+          }
+        };
 
-        await pc.setRemoteDescription(sdp);
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        roomService.sendWebRTCAnswer(answer);
-      });
+        const stream = canvas.captureStream(40);
+        stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+        console.log(
+          "5) [useCanvasStream] Stream capturé et tracks ajoutés au PeerConnection",
+        );
 
-      roomService.setWebRTCAnswerListener(async (sdp) => {
-        console.log("[WebRTC] Answer reçu");
+        roomService.setWebRTCOfferListener(async (sdp) => {
+          console.log("[WebRTC] Offer reçu");
 
-        await pc.setRemoteDescription(sdp);
-      });
-
-      roomService.setWebRTCIceCandidateListener(async (candidate) => {
-        console.log("[WebRTC] ICE candidate reçu");
-
-        await pc.addIceCandidate(candidate);
-      });
-
-      if (isAdmin) {
-        // Admin attend que le non-admin soit prêt
-        roomService.setWebRTCReadyListener(() => {
-          console.log("[WebRTC] Non-admin prêt, envoi de l'offer");
-          pc.createOffer().then(async (offer) => {
-            await pc.setLocalDescription(offer);
-            roomService.sendWebRTCOffer(offer);
-          });
+          await pc.setRemoteDescription(sdp);
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          roomService.sendWebRTCAnswer(answer);
         });
-      } else {
-        // Non-admin signale qu'il est prêt
-        console.log("[WebRTC] Non-admin signale ready");
-        roomService.sendWebRTCReady();
+
+        roomService.setWebRTCAnswerListener(async (sdp) => {
+          console.log("[WebRTC] Answer reçu");
+
+          await pc.setRemoteDescription(sdp);
+        });
+
+        roomService.setWebRTCIceCandidateListener(async (candidate) => {
+          console.log("[WebRTC] ICE candidate reçu");
+
+          await pc.addIceCandidate(candidate);
+        });
+
+        if (isAdmin) {
+          // Admin attend que le non-admin soit prêt
+          console.log("[WebRTC] Admin - enregistre ReadyListener");
+
+          roomService.setWebRTCReadyListener(() => {
+            console.log("[WebRTC] Admin - ready reçu, envoi offer");
+
+            pc.createOffer().then(async (offer) => {
+              await pc.setLocalDescription(offer);
+              roomService.sendWebRTCOffer(offer);
+            });
+          });
+        } else {
+          // Non-admin signale qu'il est prêt
+          console.log("[WebRTC] Non-admin - envoi ready");
+          roomService.sendWebRTCReady();
+        }
+      } catch (err) {
+        console.error("[useCanvasStream] Error :", err);
       }
     })();
 
     return () => {
-      cancelAnimationFrame(animFrameId!);
+      cancelAnimationFrame(animFrameId.current);
       peerRef.current?.close();
     };
-  }, [gameId, isAdmin, roomService, document.getElementById("cnv")]);
+  }, [isCanvasReady, canvasRefs]);
 
   return { remoteVideoRef };
 }

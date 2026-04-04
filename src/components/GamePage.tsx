@@ -14,32 +14,37 @@ import "../styles/components/GamePage.css";
 export default function GamePage({ games }: { games: Game[] }) {
   const [showChat, setShowChat] = useState<boolean>(false);
   const { id } = useParams();
-  const chatManager = useRoomService();
   const { isCanvasReady } = useRoom();
+  const chatManager = useRoomService();
   const isMultiplayer = chatManager.isInRoom;
-
   const gameSelected = id ? games[Number(id)] : null;
 
   if (!gameSelected) {
     return <h2>Game not found</h2>;
   }
+
   useEffect(() => {
-    console.log(isCanvasReady);
+    console.log(
+      "1) [GamePage] isMultiplayer:",
+      isMultiplayer,
+      "isCanvasReady:",
+      isCanvasReady,
+    );
   }, [isCanvasReady]);
 
   return (
     <div className="game-container">
-      {/* OpponentScreen - rendu uniquement une fois le jeu chargé ET en multijoueur */}
+      {/* OpponentScreen*/}
       {isMultiplayer && isCanvasReady && <OpponentScreen />}
 
-      {/* Jeu */}
+      {/* Game */}
       <div
         className={`game-container-left ${!isMultiplayer ? "game-container-left--fullwidth" : ""}`}
       >
         <GameContainer game={gameSelected} />
       </div>
 
-      {/* Chat latéral - uniquement en mode multijoueur sur grand écran */}
+      {/* Lateral chat */}
       {isMultiplayer && window.innerWidth >= 700 && (
         <div className="game-container-right">
           <Chatter />

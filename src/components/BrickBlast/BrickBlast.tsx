@@ -66,7 +66,8 @@ const GlobalEffects = () => {
 
 //main scene
 export const Scene = () => {
-  const { setIsCanvasReady } = useRoom();
+  const { setIsCanvasReady, canvasRefs } = useRoom();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     return () => {
       stopBGM();
@@ -74,26 +75,36 @@ export const Scene = () => {
   }, []);
 
   return (
-      <div style={{ width: "100%", height: "100%", overflow: "hidden", touchAction: "none" }}>
-          <Canvas
-              style={{ touchAction: "none" }}
-              id="cnv"
-              onCreated={() => setIsCanvasReady(true)}
-              camera={{ fov: 80, near: 0.1, far: 1000, position: [0, -400, 100] }}
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        overflow: "hidden",
+        touchAction: "none",
+      }}
+    >
+      <Canvas
+        style={{ touchAction: "none" }}
+        ref={canvasRef}
+        onCreated={({ gl }) => {
+          canvasRefs.current = [gl.domElement];
+          setIsCanvasReady(true);
+        }}
+        camera={{ fov: 80, near: 0.1, far: 1000, position: [0, -400, 100] }}
       >
-              <Stats />
-              <CameraController />
-              <Suspense fallback={null}>
-                  <GameOverScreen />
-                  <Score />
-                  <RestartButton /> <MusicButton />
-                  <Grid /> <GridRenderer /> <GhostPreview />
-                  <BlockHolder />
-                  <BlocksGeneration />
-                  <Background />
-                  <GlobalEffects />
-              </Suspense>
-          </Canvas>
+        <Stats />
+        <CameraController />
+        <Suspense fallback={null}>
+          <GameOverScreen />
+          <Score />
+          <RestartButton /> <MusicButton />
+          <Grid /> <GridRenderer /> <GhostPreview />
+          <BlockHolder />
+          <BlocksGeneration />
+          <Background />
+          <GlobalEffects />
+        </Suspense>
+      </Canvas>
     </div>
   );
 };

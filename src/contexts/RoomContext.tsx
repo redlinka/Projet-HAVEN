@@ -23,6 +23,7 @@ interface RoomContextValue {
   roomClosed: boolean; // ← GamePage écoute ce flag
   difficulty: { cols: number; rows: number } | null;
   isCanvasReady: boolean; // ← Canvas du jeu est prêt
+  canvasRefs: React.MutableRefObject<HTMLCanvasElement[]>;
 
   // ── Setters nécessaires à Chatter ────────────────────────────
   setState: (s: ConnectionState) => void;
@@ -55,6 +56,7 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
   const [gameStarted, setGameStarted] = useState(false);
   const [roomClosed, setRoomClosed] = useState(false);
   const [isCanvasReady, setIsCanvasReady] = useState(false);
+  const canvasRefs = useRef<HTMLCanvasElement[]>([]);
   const [difficulty, setDifficulty] = useState<{
     cols: number;
     rows: number;
@@ -83,6 +85,7 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
       setDifficulty({ cols: 0, rows: 0 });
       setGameStarted(false);
       setIsCanvasReady(false);
+      canvasRefs.current = [];
     });
 
     roomService.setDifficultyListener((mod) => {
@@ -138,6 +141,7 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
     setDifficulty({ cols: 0, rows: 0 });
     setGameStarted(false);
     setIsCanvasReady(false);
+    canvasRefs.current = [];
   }, [roomService]);
 
   const handleStartGame = useCallback(
@@ -170,6 +174,7 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
         setError,
         gameStarted,
         isCanvasReady,
+        canvasRefs,
         setIsCanvasReady,
         roomClosed,
         difficulty,

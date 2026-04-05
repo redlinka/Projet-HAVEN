@@ -120,7 +120,7 @@ export const GameOverScreen = () => {
 				game: 'BRICKBLAST',
 				mode: 'SOLO',
 				difficulty: 'NORMAL',
-				points: score
+				points: score * 5
 			})
 		})
 		.then(r => r.json())

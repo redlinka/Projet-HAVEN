@@ -20,14 +20,8 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html {
-    height: 100%;
-    overflow: hidden;
-}
 
 body {
-    height: 100%;
-    overflow: hidden;
     font-family: 'DM Sans', sans-serif;
     background: var(--bg);
     color: var(--text);
@@ -37,7 +31,6 @@ body {
 
 .page-wrapper {
     flex: 1;
-    min-height: 0;
     display: flex;
     flex-direction: column;
     padding: var(--gap) clamp(12px, 2vw, 24px);
@@ -46,7 +39,7 @@ body {
     width: 100%;
     max-width: 1300px;
     margin: 0 auto;
-    margin-bottom: 3%;
+    margin-bottom: 5%;
 }
 
 .page-title {
@@ -72,9 +65,9 @@ body {
     background: var(--card);
     border-radius: var(--r);
     box-shadow: 0 2px 20px rgba(43,31,20,.09);
-    overflow: hidden;
     display: flex;
     flex-direction: column;
+    max-height: 700px;
 }
 
 .card-body {
@@ -82,7 +75,6 @@ body {
     min-height: 0;
     display: grid;
     grid-template-columns: clamp(200px, 26vw, 300px) 1fr;
-    overflow: hidden;
 }
 
 .panel-left {
@@ -284,7 +276,7 @@ input[type="range"]::-moz-range-thumb {
     justify-content: space-between;
     gap: 10px;
     padding: clamp(7px, 1vh, 14px) var(--pad-x);
-    margin-top: clamp(15px, 4vh, 30px);
+    margin-top: clamp(10px, 2vh, 25px);
 }
 .footer-left { display: flex; gap: clamp(5px, 0.7vw, 10px); }
 

@@ -107,3 +107,18 @@ body.translating::after {
     51%  { transform: scaleX(1); transform-origin: right; }
     100% { transform: scaleX(0); transform-origin: right; }
 }
+.lang-flag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 14px;
+    font-size: 9px;
+    font-weight: 700;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.04em;
+    border-radius: 2px;
+    color: #fff;
+    background: var(--main-brown, #A26547);
+    flex-shrink: 0;
+}

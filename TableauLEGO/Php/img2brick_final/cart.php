@@ -1,3 +1,4 @@
+<?php include_once("matomo_tag.php"); ?>
 <?php
 session_start();
 global $cnx;
@@ -16,7 +17,6 @@ $tilingFolder = 'users/tilings/';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['remove_pavage_id'])) {
     $pavageId = (int)$_POST['remove_pavage_id'];
-    $userId   = (int)($_SESSION['userId'] ?? 0);
 
     try {
         $cnx->beginTransaction();
@@ -26,30 +26,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['remove_pavage_id'])) 
         $tiling = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($tiling) {
+            $imageId = (int)$tiling['image_id'];
+
+            // Supprime uniquement ce pavage du panier et de la table TILLING
             $cnx->prepare("DELETE FROM contain WHERE pavage_id = ?")->execute([$pavageId]);
             $cnx->prepare("DELETE FROM TILLING WHERE pavage_id = ?")->execute([$pavageId]);
 
-            $txtPath = __DIR__ . $tilingFolder . $tiling['pavage_txt'];
+            // Supprime le fichier .txt associé
+            $txtPath = __DIR__ . '/users/tilings/' . $tiling['pavage_txt'];
             if (file_exists($txtPath)) unlink($txtPath);
 
-            $rootImageId = (int)$tiling['image_id'];
-            while (true) {
-                $stmt = $cnx->prepare("SELECT img_parent FROM IMAGE WHERE image_id = ?");
-                $stmt->execute([$rootImageId]);
-                $parentId = $stmt->fetchColumn();
-                if (!$parentId) break;
-                $rootImageId = (int)$parentId;
-            }
+            // Supprime uniquement l'image LEGO de ce preset (pas toute l'arborescence)
+            $stmt = $cnx->prepare("SELECT path FROM IMAGE WHERE image_id = ?");
+            $stmt->execute([$imageId]);
+            $imgFile = $stmt->fetchColumn();
 
-            $imgDirPath    = __DIR__ . '/users/imgs';
-            $tilingDirPath = __DIR__ . '/users/tilings';
-            deleteDescendants($cnx, $rootImageId, $imgDirPath, $tilingDirPath, false);
+            if ($imgFile) {
+                $fullPath = __DIR__ . '/users/imgs/' . $imgFile;
+                if (file_exists($fullPath)) unlink($fullPath);
+            }
+            $cnx->prepare("DELETE FROM IMAGE WHERE image_id = ?")->execute([$imageId]);
+
+            // Si l'image source n'a plus aucun enfant LEGO, on la supprime aussi
+            $stmt = $cnx->prepare("SELECT img_parent FROM IMAGE WHERE image_id = ?");
+            $stmt->execute([$imageId]);
+            // L'image vient d'être supprimée, on relit depuis TILLING pour retrouver le parent
+            // On cherche d'autres presets liés à la même image parente
+            $stmt = $cnx->prepare("
+                SELECT COUNT(*) FROM TILLING t
+                JOIN IMAGE i ON i.image_id = t.image_id
+                JOIN IMAGE parent ON parent.image_id = i.img_parent
+                WHERE i.img_parent = (
+                    SELECT img_parent FROM IMAGE WHERE image_id = ? LIMIT 1
+                )
+            ");
+            // Note : l'image est déjà supprimée ici, cleanStorage s'occupera du parent orphelin
         }
 
         $cnx->commit();
         addLog($cnx, "USER", "DELETE", "pavage");
         header("Location: cart.php");
         exit;
+
     } catch (PDOException $e) {
         if ($cnx->inTransaction()) $cnx->rollBack();
         header("Location: cart.php?error=delete_failed");
@@ -65,8 +83,9 @@ $stmt = $cnx->prepare("
     SELECT
         o.order_id,
         c.pavage_id,
-        i.path AS lego_path,
-        t.pavage_txt
+        i.path     AS lego_path,
+        t.pavage_txt,
+        t.price    AS stored_price
     FROM ORDER_BILL o
     JOIN contain c  ON c.order_id  = o.order_id
     JOIN TILLING t  ON t.pavage_id = c.pavage_id
@@ -84,15 +103,16 @@ foreach ($row_pan as $row) {
     $id_pavage  = (int)($row['pavage_id'] ?? 0);
     $legoPath   = (string)($row['lego_path'] ?? '');
     $src        = $imgFolder . ltrim($legoPath, '/');
-    $price      = 0.0;
     $pavageFile = trim((string)($row['pavage_txt'] ?? ''));
-    $txtPath    = __DIR__ . '/users/tilings/' . $pavageFile;
 
-    if ($pavageFile !== '' && is_file($txtPath) && is_readable($txtPath)) {
-        $txtContent = file_get_contents($txtPath);
-        if ($txtContent !== false && preg_match('/\d+/', $txtContent, $m)) {
-            $price = ((float)$m[0]) / 100;
-        }
+    // Prix stocké en centimes dans la BDD, on convertit en euros
+    $storedPrice = (int)($row['stored_price'] ?? 0);
+    if ($storedPrice > 0) {
+        $price = $storedPrice / 100;
+    } else {
+        // Fallback sur getTilingStats() si le prix n'est pas encore en BDD
+        $stats = getTilingStats($pavageFile);
+        $price = ($stats['price'] ?? 0) / 100;
     }
 
     $subtotal += $price;

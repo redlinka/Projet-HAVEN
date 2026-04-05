@@ -1,3 +1,4 @@
+<?php include_once("matomo_tag.php"); ?>
 <?php
 ob_start();
 session_start();
@@ -331,7 +332,7 @@ if ($generated) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Choose Your Tiling — Bricksy</title>
+    <title>Choose Your Tiling - Bricksy</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
@@ -519,7 +520,12 @@ if ($generated) {
             <p class="selection-info" id="selInfo">
                 <strong id="selCount">1</strong> tiling selected
             </p>
-            <button type="submit" class="btn btn-success" id="addToCartBtn">
+            <button type="submit" class="btn btn-success" id="addToCartBtn" 
+            onclick="
+                document.querySelectorAll('.card-checkbox:checked').forEach(chk => {
+                _paq.push(['trackEvent', 'Pavage', 'Ajout panier', chk.value]);
+                });
+            ">
                 Add to basket
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
@@ -560,12 +566,16 @@ function toggleCard(key) {
     if (!chk) return;
     chk.checked = !chk.checked;
     document.getElementById('card-' + key).classList.toggle('selected', chk.checked);
+    // Matomo : sélection ou désélection d'un pavage
+    _paq.push(['trackEvent', 'Pavage', chk.checked ? 'Selection' : 'Deselection', key]);
     updateCount();
 }
 
 function syncCard(key) {
     const chk = document.getElementById('chk-' + key);
     document.getElementById('card-' + key).classList.toggle('selected', chk.checked);
+    // Matomo : sélection ou désélection d'un pavage
+    _paq.push(['trackEvent', 'Pavage', chk.checked ? 'Selection' : 'Deselection', key]);
     updateCount();
 }
 

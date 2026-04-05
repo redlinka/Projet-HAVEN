@@ -32,7 +32,7 @@
     justify-content: space-evenly;
     align-items: center;
     gap: 1vh;
-    min-width: clamp(150px, 60%, 600px);
+    min-width: clamp(150px, 50%, 500px);
 }
 #dropArea {
     text-align: center;

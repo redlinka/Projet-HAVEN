@@ -1,3 +1,4 @@
+<?php include_once("matomo_tag.php"); ?>
 <?php
 session_start();
 include("./config/cnx.php");
@@ -79,8 +80,6 @@ require_once __DIR__ . '/includes/i18n.php';
         START
         <img src="assets/arrow.svg" alt="">
       </a>
-      <!-- <a href="#" class="btn-outline">DOWNLOAD APP</a>
-        <a href="upload.php" class="btn-outline">START &rarr;</a> -->
     </div>
   </main>
 

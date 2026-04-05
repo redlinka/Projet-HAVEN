@@ -1,3 +1,4 @@
+<?php include_once("matomo_tag.php"); ?>
 <?php
 // verify an unverified account
 session_start();
@@ -116,5 +117,4 @@ if (!isset($_GET['token'])) {
 
     <?php include("./includes/footer.php"); ?>
 </body>
-
 </html>

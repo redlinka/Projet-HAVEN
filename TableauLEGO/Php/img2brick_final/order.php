@@ -218,8 +218,8 @@ function createPayPalOrder(float $amount): ?string {
             'brand_name'          => 'Bricksy',
             'landing_page'        => 'NO_PREFERENCE',
             'user_action'         => 'PAY_NOW',
-            'return_url'          => $baseUrl . '/img2brick_final/paypal_return.php',
-            'cancel_url'          => $baseUrl . '/img2brick_final/paypal_cancel.php',
+            'return_url'          => $baseUrl . '/paypal_return.php',
+            'cancel_url'          => $baseUrl . '/paypal_cancel.php',
         ],
     ];
 

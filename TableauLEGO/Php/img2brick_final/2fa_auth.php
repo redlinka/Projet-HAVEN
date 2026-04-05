@@ -3,7 +3,7 @@ session_start();
 global $cnx;
 include("./config/cnx.php");
 require_once __DIR__ . '/includes/i18n.php';
-require_once __DIR__ . '/TwoFactorAuthLight.php';
+require_once __DIR__ . '/twofactorauthlight.php';
 date_default_timezone_set('Europe/Paris');
 
 // Verify if we have a pending 2FA user in session, else redirect to login
@@ -179,7 +179,7 @@ if ($method === 'totp' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             </svg>
         </div>
 
-        <span class="method-badge totp">📱 Authenticator app</span>
+        <span class="method-badge totp">Authenticator app</span>
         <h1 class="mail-title">Enter your code</h1>
         <p class="mail-subtitle">
             Open your authenticator app and enter the <strong>6-digit code</strong> for Bricksy.

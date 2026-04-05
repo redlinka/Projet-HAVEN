@@ -1,3 +1,4 @@
+<?php include_once("matomo_tag.php"); ?>
 <?php
 session_start();
 global $cnx;

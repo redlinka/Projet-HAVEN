@@ -93,6 +93,14 @@ export default function Navbar({ games }: { games: Game[] }) {
       </nav>
 
       <div className="user">
+        <a
+          href="https://adam.nachnouchi.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="storefront-link"
+        >
+          <img src={`${import.meta.env.BASE_URL}img/storefront.png`} alt="Storefront" />
+        </a>
         <Link to={`/history`} className="history-link">
           <p>{totalPoints} Points</p>
         </Link>

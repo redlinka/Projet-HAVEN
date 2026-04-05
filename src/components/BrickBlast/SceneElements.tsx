@@ -51,7 +51,7 @@ export const Score = () => {
 	useFrame(() => {
 		if (scoreRef.current) {
 			const score = useGameStore.getState().score;
-			scoreRef.current.text = "Score: " + score;
+			scoreRef.current.text = "Score: " + score * 5;
 		}
 	});
 

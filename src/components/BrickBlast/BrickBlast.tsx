@@ -20,7 +20,6 @@ import { BlendFunction } from "postprocessing";
 import { useGameStore } from "./Store.ts";
 import { GridRenderer } from "./GridRenderer.tsx";
 import { GhostPreview } from "./GhostPreview.tsx";
-import { Stats } from "@react-three/drei";
 import * as THREE from "three";
 import {stopBGM, toggleBGM} from "./audio.ts";
 import { useRoom } from "../../contexts/RoomContext.tsx";

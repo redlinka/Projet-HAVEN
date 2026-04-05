@@ -1,16 +1,19 @@
 import { useEffect } from "react";
 import { useUser } from "../../contexts/UserContext";
+import "../../styles/components/Puzzle/EndGameScreen.css";
 
 interface Props {
   score: number;
-  nbPieces: number;
-  mod: { cols: number; rows: number };
+  difficulty: { cols: number; rows: number };
+  mode: string;
   onModeMenu: () => void;
 }
 
-export default function EndGameScreen({ score, nbPieces, mod, onModeMenu }: Props) {
-  const perfect = score === nbPieces;
-  const diff = mod.cols === 16 ? 'easy' : mod.cols === 32 ? 'medium' : 'hard';
+export default function EndGameScreen({ score, difficulty, mode, onModeMenu }: Props) {
+  const perfect = score === difficulty.cols * difficulty.rows;
+  const reason = localStorage.getItem("reason");
+  console.log("la raison est " +reason);
+  const diff = difficulty.cols === 16 ? 'easy' : difficulty.cols === 32 ? 'medium' : 'hard';
   const { user, setUser } = useUser();
 
   useEffect(() => {
@@ -49,23 +52,59 @@ export default function EndGameScreen({ score, nbPieces, mod, onModeMenu }: Prop
 
   
 
-  return (
-    <div className="ending-overlay">
-      <div className={perfect ? "ending-title-win" : "ending-title-lose"}>
-        {perfect ? "PERFECT!" : "GAME CLEAR"}
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <div className="ending-score">
-          SCORE {String(score).padStart(4, "0")} / {nbPieces}
+   return (
+  <div className="ending-overlay">
+    <div className="ending-panel">
+      <div className="ending-panel-inner">
+
+        <div className={"ending-header win"}>
+          {perfect ? "PERFECT!" : "GAME CLEAR"}
         </div>
-        {perfect && <div className="ending-hi">★ NEW RECORD ★</div>}
+
+        <div className="ending-plate">
+          <div className="ending-plate-inner">
+            <div className="plate-content">
+
+              <div className={perfect ? "plate-msg win" : "plate-msg lose"}>
+                {reason}
+              </div>
+
+              <div className="plate-sep" />
+
+              <div className="plate-row">
+                <span className="plate-key">SCORE</span>
+                <span className="plate-val big">{String(score).padStart(4, "0")}/ {String(difficulty.cols * difficulty.rows).padStart(4, "0")}</span>
+              </div>
+    
+              <div className="plate-sep" />
+
+              <div className="plate-row">
+                <span className="plate-key">DIFF</span>
+                <span className={`plate-diff plate-diff-${diff}`}>{diff.toUpperCase()}</span>
+              </div>
+              <div className="plate-row">
+                <span className="plate-key">MODE</span>
+                <span className="plate-val">{mode}</span>
+              </div>
+
+              <div className="plate-sep" />
+
+              <div className="plate-hi">
+                {perfect ? "★ PERFECT SCORE ★" : "★ BETTER LUCK NEXT TIME ★"}
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div className="ending-footer">
+          <button className="retry-btn" onClick={onModeMenu}>
+            <span className="btn-cursor">▮</span>MAIN MENU
+          </button>
+        </div>
+
       </div>
-      <div style={{ fontSize: 6, color: "#4a3060" }}>
-        {mod.cols}×{mod.rows} - {nbPieces} PIECES
-      </div>
-      <button className="retry-btn" onClick={onModeMenu}>
-        MODE MENU
-      </button>
     </div>
-  );
+  </div>
+);
 }

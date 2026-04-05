@@ -20,6 +20,7 @@ import {
   LS_NB_PIECES,
   lsClear,
   lsGet,
+  lsSet,
 } from "../utils/puzzleStorage";
 
 // INTERFACES
@@ -102,6 +103,8 @@ export function usePuzzle({
   const [isOnBoard, setIsOnBoard] = useState(false);
   const [endGame, setEndGame] = useState<boolean>(false);
 
+
+
   useEffect(() => {
     modRef.current = mod;
   }, [mod]);
@@ -165,7 +168,7 @@ export function usePuzzle({
           if (updatedBoard) {
             playOnDrop();
 
-            localStorage.setItem(LS_BOARD, JSON.stringify(updatedBoard));
+            lsSet(LS_BOARD, updatedBoard);
 
             setAllBricks((prevBricks) => {
               const remaining = prevBricks.slice(1);
@@ -173,13 +176,15 @@ export function usePuzzle({
 
               setCurrentBrick(next); 
 
-              localStorage.setItem(LS_BRICKS, JSON.stringify(remaining));
-              localStorage.setItem(LS_CURRENT_BRICK, JSON.stringify(next));
+              lsSet(LS_BRICKS, remaining);
+              lsSet(LS_CURRENT_BRICK, next);
 
               if (!next) {
+                localStorage.setItem("reason", "ALL PIECES PLACED");
                 setEndGame(true);
                 lsClear();
               } else if (!checkPlacementValid(updatedBoard, modRef.current.cols, next)) {
+                localStorage.setItem("reason", "PIECE CANNOT FIT THE BOARD. GAME OVER!");
                 setEndGame(true);
                 lsClear();
               }
@@ -257,19 +262,14 @@ export function usePuzzle({
         setAnswerBoard(answerData);
         setBoard(initPuzzleBoard(mod.cols, mod.rows));
 
-        localStorage.setItem(
-          LS_MOD,
-          JSON.stringify({ cols: mod.cols, rows: mod.rows }),
-        );
-        localStorage.setItem(
-          LS_BOARD,
-          JSON.stringify(initPuzzleBoard(mod.cols, mod.rows)),
-        );
-        localStorage.setItem(LS_ANSWER, JSON.stringify(answerData));
-        localStorage.setItem(LS_BRICKS, JSON.stringify(remaining));
-        localStorage.setItem(LS_CURRENT_BRICK, JSON.stringify(firstBrick));
-        localStorage.setItem(LS_IMAGE, JSON.stringify(imagePath));
-        localStorage.setItem(LS_NB_PIECES, JSON.stringify(nb));
+    
+        lsSet(LS_MOD, { cols: mod.cols, rows: mod.rows });
+        lsSet(LS_BOARD, initPuzzleBoard(mod.cols, mod.rows));
+        lsSet(LS_ANSWER, answerData);
+        lsSet(LS_BRICKS, remaining);
+        lsSet(LS_CURRENT_BRICK, firstBrick);
+        lsSet(LS_IMAGE, imagePath);
+        lsSet(LS_NB_PIECES, nb);
       } catch (err) {
         console.error("Error loading game:", err);
       } finally {

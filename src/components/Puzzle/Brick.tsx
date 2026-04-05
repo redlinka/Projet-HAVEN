@@ -35,7 +35,7 @@ export default function Brick({
     }
 
     const maxPx = container
-      ? Math.min(container.clientWidth, container.clientHeight) - 20 // -20 for padding
+      ? Math.min(container.clientWidth, container.clientHeight) - 20
       : rawBlockSize * Math.max(b.w, b.h);
 
     const maxBlockSize = Math.floor(maxPx / Math.max(b.w, b.h));

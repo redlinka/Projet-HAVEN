@@ -16,6 +16,7 @@ import { usePuzzleSound } from "./hooks/usePuzzleSounds";
 import "../../styles/components/Puzzle/PuzzleGame.css";
 import { useRoom } from "../../contexts/RoomContext";
 
+
 //COMPONENT
 
 export default function PuzzleGame() {
@@ -72,9 +73,10 @@ export default function PuzzleGame() {
 
   if (loading)
     return (
-      <MonitorShell>
-        <LoadingScreen />
-      </MonitorShell>
+        <MonitorShell>
+          <LoadingScreen />
+        </MonitorShell>
+
     );
 
   const total = nbPieces;
@@ -106,8 +108,8 @@ export default function PuzzleGame() {
       {endGame ? (
         <EndGameScreen
           score={score}
-          nbPieces={nbPieces}
-          mod={mod}
+          difficulty={mod}
+          mode= {sessionStorage.getItem("puzzle_save") ? "DUPLICATE" : "SOLO"}
           onModeMenu={handleModeMenu}
         />
       ) : !mod.cols || !mod.rows ? (

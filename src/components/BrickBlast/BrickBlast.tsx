@@ -69,8 +69,30 @@ export const Scene = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
       toggleBGM(`${import.meta.env.BASE_URL}sounds/brickblast/background.mp3`, 0.25);
+
+    const resetState = {
+      score: 0,
+      grid: Array(9).fill(0).map(() => Array(9).fill(0)),
+      isGameOver: false,
+      hoverCoords: null,
+      hoveredMeshes: [],
+      activePiece: null,
+      isValidDrop: false,
+      nextPieces: [],
+    };
+
+    const handleBeforeUnload = () => {
+      if (useGameStore.getState().isGameOver) {
+        useGameStore.setState(resetState);
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
     return () => {
       stopBGM();
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      useGameStore.setState(resetState);
     };
   }, []);
 
@@ -92,7 +114,6 @@ export const Scene = () => {
         }}
         camera={{ fov: 80, near: 0.1, far: 1000, position: [0, -400, 100] }}
       >
-              <Stats />
               <CameraController />
               <Suspense fallback={null}>
                   <GameOverScreen />

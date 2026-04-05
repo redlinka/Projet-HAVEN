@@ -1,10 +1,11 @@
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import { Edges, Line, Text } from "@react-three/drei";
 import * as THREE from "three";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useGameStore } from "./Store.ts";
 import {ASPECT_COEFF} from "./logic.ts";
 import {playSFX, toggleBGM} from "./audio.ts";
+import {useUser} from "../../contexts/UserContext.tsx";
 
 export const CameraController = () => {
 	const { size } = useThree();
@@ -95,6 +96,49 @@ export const GameOverScreen = () => {
 
 	const centerX = isPortrait ? -30 : 0;
 	const centerY = isPortrait ? -5 : 0;
+
+	const score = useGameStore((state) => state.score);
+	const { user, setUser } = useUser();
+	const hasSentRef = useRef(false);
+
+	useEffect(() => {
+		if (!isGameOver) {
+			hasSentRef.current = false;
+			return;
+		}
+		if (hasSentRef.current) return;
+		hasSentRef.current = true;
+
+		const token = localStorage.getItem("sessionToken");
+
+		fetch('/api-node/endgame', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				token: token,
+				SQLid: user?.SQL_id ?? -1,
+				game: 'BRICKBLAST',
+				mode: 'SOLO',
+				difficulty: 'NORMAL',
+				points: score
+			})
+		})
+		.then(r => r.json())
+		.then(player => {
+			if (!player) return;
+
+			localStorage.setItem("sessionToken", player.sessionToken ?? token);
+			localStorage.setItem("user", JSON.stringify(player));
+
+			setUser({
+				id: player.id ?? user?.id ?? -1,
+				SQL_id: player.SQL_id ?? user?.SQL_id ?? -1,
+				sessionToken: player.sessionToken ?? token,
+				games: player.games ?? []
+			});
+		})
+		.catch(err => console.error("Error saving score:", err));
+	}, [isGameOver, score]);
 
 	useFrame(() => {
 		if (!groupRef.current || !overlayRef.current) return;

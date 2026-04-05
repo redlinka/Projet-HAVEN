@@ -25,3 +25,13 @@ export interface GameEntry {
   expiresAt: string;
   used: boolean;
 }
+
+export type PuzzleSave = {
+  mod?: any;
+  board?: any;
+  answer?: any;
+  bricksRemaining?: number;
+  currentBrick?: any;
+  image?: string;
+  nbPieces?: number;
+};

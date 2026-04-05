@@ -1,0 +1,140 @@
+.ending-overlay {
+  font-family: "Press Start 2P", monospace;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    #2e1f52 0%,
+    #1a0f35 70%,
+    #0d0820 100%
+  );
+}
+
+.ending-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+  pointer-events: none;
+}
+
+.ending-panel {
+  width: clamp(240px, 50vw, 300px);
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid #2a1f4a;
+  box-shadow: 0 0 20px rgba(120, 60, 200, 0.3);
+  padding: 16px;
+}
+
+.ending-header {
+  text-align: center;
+  font-size: clamp(12px, 2.5vw, 14px);
+  letter-spacing: 3px;
+  margin-bottom: 12px;
+}
+
+.ending-header.win {
+  color: #ff8c00;
+  text-shadow: 0 0 10px #ff6b00;
+}
+
+.ending-header.lose {
+  color: #ff4466;
+  text-shadow: 0 0 8px #ff4466;
+}
+
+.plate-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.plate-msg {
+  text-align: center;
+  font-size: 7px;
+  letter-spacing: 2px;
+  line-height: 1.6;
+}
+
+.plate-msg.win {
+  color: #ff8c00;
+}
+
+.plate-msg.lose {
+  color: #534AB7;
+}
+
+.plate-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 8px;
+}
+
+.plate-key {
+  color: #2a1f4a;
+}
+
+.plate-val {
+  color: #e8c87a;
+}
+
+.plate-val.big {
+  font-size: 13px;
+  color: #ff8c00;
+  text-shadow: 0 0 10px #ff6b00;
+}
+
+/* diff */
+.plate-diff-easy,
+.plate-diff-medium {
+  color: #ff8c00;
+}
+
+.plate-diff-hard {
+  color: #ff4466;
+}
+
+.plate-hi {
+  text-align: center;
+  font-size: 6px;
+  color: #e8c87a;
+  opacity: 0.5;
+  margin-top: 6px;
+}
+
+.retry-btn {
+  margin-top: 14px;
+  width: 100%;
+  padding: 10px;
+
+  font-family: "Press Start 2P", monospace;
+  font-size: 9px;
+
+  background: #ff8c00;
+  color: #1a0f35;
+  border: none;
+  cursor: pointer;
+
+  letter-spacing: 2px;
+
+  transition: transform 0.1s, box-shadow 0.1s;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.4);
+}
+
+.retry-btn:hover {
+  transform: translateY(-1px);
+}
+
+.retry-btn:active {
+  transform: scale(0.96);
+}

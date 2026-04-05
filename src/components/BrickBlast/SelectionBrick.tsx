@@ -57,7 +57,6 @@ export const SelectionBrick = ({
     const isDraggingGlobal = useGameStore((state) => state.isDraggingGlobal);
     const setIsDraggingGlobal = useGameStore((state) => state.setIsDraggingGlobal);
     const setActivePiece = useGameStore((state) => state.setActivePiece);
-    const nextPieces = useGameStore((state) => state.nextPieces);
     const setNextPieces = useGameStore((state) => state.setNextPieces);
 
     const currentShape = useRef<number[][]>(shape);
@@ -146,6 +145,21 @@ export const SelectionBrick = ({
         if (groupRef.current) groupRef.current.scale.set(0, 0, 0);
     }, []);
 
+    // Reset state if React reuses this component for a new piece
+    // (e.g. same slot/color/shape key collision on refill).
+    useEffect(() => {
+        isConsumed.current = false;
+        isPoppingIn.current = true;
+        isDragged.current = false;
+        rotationStep.current = 0;
+        currentShape.current = shape;
+        if (groupRef.current) {
+            groupRef.current.scale.set(0, 0, 0);
+            groupRef.current.rotation.z = 0;
+            groupRef.current.visible = true;
+        }
+    }, [color, shape]);
+
     return (
         <group
             ref={groupRef}
@@ -189,7 +203,9 @@ export const SelectionBrick = ({
                     groupRef.current.visible = false;
 
                     // 4. Update the store to mark THIS piece's slot as empty
-                    const updatedPieces = [...nextPieces];
+                    const currentPieces =
+                        useGameStore.getState().nextPieces;
+                    const updatedPieces = [...currentPieces];
                     updatedPieces[nextPieceIndex] = null;
 
                     let piecesToCheck = updatedPieces;

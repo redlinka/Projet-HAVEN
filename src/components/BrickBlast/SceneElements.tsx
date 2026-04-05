@@ -287,6 +287,7 @@ export const TopBarControls = () => {
 
 	// Calculate the starting position (Restart Button) and the gap between buttons
 	const startX = isPortrait ? -5 : 40;
+	const startY = isPortrait ? 75 : 60;
 	const gap = isPortrait ? 10 : 15;
 
 	const handleRestart = () => {
@@ -321,7 +322,7 @@ export const TopBarControls = () => {
 
 	return (
 		// Group anchors the Y and Z axes globally for all 3 buttons
-		<group position={[0, 60, 5]}>
+		<group position={[0, startY, 5]}>
 
 			<MenuButton
 				{...commonProps}

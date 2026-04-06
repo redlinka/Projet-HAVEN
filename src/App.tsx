@@ -45,76 +45,52 @@ function App() {
   const [chatManager] = useState(() => new WebSocketRoomService());
 
   useEffect(() => {
-    getSession()
-      .then(async (phpData) => {
+    const initUser = async () => {
+      try {
+        const phpData = await getSession();
         const localToken = localStorage.getItem("sessionToken");
+
+        let url = "/api-node/player";
+        let options: RequestInit = {};
 
         // USER CONNECTED IN BRICKSY
         if (phpData?.id && phpData.id !== -1) {
-          try {
-            const response = await fetch(
-              `/api-node/player?SQLid=${phpData.id}`,
-            );
-            const mongoPlayer = await response.json();
-
-            if (mongoPlayer?.sessionToken) {
-              localStorage.setItem("sessionToken", mongoPlayer.sessionToken);
-
-              setUser({
-                id: phpData.id,
-                SQL_id: mongoPlayer.SQL_id ?? phpData.id,
-                sessionToken: mongoPlayer.sessionToken ?? null,
-                games: mongoPlayer.games ?? [],
-              });
-            } else {
-              setUser({
-                id: phpData.id,
-                SQL_id: phpData.id,
-                sessionToken: null,
-                games: [],
-              });
-            }
-          } catch {
-            setUser({
-              id: phpData.id,
-              SQL_id: phpData.id,
-              sessionToken: null,
-              games: [],
-            });
-          }
-        }
-
+          url += `?SQLid=${phpData.id}`;
+        } 
         // GUEST WITH TOKEN
         else if (localToken) {
-          try {
-            const response = await fetch(`/api-node/player`, {
-              headers: { Authorization: `Bearer ${localToken}` },
-            });
-            const guestData = await response.json();
+          options.headers = { Authorization: `Bearer ${localToken}` };
+        }
 
-            setUser({
-              id: -1,
-              SQL_id: guestData?.SQL_id ?? null,
-              sessionToken: guestData?.sessionToken ?? localToken,
-              games: guestData?.games ?? [],
-            });
-          } catch {
-            setUser({
-              id: -1,
-              SQL_id: -1,
-              sessionToken: localToken,
-              games: [],
-            });
-          }
-        }
-        // NEW GUEST
-        else {
+        const response = await fetch(url, options);
+        const playerData = await response.json();
+
+        // IF NO PLAYER DATA, WE SET A DEFAULT GUEST USER
+        if (!playerData) {
           setUser({ id: -1, SQL_id: -1, sessionToken: null, games: [] });
+          return;
         }
-      })
-      .catch(() =>
-        setUser({ id: -1, SQL_id: -1, sessionToken: null, games: [] }),
-      );
+
+        // IF PLAYER DATA EXISTS
+        // we save his token in ls
+        if (playerData.sessionToken) {
+          localStorage.setItem("sessionToken", playerData.sessionToken);
+        }
+
+        setUser({
+          id: phpData?.id ?? -1,
+          SQL_id: playerData.SQL_id ?? (phpData?.id ?? -1),
+          sessionToken: playerData.sessionToken ?? localToken,
+          games: playerData.games ?? [],
+        });
+
+      } catch (err) {
+        console.error("Error initializing user:", err);
+        setUser({ id: -1, SQL_id: -1, sessionToken: null, games: [] });
+      }
+    };
+
+    initUser();
   }, []);
 
   useEffect(() => {

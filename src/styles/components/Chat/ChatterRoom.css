@@ -161,11 +161,13 @@
   padding: 0.85rem 1rem;
   border-top: 1px solid rgba(160, 88, 190, 0.2);
   background: rgba(8, 2, 18, 0.6);
+  overflow: hidden;
 }
 
 .chatter-footer > form,
 .chatter-footer > *:first-child {
   flex: 1;
+  min-width: 0;
 }
 
 .chatter-start-btn {
@@ -211,6 +213,11 @@
   .chatter-header-right {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .chatter-footer {
+    gap: 0.5rem;
+    padding: 0.75rem 0.75rem;
   }
 
   .chatter-start-btn {

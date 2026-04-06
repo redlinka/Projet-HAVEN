@@ -4,6 +4,7 @@
   z-index: 100;
   border-radius: 10px;
   max-width: 250px;
+  max-height: 30vh;
   cursor: grabbing;
 }
 
@@ -12,7 +13,9 @@
 }
 
 .opponent-screen video {
+  display: block;
   width: 100%;
-  object-fit: cover;
+  max-height: 30vh;
+  object-fit: contain;
   border-radius: 10px;
 }

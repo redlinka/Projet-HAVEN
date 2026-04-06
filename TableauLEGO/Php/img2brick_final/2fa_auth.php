@@ -31,7 +31,7 @@ if ($method === 'email' && !isset($_SESSION['2fa_mail_sent'])) {
         $cnx->prepare("DELETE FROM 2FA WHERE user_id = ?")->execute([$pendingUserId]);
         $cnx->prepare("INSERT INTO 2FA (user_id, verification_token, token_expire_at) VALUES (?,?,?)")
             ->execute([$pendingUserId, $token, $expireAt]);
-        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
+        $protocol = ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
         $link     = $protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/verify_connexion.php?token=' . $token;
         $emailBody = "
             <div style='font-family:Arial,sans-serif;padding:20px;border:1px solid #e0e0e0;border-radius:8px;max-width:600px;'>
@@ -161,8 +161,30 @@ if ($method === 'totp' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="alert-err"><?php foreach ($errors as $e): ?><div><?= htmlspecialchars($e) ?></div><?php endforeach; ?></div>
         <?php endif; ?>
 
-        <div class="alert alert-success">
+        <!-- Status message (shows waiting state) -->
+        <div id="waiting-status" class="alert alert-success">
             ✓ The link expires in <strong>1 minute</strong>. Check your spam folder if you don't see it.
+        </div>
+
+        <!-- Loading spinner (initially hidden) -->
+        <div id="spinner-container" style="display: none; text-align: center; margin: 20px 0;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p style="margin-top: 15px; color: #666;">
+                Checking for email confirmation...
+            </p>
+        </div>
+
+        <!-- Success message (initially hidden) -->
+        <div id="success-message" style="display: none;">
+            <div class="alert alert-info">
+                <strong>✅ Login successful!</strong><br>
+                Welcome <span id="welcome-username"></span>! Redirecting you now...
+            </div>
+            <div class="spinner-border text-primary spinner-border-sm" role="status" style="margin-top: 10px;">
+                <span class="visually-hidden">Redirecting...</span>
+            </div>
         </div>
 
         <div class="mail-divider"></div>
@@ -208,9 +230,107 @@ if ($method === 'totp' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script>
+// ━━━ TOTP MODE: Format input field ━━━
 document.getElementById('totp_code')?.addEventListener('input', function () {
     this.value = this.value.replace(/\D/g, '').slice(0, 6);
 });
+
+// ━━━ EMAIL MODE: Poll for successful 2FA ━━━
+<?php if ($method === 'email'): ?>
+(function emailModePoll() {
+    let checkAttempts = 0;
+    const maxAttempts = 60; // Check for up to 1 minute (60 attempts with 1s interval)
+
+    function checkLoginStatus() {
+        fetch('api/checkLoginStatus.php', {
+            method: 'GET',
+            credentials: 'same-origin'
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.loggedIn === true) {
+                    // User has clicked the email link and is now logged in
+                    showSuccessAndRedirect(data);
+                } else {
+                    // Not logged in yet, check again after a delay
+                    checkAttempts++;
+                    if (checkAttempts >= maxAttempts) {
+                        // Timeout after 1 minute
+                        updateStatus('Link expired. Please <a href="auth.php">try logging in again</a>.', 'danger');
+                    } else {
+                        // Check again in 1 second
+                        setTimeout(checkLoginStatus, 1000);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error checking login:', error);
+                setTimeout(checkLoginStatus, 2000); // Retry on error
+            });
+    }
+
+    function showSuccessAndRedirect(data) {
+        // Hide waiting message and spinner
+        document.getElementById('waiting-status').style.display = 'none';
+        document.getElementById('spinner-container').style.display = 'none';
+
+        // Show success message
+        const successEl = document.getElementById('success-message');
+        successEl.style.display = 'block';
+        document.getElementById('welcome-username').textContent = data.username || 'User';
+
+        // Redirect after 2 seconds
+        setTimeout(() => {
+            window.location.href = data.redirectUrl || 'index.php';
+        }, 2000);
+    }
+
+    function updateStatus(message, type = 'success') {
+        document.getElementById('waiting-status').className = 'alert alert-' + type;
+        document.getElementById('waiting-status').innerHTML = message;
+        document.getElementById('spinner-container').style.display = 'none';
+    }
+
+    // Start polling when page loads
+    document.addEventListener('DOMContentLoaded', function () {
+        // Show spinner after 800ms
+        setTimeout(() => {
+            document.getElementById('spinner-container').style.display = 'block';
+        }, 800);
+
+        // Start checking login status
+        checkLoginStatus();
+    });
+
+    // Also start immediately if DOM is already loaded
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () {
+            // Handler will run above
+        });
+    } else {
+        // DOM already loaded
+        setTimeout(() => {
+            document.getElementById('spinner-container').style.display = 'block';
+        }, 800);
+        checkLoginStatus();
+    }
+})();
+<?php endif; ?>
 </script>
+
+<style>
+<?php if ($method === 'email'): ?>
+#spinner-container {
+    padding: 20px;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+.spinner-border {
+    width: 2rem;
+    height: 2rem;
+}
+<?php endif; ?>
+</style>
 </body>
 </html>

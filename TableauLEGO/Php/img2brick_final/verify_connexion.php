@@ -37,8 +37,8 @@ try {
 
     // --- SUCCESS: LOG THE USER IN ---
 
-    // Delete used token
-    $cnx->prepare("DELETE FROM `2FA` WHERE id_token = ?")->execute([$result['id_token']]);
+    // Delete used token (FIXED: use verification_token not id_token)
+    $cnx->prepare("DELETE FROM `2FA` WHERE verification_token = ? AND user_id = ?")->execute([$_GET['token'], $result['user_id']]);
 
     // Regenerate session ID Prevent fixation
     session_regenerate_id(true);
@@ -67,12 +67,9 @@ try {
     // Rotate CSRF
     csrf_rotate();
     addLog($cnx, "USER", "LOG", "in");
-    // Redirect to intended destination
-    if (isset($_SESSION['redirect_after_login'])) {
-        header("Location:" . $_SESSION['redirect_after_login']);
-    } else {
-        header('Location: index.php');
-    }
+    // Redirect to completion page (tells user to go back to other tab)
+    // The polling on 2fa_auth.php will detect the login and auto-redirect
+    header('Location: verify_connexion_complete.php');
     exit;
 } catch (PDOException $e) {
     http_response_code(500);

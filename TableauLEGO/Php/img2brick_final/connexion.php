@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ins = $cnx->prepare("INSERT INTO 2FA (user_id, verification_token, token_expire_at) VALUES (?, ?, ?)");
                 $ins->execute([$user['user_id'], $token, $expire_at]);
 
-                $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+                $protocol = ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
                 $link = $protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/verify_account.php?token=' . $token;
 
                 $emailBody = "
@@ -85,8 +85,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ins = $cnx->prepare("INSERT INTO 2FA (user_id, verification_token, token_expire_at) VALUES (?, ?, ?)");
                 $ins->execute([$user['user_id'], $token, $expire_at]);
 
-                // Construct magic link
-                $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+                // Construct magic link (FIXED: proper HTTPS detection)
+                $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443 ? "https://" : "http://";
                 $domain = $_SERVER['HTTP_HOST'];
                 $link = $protocol . $domain . dirname($_SERVER['PHP_SELF']) . '/verify_connexion.php?token=' . $token;
 
@@ -109,8 +109,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $emailBody
                 );
 
-                // Redirect to check mail page
-                header("Location: connexion_mail.php");
+                // Set pending 2FA session and redirect to 2FA page
+                session_regenerate_id(true);
+                $_SESSION['2fa_pending_user_id'] = $user['user_id'];
+                $_SESSION['2fa_mail_sent'] = true;
+                addLog($cnx, "USER", "2FA_REQUESTED", "email");
+                header("Location: 2fa_auth.php");
                 exit;
             }
 

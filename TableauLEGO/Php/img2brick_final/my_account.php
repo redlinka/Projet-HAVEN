@@ -120,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $expire_at = date('Y-m-d H:i:s', time() + 60);
                     $cnx->prepare("DELETE FROM 2FA WHERE user_id=?")->execute([$userId]);
                     $cnx->prepare("INSERT INTO 2FA (user_id, verification_token, token_expire_at) VALUES (?,?,?)")->execute([$userId, $token, $expire_at]);
-                    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+                    $protocol = ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
                     $link = $protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/verify_connexion.php?token=' . $token;
                     $emailBody = "<div style='font-family:Arial,sans-serif;padding:20px;border:1px solid #e0e0e0;border-radius:8px;max-width:600px;'><h2 style='color:#8B5E3C;'>Verify Your New Email Address</h2><p>Click below to verify your new email:</p><p style='text-align:center;'><a href='{$link}' style='display:inline-block;background:#8B5E3C;color:white;padding:12px 24px;text-decoration:none;border-radius:5px;font-weight:bold;'>Verify My Email</a></p><p style='color:#6c757d;font-size:12px;margin-top:20px;'>Or copy: {$link}</p></div>";
                     sendMail($newEmail, 'Verify your new email address - Bricksy', $emailBody);

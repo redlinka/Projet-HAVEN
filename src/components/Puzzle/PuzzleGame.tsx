@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Disc, Disc3, Volume2, VolumeOff, X } from "lucide-react";
 import { createPortal } from "react-dom";
 
@@ -16,11 +16,10 @@ import { usePuzzleSound } from "./hooks/usePuzzleSounds";
 import "../../styles/components/Puzzle/PuzzleGame.css";
 import { useRoom } from "../../contexts/RoomContext";
 
-
-//COMPONENT
-
 export default function PuzzleGame() {
   const { difficulty } = useRoom();
+  const [display, setDisplay] = useState(false);
+
   const {
     isPlayingMusic,
     isPlayingEffect,
@@ -51,12 +50,22 @@ export default function PuzzleGame() {
     handlePointerDown,
   } = usePuzzle({ playOnDrag, playOnDrop, playWrongPlacement });
 
-  // Multiplayer effect
+  // Reset le display quand on change de mode ou qu'on charge
+  useEffect(() => {
+    if (!loading && mod.cols > 0) {
+      const timer = setTimeout(() => setDisplay(true), 10);
+      return () => clearTimeout(timer);
+    } else {
+      setDisplay(false);
+    }
+  }, [loading, mod.cols]);
+
+  // Sync Multiplayer
   useEffect(() => {
     if (difficulty) {
       setMod(difficulty);
     }
-  }, [difficulty]);
+  }, [difficulty, setMod]);
 
   const soundsButtons = () => (
     <div className="sounds-container">
@@ -69,23 +78,19 @@ export default function PuzzleGame() {
     </div>
   );
 
-  // RETURN LOADING SCREEN IF STILL LOADING
-
-  if (loading)
+  if (loading) {
     return (
-        <MonitorShell>
-          <LoadingScreen />
-        </MonitorShell>
-
+      <MonitorShell>
+        <LoadingScreen />
+      </MonitorShell>
     );
+  }
 
   const total = nbPieces;
 
-  // MAIN RENDER
-
   return (
     <MonitorShell>
-      {soundsButtons()}
+      {display && soundsButtons()}
 
       {/* Image zoom portal */}
       {imageZoomed &&
@@ -94,116 +99,111 @@ export default function PuzzleGame() {
             <button onClick={() => setImageZoomed(false)}>
               <X size={32} />
             </button>
-
             <img
               src={imagePath}
               alt="Puzzle reference"
               onClick={(e) => e.stopPropagation()}
             />
           </div>,
-          document.body,
+          document.body
         )}
 
-      {/* End screen / Mode select / Game */}
+      {/* Logique d'écrans */}
       {endGame ? (
         <EndGameScreen
           score={score}
           difficulty={mod}
-          mode= {sessionStorage.getItem("puzzle_save") ? "DUPLICATE" : "SOLO"}
+          mode={sessionStorage.getItem("puzzle_save") ? "DUPLICATE" : "SOLO"}
           onModeMenu={handleModeMenu}
         />
       ) : !mod.cols || !mod.rows ? (
         <DifficultySelect setMod={setMod} />
       ) : (
-        <div className="puzzle-game-container">
-          <HUDBar
-            score={score}
-            placed={nbPieces - allBricks.length}
-            total={total}
-            remaining={allBricks.length}
-            isPlayingEffect={isPlayingEffect}
-            isPlayingMusic={isPlayingMusic}
-            onToggleEffect={() => setIsPlayingEffect((prev: any) => !prev)}
-            onToggleMusic={toggleMusic}
-            onRestart={handleModeMenu}
-          />
-
-          <div className="puzzle-game">
-            {/* Board */}
-            <div className="board-wrap">
-              <span className="board-label">▸ BOARD</span>
-              <div className="board-container">
-                <PuzzleBoard rows={mod.rows} cols={mod.cols} board={board} />
-              </div>
-            </div>
-
-            {/* Side panel */}
-            <div className="side-panel">
-              <div className="panel-card">
-                <div className="panel-card-title">CURRENT PIECE</div>
-                <div className="piece-random">
-                  {currentBrick ? (
-                    <div style={{ opacity: activeBrick ? 0.3 : 1 }}>
-                      <Brick
-                        b={currentBrick}
-                        boardSize={16}
-                        onPointerDown={(e) =>
-                          handlePointerDown(currentBrick, e)
-                        }
-                      />
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: 7, color: "#3a2d5c" }}>-</div>
-                  )}
-                </div>
-                <div className="piece-grab-hint">DRAG TO BOARD</div>
-              </div>
-
-              <div
-                className="panel-card image-card"
-                style={{ backgroundImage: `url(${imagePath})` }}
-                onClick={() => setImageZoomed(true)}
-                title="Click to zoom"
+        <div 
+          className="puzzle-game-container" 
+          style={{ opacity: display ? 1 : 0, transition: "opacity 0.2s" }}
+        >
+          {display && (
+            <>
+              <HUDBar
+                score={score}
+                placed={nbPieces - allBricks.length}
+                total={total}
+                remaining={allBricks.length}
+                isPlayingEffect={isPlayingEffect}
+                isPlayingMusic={isPlayingMusic}
+                onToggleEffect={() => setIsPlayingEffect((prev: any) => !prev)}
+                onToggleMusic={toggleMusic}
+                onRestart={handleModeMenu}
               />
 
-              {/* Drop down menu for sounds options */}
-              <div className="panel-card desktop-only">
-                <button
-                  onClick={() => {
-                    handleModeMenu();
-                  }}
-                >
-                  Restart
-                </button>
-              </div>
-            </div>
-          </div>
+              <div className="puzzle-game">
+                <div className="board-wrap">
+                  <span className="board-label">▸ BOARD</span>
+                  <div className="board-container">
+                    <PuzzleBoard rows={mod.rows} cols={mod.cols} board={board} />
+                  </div>
+                </div>
 
-          {/* Dragging ghost */}
-          {activeBrick &&
-            dragPos &&
-            createPortal(
-              <div
-                style={{
-                  position: "fixed",
-                  left: dragPos.x,
-                  top: dragPos.y,
-                  transform: "translate(-50%, -50%)",
-                  pointerEvents: "none",
-                  zIndex: 9999,
-                  opacity: isOnBoard ? 0.85 : 1,
-                  filter: isOnBoard
-                    ? "drop-shadow(0 0 12px rgba(68,255,136,.9))"
-                    : "drop-shadow(0 0 10px rgba(255,140,0,.7))",
-                  transition: "filter .1s",
-                }}
-              >
-                <Brick b={activeBrick} boardSize={mod.cols} />
-              </div>,
-              document.body,
-            )}
+                <div className="side-panel">
+                  <div className="panel-card">
+                    <div className="panel-card-title">CURRENT PIECE</div>
+                    <div className="piece-random">
+                      {currentBrick ? (
+                        <div style={{ opacity: activeBrick ? 0.3 : 1 }}>
+                          <Brick
+                            b={currentBrick}
+                            boardSize={16}
+                            onPointerDown={(e) =>
+                              handlePointerDown(currentBrick, e)
+                            }
+                          />
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: 7, color: "#3a2d5c" }}>-</div>
+                      )}
+                    </div>
+                    <div className="piece-grab-hint">DRAG TO BOARD</div>
+                  </div>
+
+                  <div
+                    className="panel-card image-card"
+                    style={{ backgroundImage: `url(${imagePath})` }}
+                    onClick={() => setImageZoomed(true)}
+                    title="Click to zoom"
+                  />
+
+                  <div className="panel-card desktop-only">
+                    <button onClick={handleModeMenu}>Restart</button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
+
+      {activeBrick && dragPos &&
+        createPortal(
+          <div
+            style={{
+              position: "fixed",
+              left: dragPos.x,
+              top: dragPos.y,
+              transform: "translate(-50%, -50%)",
+              pointerEvents: "none",
+              zIndex: 9999,
+              opacity: isOnBoard ? 0.85 : 1,
+              filter: isOnBoard
+                ? "drop-shadow(0 0 12px rgba(68,255,136,.9))"
+                : "drop-shadow(0 0 10px rgba(255,140,0,.7))",
+              transition: "filter .1s",
+            }}
+          >
+            <Brick b={activeBrick} boardSize={mod.cols} />
+          </div>,
+          document.body
+        )}
     </MonitorShell>
   );
 }

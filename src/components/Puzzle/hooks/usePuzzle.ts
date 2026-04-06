@@ -22,6 +22,7 @@ import {
   lsGet,
   lsSet,
 } from "../utils/puzzleStorage";
+import { useRoom } from "../../../contexts/RoomContext";
 
 // INTERFACES
 
@@ -67,32 +68,26 @@ export function usePuzzle({
   playOnDrop,
   playWrongPlacement,
 }: UsePuzzleOptions): PuzzleState {
-  const savedMod = lsGet<{ cols: number; rows: number }>(LS_MOD);
+  
+  const {roomId} = useRoom();
 
-  const [mod, setMod] = useState(savedMod ?? { cols: 0, rows: 0 });
+  const savedMod =lsGet<{ cols: number; rows: number }>(LS_MOD) ?? { cols: 0, rows: 0 } ;
+
+  const [mod, setMod] = useState(!roomId ? savedMod : { cols: 0, rows: 0 });
   const [loading, setLoading] = useState(false);
-
-  const [allBricks, setAllBricks] = useState<Brick[]>(
-    lsGet<Brick[]>(LS_BRICKS) ?? [],
-  );
+  const [allBricks, setAllBricks] = useState<Brick[]>(!roomId ? lsGet<Brick[]>(LS_BRICKS) ?? [] : []);
   const [currentBrick, setCurrentBrick] = useState<Brick | null>(
     lsGet<Brick>(LS_CURRENT_BRICK),
   );
 
-  const [board, setBoard] = useState<string[]>(lsGet<string[]>(LS_BOARD) ?? []);
-  const [answerBoard, setAnswerBoard] = useState<string[]>(
-    lsGet<string[]>(LS_ANSWER) ?? [],
-  );
+  const [board, setBoard] = useState<string[]>(!roomId ? lsGet<string[]>(LS_BOARD) ?? [] : []);
+  const [answerBoard, setAnswerBoard] = useState<string[]>(!roomId ? lsGet<string[]>(LS_ANSWER) ?? [] : []);
   const [score, setScore] = useState(0);
 
-  const [imagePath, setImagePath] = useState<string>(
-    lsGet<string>(LS_IMAGE) ?? "",
-  );
+  const [imagePath, setImagePath] = useState<string>(!roomId ? lsGet<string>(LS_IMAGE) ?? "" : "",);
   const [imageZoomed, setImageZoomed] = useState(false);
 
-  const [nbPieces, setNbPieces] = useState<number>(
-    lsGet<number>(LS_NB_PIECES) ?? 0,
-  );
+  const [nbPieces, setNbPieces] = useState<number>(!roomId ? lsGet<number>(LS_NB_PIECES) ?? 0 : 0);
 
   // DRAG STATE
   const [activeBrick, setActiveBrick] = useState<Brick | null>(null);
@@ -102,8 +97,6 @@ export function usePuzzle({
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const [isOnBoard, setIsOnBoard] = useState(false);
   const [endGame, setEndGame] = useState<boolean>(false);
-
-
 
   useEffect(() => {
     modRef.current = mod;
@@ -262,7 +255,6 @@ export function usePuzzle({
         setAnswerBoard(answerData);
         setBoard(initPuzzleBoard(mod.cols, mod.rows));
 
-    
         lsSet(LS_MOD, { cols: mod.cols, rows: mod.rows });
         lsSet(LS_BOARD, initPuzzleBoard(mod.cols, mod.rows));
         lsSet(LS_ANSWER, answerData);

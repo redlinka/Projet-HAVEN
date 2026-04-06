@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import "../../styles/components/Puzzle/DifficultySelect.css";
 import { useRoom } from "../../contexts/RoomContext";
+import { LS_MOD, lsClear, lsGet } from "./utils/puzzleStorage";
 
 const DIFFICULTIES = [
   { label: "EASY", cols: 16, rows: 16, stars: 1 },
@@ -35,19 +36,28 @@ export default function DifficultySelect({
   }, [selected]);
 
   const handleConfirm = () => {
-    setConfirmed(true);
-    setTimeout(() => {
-      const mod = {
-        cols: DIFFICULTIES[selected].cols,
-        rows: DIFFICULTIES[selected].rows,
-      };
-      setMod(mod);
-      if (connectedUsers?.length > 1 && isAdmin) {
-        handleSelectDifficulty(mod);
-        console.log("Difficulté envoyé à la room");
-      }
-    }, 400);
+  setConfirmed(true);
+  
+  const nextMod = {
+    cols: DIFFICULTIES[selected].cols,
+    rows: DIFFICULTIES[selected].rows,
   };
+
+  const savedMod = lsGet<{ cols: number; rows: number }>(LS_MOD);
+  
+  if (savedMod) {
+    if (savedMod.cols !== nextMod.cols || savedMod.rows !== nextMod.rows) {
+      lsClear();
+    }
+  }
+
+  setTimeout(() => {
+    setMod(nextMod);
+    if (connectedUsers?.length > 1 && isAdmin) {
+      handleSelectDifficulty(nextMod);
+    }
+  }, 400);
+};
 
   return (
     <div className="difficulty-crt">

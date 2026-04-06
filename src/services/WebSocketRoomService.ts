@@ -13,6 +13,7 @@ export class WebSocketRoomService implements RoomService {
   private roomUpdateListener: ((users: string[]) => void) | null = null;
   private gameStartedListener: (() => void) | null = null;
   private roomClosedListener: (() => void) | null = null;
+  private userRejoiningListener: ((userName: string) => void) | null = null;
   private difficultyListener:
     | ((mod: { cols: number; rows: number }) => void)
     | null = null;
@@ -59,6 +60,9 @@ export class WebSocketRoomService implements RoomService {
     listener: (mod: { cols: number; rows: number }) => void,
   ): void {
     this.difficultyListener = listener;
+  }
+  setUserRejoiningListener(listener: (userName: string) => void): void {
+    this.userRejoiningListener = listener;
   }
   setWebRTCOfferListener(l: (sdp: RTCSessionDescriptionInit) => void) {
     this.webRTCOfferListener = l;
@@ -164,6 +168,12 @@ export class WebSocketRoomService implements RoomService {
       case "room_closed":
         this.handleRoomClosed();
         break;
+      case "user_rejoined":
+        this.userRejoiningListener?.(data.user_name as string);
+        break;
+      case "user_reconnecting":
+        this.handleUserReconnecting(data);
+        break;
       case "game_started":
         this.gameStartedListener?.();
         break;
@@ -236,8 +246,20 @@ export class WebSocketRoomService implements RoomService {
     this.messageListener?.(msg);
   }
 
+  private handleUserReconnecting(data: Record<string, unknown>): void {
+    const userName = data.user_name as string;
+    const msg: Message = {
+      kind: "system",
+      sender: null,
+      content: `${userName} est en train de se reconnecter...`,
+      date: new Date(),
+    };
+    this._messages.push(msg);
+    this.messageListener?.(msg);
+  }
+
   private handleRoomClosed(): void {
-    this.roomClosedListener?.(); // ← notifie avant le reset
+    this.roomClosedListener?.();
     this.currentUsers = [];
     this._roomId = null;
     this._messages = [];
@@ -287,6 +309,27 @@ export class WebSocketRoomService implements RoomService {
     this.currentUsers = [];
     this._messages = [];
     this._roomId = null;
+  }
+
+  async rejoinRoom(userName: string, roomId: string, gameId: string) {
+    const data = await this.establishConnection(
+      {
+        kind: "rejoin_room",
+        user_name: userName,
+        room_id: roomId,
+        game_id: gameId,
+      },
+      "room_rejoined",
+    );
+    this._roomId = roomId;
+    const users = (data.users as string[]) ?? [];
+    this.currentUsers = [...users, userName];
+    return {
+      users,
+      isAdmin: data.is_admin as boolean,
+      gameStarted: data.game_started as boolean,
+      difficulty: data.difficulty as { cols: number; rows: number } | null,
+    };
   }
 
   close(): void {

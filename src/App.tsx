@@ -1,5 +1,5 @@
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { ToyBrick, Puzzle } from "lucide-react";
 import { getSession } from "./api/session";
@@ -22,6 +22,7 @@ import { RoomProvider } from "./contexts/RoomContext";
 
 import type { User } from "./types/types";
 import { UserContext } from "./contexts/UserContext";
+import { useRoomReconnect } from "./hooks/useRoomReconnect";
 
 const games = [
   {
@@ -110,20 +111,8 @@ function App() {
           <RoomServiceContext.Provider value={chatManager}>
             <RoomProvider>
               <Navbar games={games} />
-
               <div className="app-content">
-                <Routes>
-                  <Route path="/" element={<HomePage games={games} />} />
-                  <Route
-                    path="/game/:id"
-                    element={<GamePage games={games} />}
-                  />
-                  <Route
-                    path="/game/:id/lobby"
-                    element={<GameLobbyPage games={games} />}
-                  />
-                  <Route path="/history" element={<History />} />
-                </Routes>
+                <AppRoutes />
               </div>
             </RoomProvider>
           </RoomServiceContext.Provider>
@@ -134,3 +123,16 @@ function App() {
 }
 
 export default App;
+
+const AppRoutes = () => {
+  useRoomReconnect();
+
+  return (
+    <Routes>
+      <Route path="/" element={<HomePage games={games} />} />
+      <Route path="/game/:id" element={<GamePage games={games} />} />
+      <Route path="/game/:id/lobby" element={<GameLobbyPage games={games} />} />
+      <Route path="/history" element={<History />} />
+    </Routes>
+  );
+};

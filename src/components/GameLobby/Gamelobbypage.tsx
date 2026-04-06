@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import type { Game } from "../../types/types";
@@ -16,7 +16,7 @@ export default function GameLobbyPage({ games }: { games: Game[] }) {
   const [lobbyState, setLobbyState] = useState<LobbyState>("select");
   const { id } = useParams();
   const navigate = useNavigate();
-  const { handleDisconnect } = useRoom();
+  const { handleDisconnect, roomId } = useRoom();
   const [searchParams] = useSearchParams();
 
   const gameSelected = id ? games[Number(id)] : null;
@@ -32,6 +32,13 @@ export default function GameLobbyPage({ games }: { games: Game[] }) {
       navigate(-1);
     }
   };
+
+  useEffect(() => {
+    // if the player is already in a room
+    if (roomId) {
+      setLobbyState("multiplayer");
+    }
+  }, [roomId]);
 
   return (
     <div className="glp-screen">

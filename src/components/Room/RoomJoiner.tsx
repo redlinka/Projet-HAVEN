@@ -6,7 +6,12 @@ import { useParams } from "react-router-dom";
 
 interface RoomJoinerProps {
   /** Appelé quand le salon est rejoint avec succès ; users = joueurs déjà présents */
-  onRoomJoined: (userName: string, users: string[]) => void;
+  onRoomJoined: (
+    userName: string,
+    users: string[],
+    gameId: string,
+    isAdmin: boolean | false,
+  ) => void;
   /** Appelé en cas d'erreur */
   onError: (error: string) => void;
   /** Appelé au départ de la requête */
@@ -43,7 +48,7 @@ export default function RoomJoiner({
         roomCode || "",
         gameId || "",
       );
-      onRoomJoined(name, existingUsers);
+      onRoomJoined(name, existingUsers, gameId ?? "", false);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Impossible de rejoindre le salon";

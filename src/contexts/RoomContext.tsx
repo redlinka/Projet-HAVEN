@@ -8,6 +8,7 @@ import {
 } from "react";
 import { useRoomService } from "./RoomServiceContext";
 import type { Message } from "../components/Chat/ChatDisplayer";
+import { RoomSessionService } from "../services/RoomSession";
 
 export type ConnectionState = "idle" | "connecting" | "connected";
 
@@ -16,8 +17,10 @@ interface RoomContextValue {
   state: ConnectionState;
   messages: Message[];
   connectedUsers: string[];
+  userName: string | null;
   roomId: string | null;
   isAdmin: boolean;
+  gameId: string;
   error: string | null;
   gameStarted: boolean; // ← GameLobbyPage écoute ce flag
   roomClosed: boolean; // ← GamePage écoute ce flag
@@ -27,12 +30,20 @@ interface RoomContextValue {
 
   // ── Setters nécessaires à Chatter ────────────────────────────
   setState: (s: ConnectionState) => void;
+  setGameId: (s: string) => void;
   setError: (e: string | null) => void;
   setIsCanvasReady: (ready: boolean) => void; // ← Appelé quand le canvas est initialisé
+  setIsAdmin: (isAdmin: boolean) => void; // ← Appelé à la reconnexion pour rétablir les droits admin
+  setDifficulty: (difficulty: { cols: number; rows: number }) => void;
 
   // ── Handlers ─────────────────────────────────────────────────
-  handleRoomCreated: (userName: string, id: string) => void;
-  handleRoomJoined: (userName: string, existingUsers: string[]) => void;
+  handleRoomCreated: (userName: string, id: string, gameId: string) => void;
+  handleRoomJoined: (
+    userName: string,
+    existingUsers: string[],
+    gameId: string,
+    isAdmin: boolean | false,
+  ) => void;
   handleSendMessage: (content: string) => void;
   handleDisconnect: () => void;
   handleStartGame: (onStartGame: () => void) => void;
@@ -52,6 +63,7 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
   const [connectedUsers, setConnectedUsers] = useState<string[]>([]);
   const [roomId, setRoomId] = useState<string | null>(roomService.roomId);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [gameStarted, setGameStarted] = useState(false);
   const [roomClosed, setRoomClosed] = useState(false);
@@ -61,6 +73,7 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
     cols: number;
     rows: number;
   } | null>({ cols: 0, rows: 0 });
+  const [gameId, setGameId] = useState<string>("");
 
   // ── Listeners — une seule fois au montage ─────────────────────
   useEffect(() => {
@@ -86,6 +99,7 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
       setGameStarted(false);
       setIsCanvasReady(false);
       canvasRefs.current = [];
+      setGameId("");
     });
 
     roomService.setDifficultyListener((mod) => {
@@ -94,24 +108,37 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
   }, [roomService]);
 
   // ── Handlers ──────────────────────────────────────────────────
-  const handleRoomCreated = useCallback((userName: string, id: string) => {
-    setRoomId(id);
-    setIsAdmin(true);
-    setConnectedUsers([userName]);
-    setState("connected");
-    setError(null);
-    setDifficulty({ cols: 0, rows: 0 });
-    setGameStarted(false);
-  }, []);
-
-  const handleRoomJoined = useCallback(
-    (userName: string, existingUsers: string[]) => {
-      setConnectedUsers([...existingUsers, userName]);
-      setIsAdmin(false);
+  const handleRoomCreated = useCallback(
+    (userName: string, id: string, gameID: string) => {
+      setRoomId(id);
+      setIsAdmin(true);
+      setConnectedUsers([userName]);
       setState("connected");
       setError(null);
       setDifficulty({ cols: 0, rows: 0 });
       setGameStarted(false);
+      setUserName(userName);
+      setGameId(gameID);
+    },
+    [],
+  );
+
+  const handleRoomJoined = useCallback(
+    (
+      userName: string,
+      existingUsers: string[],
+      gameId: string,
+      isAdmin: boolean | false,
+    ) => {
+      setConnectedUsers([...existingUsers, userName]);
+      setUserName(userName);
+      setIsAdmin(isAdmin);
+      setState("connected");
+      setError(null);
+      setDifficulty({ cols: 0, rows: 0 });
+      setGameStarted(false);
+      setRoomId(roomService.roomId);
+      setGameId(gameId);
     },
     [],
   );
@@ -129,6 +156,7 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
   );
 
   const handleDisconnect = useCallback(() => {
+    RoomSessionService.clear();
     roomService.leaveRoom();
     setState("idle");
     setMessages([]);
@@ -141,7 +169,9 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
     setDifficulty({ cols: 0, rows: 0 });
     setGameStarted(false);
     setIsCanvasReady(false);
+    setUserName(null);
     canvasRefs.current = [];
+    setGameId("");
   }, [roomService]);
 
   const handleStartGame = useCallback(
@@ -161,23 +191,44 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
     [roomService],
   );
 
+  useEffect(() => {
+    console.log("RoomContext state update:", {
+      roomId,
+      userName,
+    });
+    if (roomId && connectedUsers.length > 0) {
+      RoomSessionService.save({
+        roomId,
+        userName: userName ?? "",
+        gameId: gameId ?? "",
+        isAdmin,
+        difficulty: difficulty ?? { cols: 0, rows: 0 },
+      });
+    }
+  }, [roomId, userName, difficulty]);
+
   return (
     <RoomContext.Provider
       value={{
-        state,
-        setState,
-        messages,
-        connectedUsers,
-        roomId,
-        isAdmin,
         error,
-        setError,
+        state,
+        roomId,
+        gameId,
+        isAdmin,
+        userName,
+        messages,
+        difficulty,
+        roomClosed,
+        canvasRefs,
         gameStarted,
         isCanvasReady,
-        canvasRefs,
+        connectedUsers,
+        setState,
+        setError,
+        setGameId,
+        setIsAdmin,
+        setDifficulty,
         setIsCanvasReady,
-        roomClosed,
-        difficulty,
         handleRoomCreated,
         handleRoomJoined,
         handleSendMessage,

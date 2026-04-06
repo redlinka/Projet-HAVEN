@@ -1,4 +1,5 @@
 <?php
+
 /**
  * paypal_return.php
  * ─────────────────────────────────────────────────────────────────
@@ -41,7 +42,8 @@ if ($tokenFromUrl && $tokenFromUrl !== $paypalOrderId) {
 //  Fonctions PayPal
 // ────────────────────────────────────────────────────────────────
 
-function getPayPalAccessToken(): ?string {
+function getPayPalAccessToken(): ?string
+{
     $clientId     = $_ENV['PAYPAL_CLIENT_ID']    ?? getenv('PAYPAL_CLIENT_ID');
     $clientSecret = $_ENV['PAYPAL_CLIENT_SECRET'] ?? getenv('PAYPAL_CLIENT_SECRET');
 
@@ -62,7 +64,8 @@ function getPayPalAccessToken(): ?string {
 /**
  * Capturer le paiement — c'est ici que l'argent est débité
  */
-function capturePayPalOrder(string $paypalOrderId): ?array {
+function capturePayPalOrder(string $paypalOrderId): ?array
+{
     $token = getPayPalAccessToken();
     if (!$token) return null;
 
@@ -121,21 +124,34 @@ try {
     // $stmt->execute([$captureId, $cartOrderId]);
 
     $cnx->commit();
+    if (!empty($_SESSION['coupon_applied']) && !empty($_SESSION['coupon_user_id'])) {
+        $nodeUrl = "https://adam.nachnouchi.com/api-node/use-points";
+        $ch = curl_init($nodeUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['SQLid' => (int)$_SESSION['coupon_user_id']]));
+        curl_exec($ch);
+        curl_close($ch);
+    }
 
     // Nettoyer la session
     unset(
         $_SESSION['paypal_order_id'],
         $_SESSION['pending_order_id'],
-        $_SESSION['pending_order_address']
+        $_SESSION['pending_order_address'],
+        $_SESSION['coupon_applied'],
+        $_SESSION['coupon_final_total'],
+        $_SESSION['coupon_user_id']
     );
-
     $_SESSION['last_order_id'] = $cartOrderId;
 
     addLog($cnx, "USER", "PAYPAL_CAPTURE", "order");
 
     header("Location: order_completed.php?order_id=" . $cartOrderId);
     exit;
-
 } catch (Exception $e) {
     if ($cnx->inTransaction()) $cnx->rollBack();
     // Le paiement a été capturé mais la BDD a planté — logguer en urgence

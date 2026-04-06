@@ -35,31 +35,14 @@ if (!$stmt->fetchColumn()) {
 }
 
 // Stocke le total final avec réduction en session pour PayPal
-$_SESSION['coupon_final_total'] = $finalTotal;
 $_SESSION['coupon_applied']     = true;
-
-// Appelle le serveur Node pour marquer tous les points comme utilisés
-$nodeUrl = "https://adam.nachnouchi.com/api-node/use-points";
-$ch = curl_init($nodeUrl);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['SQLid' => $userId]));
-$nodeResponse = curl_exec($ch);
-$nodeCode     = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
-
-if ($nodeCode !== 200) {
-    echo json_encode(['success' => false, 'error' => 'Failed to update points on game server']);
-    exit;
-}
+$_SESSION['coupon_final_total'] = $finalTotal;
+$_SESSION['coupon_user_id']     = $userId;
 
 $formatted = number_format($finalTotal, 2, '.', ' ') . ' EUR';
 
 echo json_encode([
-    'success'            => true,
-    'new_total'          => $finalTotal,
+    'success'             => true,
+    'new_total'           => $finalTotal,
     'new_total_formatted' => $formatted,
 ]);

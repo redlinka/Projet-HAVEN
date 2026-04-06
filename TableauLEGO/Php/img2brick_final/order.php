@@ -173,6 +173,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_order'])) {
                 ? (float)($_POST['final_total'] ?? $totaux)
                 : $totaux;
 
+            $finalTotal = !empty($_SESSION['coupon_applied']) && !empty($_SESSION['coupon_final_total'])
+                ? (float)$_SESSION['coupon_final_total']
+                : $totaux;
+
             $paypalOrderId = createPayPalOrder($finalTotal);
 
             if (!$paypalOrderId) {
@@ -466,13 +470,17 @@ function money($v)
                             <span>Shipping (10%)</span>
                             <strong><?= money($livraison) ?></strong>
                         </div>
+                        <div class="sum-row discount-row" id="discountRow" style="display:none; color: #2e7d32;">
+                            <span>Réduction cagnotte</span>
+                            <strong id="discountAmount">- 0.00 EUR</strong>
+                        </div>
 
                         <?php if ($couponPoints > 0): ?>
                             <!-- ── Bloc cagnotte ── -->
                             <div class="sum-divider"></div>
                             <div class="coupon-block" id="couponBlock">
                                 <div class="coupon-info-row">
-                                    <span class="coupon-label">🎮 Points disponibles</span>
+                                    <span class="coupon-label">Points disponibles</span>
                                     <strong id="couponPoints"><?= $couponPoints ?></strong>
                                 </div>
                                 <div class="coupon-info-row">
@@ -542,6 +550,7 @@ function money($v)
 
             const original = parseFloat(btn.dataset.original);
             const discount = parseFloat(btn.dataset.discount);
+            const percent = parseFloat(btn.dataset.percent);
             const finalTotal = Math.max(0, original - discount).toFixed(2);
 
             try {
@@ -559,12 +568,24 @@ function money($v)
                 const data = await res.json();
 
                 if (data.success) {
-                    // Update UI
+                    // Update total
                     document.getElementById('grandTotal').textContent = data.new_total_formatted;
                     document.getElementById('paypalBtnAmount').textContent = data.new_total_formatted;
+
+                    // Affiche la ligne de réduction
+                    const discountRow = document.getElementById('discountRow');
+                    discountRow.style.display = '';
+                    document.getElementById('discountAmount').textContent =
+                        '- ' + discount.toFixed(2).replace('.', '.') + ' EUR';
+
+                    // Update inputs cachés
                     document.getElementById('couponAppliedInput').value = '1';
                     document.getElementById('finalTotalInput').value = finalTotal;
 
+                    // Masque les infos cagnotte et affiche succès
+                    document.getElementById('couponPoints').textContent = '0';
+                    document.getElementById('couponPercent').textContent = '0%';
+                    document.getElementById('couponTotalAfter').textContent = data.new_total_formatted;
                     document.getElementById('couponSuccess').style.display = 'block';
                     btn.style.display = 'none';
                 } else {

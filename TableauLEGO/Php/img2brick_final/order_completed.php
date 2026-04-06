@@ -58,8 +58,10 @@ try {
         $emailItemsHtml .= "<li>LEGO mosaic ({$item['pavage_txt']}) - " . number_format($itemPrice, 2) . " EUR</li>";
     }
 
-    $livraison = $totalPrice * 0.10;
-    $totaux    = $totalPrice + $livraison;
+    $livraison      = $totalPrice * 0.10;
+    $totauxBrut     = $totalPrice + $livraison;
+    $discountAmount = (float)($orderBill['discount_amount'] ?? 0.00);
+    $totaux         = round($totauxBrut - $discountAmount, 2);
 
     if (!isset($_SESSION['mail_sent_' . $orderId])) {
         $subject = "Order #" . $orderId . " confirmed - Bricksy";
@@ -273,6 +275,12 @@ function money($v)
                             <span>Shipping (10%)</span>
                             <strong><?= money($livraison) ?></strong>
                         </div>
+                        <?php if ($discountAmount > 0): ?>
+                            <div class="detail-row" style="color: #2e7d32;">
+                                <span>Discount (points)</span>
+                                <strong>- <?= money($discountAmount) ?></strong>
+                            </div>
+                        <?php endif; ?>
                         <div class="sum-divider"></div>
                         <div class="total-row">
                             <span>Total paid</span>

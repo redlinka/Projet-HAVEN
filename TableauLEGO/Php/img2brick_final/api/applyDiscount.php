@@ -37,6 +37,7 @@ if (!$stmt->fetchColumn()) {
 // Stocke le total final avec réduction en session pour PayPal
 $_SESSION['coupon_applied']     = true;
 $_SESSION['coupon_final_total'] = $finalTotal;
+$_SESSION['coupon_discount_amount'] = round((float)$body['original_total'] - $finalTotal, 2);
 $_SESSION['coupon_user_id']     = $userId;
 
 $formatted = number_format($finalTotal, 2, '.', ' ') . ' EUR';

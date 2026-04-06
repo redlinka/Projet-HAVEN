@@ -115,13 +115,16 @@ $captureId = $captureResult['purchase_units'][0]['payments']['captures'][0]['id'
 try {
     $cnx->beginTransaction();
 
-    // Valider la commande (created_at = maintenant)
-    $stmt = $cnx->prepare("UPDATE ORDER_BILL SET created_at = NOW(), address_id = ? WHERE order_id = ? AND user_id = ?");
-    $stmt->execute([$orderAddressId, $cartOrderId, $userId]);
+    $discountAmount = !empty($_SESSION['coupon_applied']) && !empty($_SESSION['coupon_final_total'])
+        ? round($totaux_original - (float)$_SESSION['coupon_final_total'], 2)
+        : 0.00;
+    
+    $discountAmount = (float)($_SESSION['coupon_discount_amount'] ?? 0.00);
 
-    // Optionnel : stocker l'ID de transaction PayPal si ta table a une colonne paypal_capture_id
-    // $stmt = $cnx->prepare("UPDATE ORDER_BILL SET paypal_capture_id = ? WHERE order_id = ?");
-    // $stmt->execute([$captureId, $cartOrderId]);
+    $stmt = $cnx->prepare("UPDATE ORDER_BILL SET created_at = NOW(), address_id = ?, discount_amount = ? WHERE order_id = ? AND user_id = ?");
+    $stmt->execute([$orderAddressId, $discountAmount, $cartOrderId, $userId]);
+
+
 
     $cnx->commit();
     if (!empty($_SESSION['coupon_applied']) && !empty($_SESSION['coupon_user_id'])) {
@@ -144,6 +147,7 @@ try {
         $_SESSION['pending_order_address'],
         $_SESSION['coupon_applied'],
         $_SESSION['coupon_final_total'],
+        $_SESSION['coupon_discount_amount'],
         $_SESSION['coupon_user_id']
     );
     $_SESSION['last_order_id'] = $cartOrderId;

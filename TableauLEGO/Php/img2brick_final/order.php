@@ -169,9 +169,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_order'])) {
             $_SESSION['pending_order_address'] = $orderAddressId;
 
             // Get total price (with potential discount)
-            $finalTotal = isset($_POST['coupon_applied']) && $_POST['coupon_applied'] === '1'
-                ? (float)($_POST['final_total'] ?? $totaux)
-                : $totaux;
 
             $finalTotal = !empty($_SESSION['coupon_applied']) && !empty($_SESSION['coupon_final_total'])
                 ? (float)$_SESSION['coupon_final_total']
@@ -471,7 +468,7 @@ function money($v)
                             <strong><?= money($livraison) ?></strong>
                         </div>
                         <div class="sum-row discount-row" id="discountRow" style="display:none; color: #2e7d32;">
-                            <span>Réduction cagnotte</span>
+                            <span>Discount points</span>
                             <strong id="discountAmount">- 0.00 EUR</strong>
                         </div>
 
@@ -498,9 +495,9 @@ function money($v)
                                     data-discount="<?= $discountAmount ?>">
                                     Utiliser mes points
                                 </button>
-                                <div id="couponSuccess" class="coupon-success" style="display:none;">
-                                    ✓ Points appliqués avec succès !
-                                </div>
+                            </div>
+                            <div id="couponSuccess" class="coupon-success" style="display:none;">
+                                ✓ Points appliqués avec succès !
                             </div>
                         <?php endif; ?>
 
@@ -522,7 +519,7 @@ function money($v)
                                 <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
                                 <line x1="1" y1="10" x2="23" y2="10" />
                             </svg>
-                            Pay with PayPal — <?= money($totaux) ?>
+                            Pay with PayPal - <span id="paypalBtnAmount"><?= money($totaux) ?></span>
                         </button>
                         <a href="cart.php" class="btn-back">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
@@ -562,6 +559,7 @@ function money($v)
                     body: JSON.stringify({
                         order_id: <?= $cartOrderId ?>,
                         final_total: finalTotal,
+                        original_total: original,
                         csrf: '<?= csrf_get() ?>'
                     })
                 });
@@ -574,7 +572,7 @@ function money($v)
 
                     // Affiche la ligne de réduction
                     const discountRow = document.getElementById('discountRow');
-                    discountRow.style.display = '';
+                    discountRow.style.display = 'flex';
                     document.getElementById('discountAmount').textContent =
                         '- ' + discount.toFixed(2).replace('.', '.') + ' EUR';
 
@@ -583,11 +581,8 @@ function money($v)
                     document.getElementById('finalTotalInput').value = finalTotal;
 
                     // Masque les infos cagnotte et affiche succès
-                    document.getElementById('couponPoints').textContent = '0';
-                    document.getElementById('couponPercent').textContent = '0%';
-                    document.getElementById('couponTotalAfter').textContent = data.new_total_formatted;
+                    document.getElementById('couponBlock').style.display = 'none';
                     document.getElementById('couponSuccess').style.display = 'block';
-                    btn.style.display = 'none';
                 } else {
                     btn.disabled = false;
                     btn.textContent = 'Utiliser mes points';

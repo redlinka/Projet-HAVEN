@@ -12,55 +12,91 @@ router.get('/', async (req, res) => {
 
     let player = null;
 
-    // USER CONNECTED (BRICKSY) + TOKEN  (merge if guest exists)
+    // USER CONNECTED (BRICKSY)
     if (SQLid && SQLid !== "-1") {
-      const sqlPlayer = await Player.findOne({ SQL_id: Number(SQLid) }).select('SQL_id sessionToken games');
-      const guestPlayer = token
-        ? await Player.findOne({ sessionToken: token }).select('SQL_id sessionToken games')
-        : null;
+      const [sqlPlayer, guestPlayer] = await Promise.all([
+        Player.aggregate([
+          { $match: { SQL_id: Number(SQLid) } },
+          { $project: { SQL_id: 1, sessionToken: 1, games: 1, lastConnectedAt: 1 } }
+        ]).then(r => r[0] ?? null),
+
+        token
+          ? Player.aggregate([
+              { $match: { sessionToken: token } },
+              { $project: { SQL_id: 1, sessionToken: 1, games: 1, lastConnectedAt: 1 } }
+            ]).then(r => r[0] ?? null)
+          : Promise.resolve(null)
+      ]);
 
       if (sqlPlayer) {
-        // we merge guest games to "sql" player if guest exists, then we delete the guest
-        if (guestPlayer) {
-          const mergedGamesMap = new Map<string, typeof guestPlayer.games[number]>();
-          sqlPlayer.games.forEach(game => mergedGamesMap.set(game._id.toString(), game));
-          guestPlayer.games.forEach(game => mergedGamesMap.set(game._id.toString(), game));
-          sqlPlayer.games.splice(0, sqlPlayer.games.length);
-          Array.from(mergedGamesMap.values()).forEach(game => sqlPlayer.games.push(game));
-          await Player.deleteOne({ _id: guestPlayer._id });
+        // Merge guest games into SQL player if guest exists and is different from sqlPlayer
+        if (guestPlayer && guestPlayer._id.toString() !== sqlPlayer._id.toString()) {
+          const mergedGamesMap = new Map<string, any>();
+
+          sqlPlayer.games.forEach((game: any) => mergedGamesMap.set(game._id.toString(), game));
+          guestPlayer.games.forEach((game: any) => mergedGamesMap.set(game._id.toString(), game));
+
+          const newToken = jwt.sign(
+            { id: sqlPlayer.SQL_id },
+            process.env.JWT_SECRET as string,
+            { expiresIn: '7d' }
+          );
+
+          // Merge games, regenerate token, delete guest
+          await Promise.all([
+            Player.updateOne(
+              { _id: sqlPlayer._id },
+              {
+                $set: {
+                  games: Array.from(mergedGamesMap.values()),
+                  sessionToken: newToken,
+                  lastConnectedAt: new Date()
+                }
+              }
+            ),
+            Player.deleteOne({ _id: guestPlayer._id })
+          ]);
+
+          return res.json({ ...sqlPlayer, games: Array.from(mergedGamesMap.values()), sessionToken: newToken });
         }
 
         player = sqlPlayer;
-      } else {
-        // NO SQL ACCOUNT, we just check if there's a guest with the token and return it (no merge possible)
-        player = guestPlayer || null;
+
+      } else if (guestPlayer) {
+        // No SQL player exists on MongoDB but connected to Bricksy, we promote guest to SQL player
+        await Player.updateOne(
+          { _id: guestPlayer._id },
+          { $set: { SQL_id: Number(SQLid), lastConnectedAt: new Date() } }
+        );
+
+        return res.json({ ...guestPlayer, SQL_id: Number(SQLid) });
       }
     }
-
-    // GUEST CASE
+    // GUEST CASE (no SQL_id)
     else if (token) {
-      player = await Player.findOne({ sessionToken: token }).select('SQL_id sessionToken games');
+      const result = await Player.aggregate([
+        { $match: { sessionToken: token } },
+        { $project: { SQL_id: 1, sessionToken: 1, games: 1, lastConnectedAt: 1 } }
+      ]);
+      player = result[0] ?? null;
     }
 
     // NO PLAYER FOUND
     if (!player) return res.json(null);
 
-    // Update last connected date
-    player.lastConnectedAt = new Date();
-
-    // WE REGENERATE TOKEN IF MISSING
+    // Update last connected date + regenerate token if missing
+    const updateFields: any = { lastConnectedAt: new Date() };
     if (!player.sessionToken) {
-      const newToken = jwt.sign(
+      updateFields.sessionToken = jwt.sign(
         { id: player.SQL_id || 'guest' },
         process.env.JWT_SECRET as string,
         { expiresIn: '7d' }
       );
-      player.sessionToken = newToken;
     }
 
-    await player.save();
+    await Player.updateOne({ _id: player._id }, { $set: updateFields });
 
-    res.json(player);
+    res.json({ ...player, ...updateFields });
 
   } catch (error) {
     console.error("Error in player route:", error);

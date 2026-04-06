@@ -11,7 +11,6 @@ router.get('/', async (req, res) => {
       return res.json({ points: 0, percent: 0 });
     }
 
-    // Launch pipeline directly in MongoDB
     const stats = await Player.aggregate([
       {
         $match: { "SQL_id": Number(SQLid) }

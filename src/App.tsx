@@ -48,22 +48,34 @@ function App() {
     const initUser = async () => {
       try {
         const phpData = await getSession();
+        console.log(phpData);
         const localToken = localStorage.getItem("sessionToken");
+        console.log("localToken:", localToken);
 
         let url = "/api-node/player";
         let options: RequestInit = {};
 
-        // USER CONNECTED IN BRICKSY
-        if (phpData?.id && phpData.id !== -1) {
-          url += `?SQLid=${phpData.id}`;
-        } 
-        // GUEST WITH TOKEN
-        else if (localToken) {
+        if (localToken) {
           options.headers = { Authorization: `Bearer ${localToken}` };
         }
 
+        // USER DISCONNECTED FROM BRICKSY -> we clear all datas
+        if (!phpData?.id || phpData.id === -1) {
+          localStorage.removeItem("sessionToken");
+          localStorage.removeItem("user");
+          setUser({ id: -1, SQL_id: -1, sessionToken: null, games: [] });
+          return;
+        }
+
+        // USER CONNECTED IN BRICKSY
+        if (phpData?.id && phpData.id !== -1) {
+          console.log("On a l'id SQL du joueur bricksy");
+          url += `?SQLid=${phpData.id}`;
+        } 
+
         const response = await fetch(url, options);
         const playerData = await response.json();
+        console.log(playerData);
 
         // IF NO PLAYER DATA, WE SET A DEFAULT GUEST USER
         if (!playerData) {
@@ -100,7 +112,6 @@ function App() {
       localStorage.removeItem("user");
     }
   }, [user]);
-
   console.log(user);
 
   return (

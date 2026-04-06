@@ -25,7 +25,10 @@ $stmt = $cnx->prepare("
 $stmt->execute(['uid' => $userId]);
 $cart = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if (!$cart) { header("Location: cart.php"); exit; }
+if (!$cart) {
+    header("Location: cart.php");
+    exit;
+}
 
 $cartOrderId   = (int)$cart['order_id'];
 $cartAddressId = !empty($cart['address_id']) ? (int)$cart['address_id'] : 0;
@@ -56,7 +59,10 @@ $stmt = $cnx->prepare("
 ");
 $stmt->execute(['oid' => $cartOrderId]);
 $rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
-if (empty($rows)) { header("Location: cart.php?error=empty_cart"); exit; }
+if (empty($rows)) {
+    header("Location: cart.php?error=empty_cart");
+    exit;
+}
 
 $total = 0.0;
 foreach ($rows as $txt) {
@@ -68,9 +74,26 @@ $totalPrice = $total;
 $livraison  = $total * 0.10;
 $totaux     = $livraison + $totalPrice;
 
-// ────────────────────────────────────────────────────────────────
-//  POST — validation du formulaire puis création ordre PayPal
-// ────────────────────────────────────────────────────────────────
+// Retrieve points for HavenGame
+$apiUrl = "https://adam.nachnouchi.com/api-node/stats?SQLid=" . $userId;
+$ch = curl_init($apiUrl);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+$jsonPoints = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+$couponPoints   = 0;
+$couponPercent  = 0;
+if ($jsonPoints && $httpCode === 200) {
+    $couponData    = json_decode($jsonPoints, true);
+    $couponPoints  = $couponData['points']  ?? 0;
+    $couponPercent = $couponData['percent'] ?? 0;
+}
+$discountAmount = round($totaux * ($couponPercent / 100), 2);
+$totauxAfterCoupon = round($totaux - $discountAmount, 2);
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_order'])) {
 
     if (!csrf_validate($_POST['csrf'] ?? '')) {
@@ -85,9 +108,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_order'])) {
     $zip     = trim($_POST['zip']        ?? '');
     $country = trim($_POST['country']    ?? '');
 
-    $fillName    = $fName;  $fillSurname = $lName;
-    $fillPhone   = $phone;  $fillAddr    = $street;
-    $fillCity    = $city;   $fillZip     = $zip;
+    $fillName    = $fName;
+    $fillSurname = $lName;
+    $fillPhone   = $phone;
+    $fillAddr    = $street;
+    $fillCity    = $city;
+    $fillZip     = $zip;
     $fillCountry = $country;
 
     if (empty($errors) && !$isLocal) {
@@ -95,7 +121,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_order'])) {
         if ($token === '') {
             $errors[] = "Please complete the captcha.";
         } else {
-            set_error_handler(function () { return true; });
+            set_error_handler(function () {
+                return true;
+            });
             $ts = validateTurnstile();
             restore_error_handler();
             if (empty($ts['success'])) $errors[] = "Captcha failed.";
@@ -103,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_order'])) {
     }
 
     if (empty($errors)) {
-        if ($fName==='' || $lName==='' || $phone==='' || $street==='' || $city==='' || $zip==='' || $country==='')
+        if ($fName === '' || $lName === '' || $phone === '' || $street === '' || $city === '' || $zip === '' || $country === '')
             $errors[] = "Please fill in all contact and shipping fields.";
     }
 
@@ -140,8 +168,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_order'])) {
             $_SESSION['pending_order_id']      = $cartOrderId;
             $_SESSION['pending_order_address'] = $orderAddressId;
 
-            // ── Créer l'ordre PayPal via API ──
-            $paypalOrderId = createPayPalOrder($totaux);
+            // Get total price (with potential discount)
+            $finalTotal = isset($_POST['coupon_applied']) && $_POST['coupon_applied'] === '1'
+                ? (float)($_POST['final_total'] ?? $totaux)
+                : $totaux;
+
+            $paypalOrderId = createPayPalOrder($finalTotal);
 
             if (!$paypalOrderId) {
                 $errors[] = "Unable to connect to PayPal. Please try again.";
@@ -158,9 +190,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_order'])) {
                     $errors[] = "Unable to get PayPal approval URL. Please try again.";
                 }
             }
-
         } catch (Exception $e) {
-            try { $cnx->exec("SET @disable_triggers = 0"); } catch (Exception $ignored) {}
+            try {
+                $cnx->exec("SET @disable_triggers = 0");
+            } catch (Exception $ignored) {
+            }
             if ($cnx->inTransaction()) $cnx->rollBack();
             $errors[] = "An error occurred while processing your order. Please try again.";
         }
@@ -174,7 +208,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_order'])) {
 /**
  * Obtenir un access token PayPal Sandbox
  */
-function getPayPalAccessToken(): ?string {
+function getPayPalAccessToken(): ?string
+{
     $clientId     = $_ENV['PAYPAL_CLIENT_ID']     ?? getenv('PAYPAL_CLIENT_ID');
     $clientSecret = $_ENV['PAYPAL_CLIENT_SECRET']  ?? getenv('PAYPAL_CLIENT_SECRET');
 
@@ -196,7 +231,8 @@ function getPayPalAccessToken(): ?string {
 /**
  * Créer un ordre PayPal et retourner son ID
  */
-function createPayPalOrder(float $amount): ?string {
+function createPayPalOrder(float $amount): ?string
+{
     $token = getPayPalAccessToken();
     if (!$token) return null;
 
@@ -243,7 +279,8 @@ function createPayPalOrder(float $amount): ?string {
 /**
  * Récupérer le lien d'approbation PayPal (redirect user vers PayPal)
  */
-function getPayPalApprovalUrl(string $paypalOrderId): ?string {
+function getPayPalApprovalUrl(string $paypalOrderId): ?string
+{
     $token = getPayPalAccessToken();
     if (!$token) return null;
 
@@ -267,10 +304,14 @@ function getPayPalApprovalUrl(string $paypalOrderId): ?string {
     return null;
 }
 
-function money($v) { return number_format((float)$v, 2, '.', ' ') . ' EUR'; }
+function money($v)
+{
+    return number_format((float)$v, 2, '.', ' ') . ' EUR';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -283,178 +324,260 @@ function money($v) { return number_format((float)$v, 2, '.', ' ') . ' EUR'; }
     <link rel="stylesheet" href="style/all.css">
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
+
 <body>
 
-<?php include("./includes/navbar.php"); ?>
+    <?php include("./includes/navbar.php"); ?>
 
-<form method="POST" novalidate>
-<input type="hidden" name="csrf" value="<?= csrf_get() ?>">
+    <form method="POST" novalidate>
+        <input type="hidden" name="csrf" value="<?= csrf_get() ?>">
 
-<div class="page-wrapper">
+        <div class="page-wrapper">
 
-    <!-- ── PayPal cancelled banner ── -->
-    <?php if (isset($_GET['paypal']) && $_GET['paypal'] === 'cancelled'): ?>
-    <div style="grid-column:1/-1;background:var(--warning-bg);border:1px solid var(--warning-brd);color:var(--warning-txt);padding:clamp(8px,1.2vh,12px) var(--pad-x);border-radius:var(--r-sm);font-size:var(--fs-sm);">
-        ⚠️ You cancelled the PayPal payment. Your cart is still intact — you can try again.
-    </div>
-    <?php endif; ?>
+            <!-- ── PayPal cancelled banner ── -->
+            <?php if (isset($_GET['paypal']) && $_GET['paypal'] === 'cancelled'): ?>
+                <div style="grid-column:1/-1;background:var(--warning-bg);border:1px solid var(--warning-brd);color:var(--warning-txt);padding:clamp(8px,1.2vh,12px) var(--pad-x);border-radius:var(--r-sm);font-size:var(--fs-sm);">
+                    ⚠️ You cancelled the PayPal payment. Your cart is still intact — you can try again.
+                </div>
+            <?php endif; ?>
 
-    <!-- ── Error banner ── -->
-    <?php if (!empty($errors)): ?>
-    <div class="alert-error">
-        <ul><?php foreach ($errors as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?></ul>
-    </div>
-    <?php endif; ?>
+            <!-- ── Error banner ── -->
+            <?php if (!empty($errors)): ?>
+                <div class="alert-error">
+                    <ul><?php foreach ($errors as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?></ul>
+                </div>
+            <?php endif; ?>
 
-    <!-- ══════════════════════════════
+            <!-- ══════════════════════════════
          LEFT — Form sections
     ══════════════════════════════ -->
-    <div class="col-form">
+            <div class="col-form">
 
-        <!-- 1. Contact -->
-        <div class="section-card">
-            <div class="section-head">
-                <span class="step-num">1</span>
-                Contact Details
-            </div>
-            <div class="section-body">
-                <div class="fields-grid">
-                    <div class="field">
-                        <label for="first_name">First Name</label>
-                        <input type="text" id="first_name" name="first_name"
-                               value="<?= htmlspecialchars($fillName) ?>"
-                               placeholder="John" required>
+                <!-- 1. Contact -->
+                <div class="section-card">
+                    <div class="section-head">
+                        <span class="step-num">1</span>
+                        Contact Details
                     </div>
-                    <div class="field">
-                        <label for="last_name">Last Name</label>
-                        <input type="text" id="last_name" name="last_name"
-                               value="<?= htmlspecialchars($fillSurname) ?>"
-                               placeholder="Doe" required>
-                    </div>
-                    <div class="field field-full">
-                        <label for="phone">Phone Number</label>
-                        <input type="tel" id="phone" name="phone"
-                               value="<?= htmlspecialchars($fillPhone) ?>"
-                               placeholder="+33 6 12 34 56 78" required>
+                    <div class="section-body">
+                        <div class="fields-grid">
+                            <div class="field">
+                                <label for="first_name">First Name</label>
+                                <input type="text" id="first_name" name="first_name"
+                                    value="<?= htmlspecialchars($fillName) ?>"
+                                    placeholder="John" required>
+                            </div>
+                            <div class="field">
+                                <label for="last_name">Last Name</label>
+                                <input type="text" id="last_name" name="last_name"
+                                    value="<?= htmlspecialchars($fillSurname) ?>"
+                                    placeholder="Doe" required>
+                            </div>
+                            <div class="field field-full">
+                                <label for="phone">Phone Number</label>
+                                <input type="tel" id="phone" name="phone"
+                                    value="<?= htmlspecialchars($fillPhone) ?>"
+                                    placeholder="+33 6 12 34 56 78" required>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- 2. Shipping -->
-        <div class="section-card">
-            <div class="section-head">
-                <span class="step-num">2</span>
-                Shipping Address
-            </div>
-            <div class="section-body">
-                <div class="fields-grid">
-                    <div class="field field-full">
-                        <label for="address">Street Address</label>
-                        <input type="text" id="address" name="address"
-                               value="<?= htmlspecialchars($fillAddr) ?>"
-                               placeholder="123 Brick Street" required>
+                <!-- 2. Shipping -->
+                <div class="section-card">
+                    <div class="section-head">
+                        <span class="step-num">2</span>
+                        Shipping Address
                     </div>
-                    <div class="field">
-                        <label for="city">City</label>
-                        <input type="text" id="city" name="city"
-                               value="<?= htmlspecialchars($fillCity) ?>"
-                               placeholder="Paris" required>
-                    </div>
-                    <div class="field">
-                        <label for="zip">Zip Code</label>
-                        <input type="text" id="zip" name="zip"
-                               value="<?= htmlspecialchars($fillZip) ?>"
-                               placeholder="75001" required>
-                    </div>
-                    <div class="field field-full">
-                        <label for="country">Country</label>
-                        <select id="country" name="country" required>
-                            <option value="France" <?= ($fillCountry==='France' ? 'selected':'') ?>>France</option>
-                            <option value="USA"    <?= ($fillCountry==='USA'    ? 'selected':'') ?>>United States</option>
-                            <option value="UK"     <?= ($fillCountry==='UK'     ? 'selected':'') ?>>United Kingdom</option>
-                        </select>
+                    <div class="section-body">
+                        <div class="fields-grid">
+                            <div class="field field-full">
+                                <label for="address">Street Address</label>
+                                <input type="text" id="address" name="address"
+                                    value="<?= htmlspecialchars($fillAddr) ?>"
+                                    placeholder="123 Brick Street" required>
+                            </div>
+                            <div class="field">
+                                <label for="city">City</label>
+                                <input type="text" id="city" name="city"
+                                    value="<?= htmlspecialchars($fillCity) ?>"
+                                    placeholder="Paris" required>
+                            </div>
+                            <div class="field">
+                                <label for="zip">Zip Code</label>
+                                <input type="text" id="zip" name="zip"
+                                    value="<?= htmlspecialchars($fillZip) ?>"
+                                    placeholder="75001" required>
+                            </div>
+                            <div class="field field-full">
+                                <label for="country">Country</label>
+                                <select id="country" name="country" required>
+                                    <option value="France" <?= ($fillCountry === 'France' ? 'selected' : '') ?>>France</option>
+                                    <option value="USA" <?= ($fillCountry === 'USA'    ? 'selected' : '') ?>>United States</option>
+                                    <option value="UK" <?= ($fillCountry === 'UK'     ? 'selected' : '') ?>>United Kingdom</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- 3. Payment — PayPal Sandbox -->
-        <div class="section-card">
-            <div class="section-head">
-                <span class="step-num">3</span>
-                Payment
-            </div>
-            <div class="section-body">
-                <div class="paypal-info">
-                    <img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_111x69.jpg"
-                         alt="PayPal" style="height:40px; margin-bottom:10px; display:block;">
-                    <p style="font-size:0.85rem; color:#555; margin:0;">
-                        After confirming, you will be securely redirected to PayPal Sandbox to complete your payment.
-                    </p>
+                <!-- 3. Payment — PayPal Sandbox -->
+                <div class="section-card">
+                    <div class="section-head">
+                        <span class="step-num">3</span>
+                        Payment
+                    </div>
+                    <div class="section-body">
+                        <div class="paypal-info">
+                            <img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_111x69.jpg"
+                                alt="PayPal" style="height:40px; margin-bottom:10px; display:block;">
+                            <p style="font-size:0.85rem; color:#555; margin:0;">
+                                After confirming, you will be securely redirected to PayPal Sandbox to complete your payment.
+                            </p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Captcha -->
-        <?php if (!$isLocal): ?>
-        <div class="captcha-wrap">
-            <div class="cf-turnstile"
-                 data-sitekey="<?= htmlspecialchars($_ENV['CLOUDFLARE_TURNSTILE_PUBLIC'] ?? '') ?>">
-            </div>
-        </div>
-        <?php endif; ?>
+                <!-- Captcha -->
+                <?php if (!$isLocal): ?>
+                    <div class="captcha-wrap">
+                        <div class="cf-turnstile"
+                            data-sitekey="<?= htmlspecialchars($_ENV['CLOUDFLARE_TURNSTILE_PUBLIC'] ?? '') ?>">
+                        </div>
+                    </div>
+                <?php endif; ?>
 
-    </div><!-- /col-form -->
+            </div><!-- /col-form -->
 
-    <!-- ══════════════════════════════
+            <!-- ══════════════════════════════
          RIGHT — Summary
     ══════════════════════════════ -->
-    <div class="col-summary">
+            <div class="col-summary">
 
-        <div class="summary-card">
-            <div class="summary-head">Order Summary</div>
+                <div class="summary-card">
+                    <div class="summary-head">Order Summary</div>
 
-            <div class="summary-body">
-                <div class="sum-row">
-                    <span>Subtotal</span>
-                    <strong><?= money($totalPrice) ?></strong>
+                    <div class="summary-body">
+                        <div class="sum-row">
+                            <span>Subtotal</span>
+                            <strong><?= money($totalPrice) ?></strong>
+                        </div>
+                        <div class="sum-row">
+                            <span>Shipping (10%)</span>
+                            <strong><?= money($livraison) ?></strong>
+                        </div>
+
+                        <?php if ($couponPoints > 0): ?>
+                            <!-- ── Bloc cagnotte ── -->
+                            <div class="sum-divider"></div>
+                            <div class="coupon-block" id="couponBlock">
+                                <div class="coupon-info-row">
+                                    <span class="coupon-label">🎮 Points disponibles</span>
+                                    <strong id="couponPoints"><?= $couponPoints ?></strong>
+                                </div>
+                                <div class="coupon-info-row">
+                                    <span class="coupon-label">Réduction équivalente</span>
+                                    <strong id="couponPercent"><?= $couponPercent ?>%</strong>
+                                </div>
+                                <div class="coupon-info-row">
+                                    <span class="coupon-label">Total après réduction</span>
+                                    <strong id="couponTotalAfter"><?= money($totauxAfterCoupon) ?></strong>
+                                </div>
+                                <button type="button" class="btn-coupon" id="applyCouponBtn"
+                                    data-points="<?= $couponPoints ?>"
+                                    data-percent="<?= $couponPercent ?>"
+                                    data-original="<?= $totaux ?>"
+                                    data-discount="<?= $discountAmount ?>">
+                                    Utiliser mes points
+                                </button>
+                                <div id="couponSuccess" class="coupon-success" style="display:none;">
+                                    ✓ Points appliqués avec succès !
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
+                        <div class="sum-divider"></div>
+                        <div class="sum-row grand">
+                            <span>Total</span>
+                            <strong id="grandTotal"><?= money($totaux) ?></strong>
+                        </div>
+                    </div>
+
+                    <div class="summary-footer">
+                        <input type="hidden" name="coupon_applied" id="couponAppliedInput" value="0">
+                        <input type="hidden" name="final_total" id="finalTotalInput" value="<?= $totaux ?>">
+
+                        <button type="submit" name="confirm_order" class="btn-confirm">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                                style="margin-right:6px;vertical-align:middle;">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                                <line x1="1" y1="10" x2="23" y2="10" />
+                            </svg>
+                            Pay with PayPal — <?= money($totaux) ?>
+                        </button>
+                        <a href="cart.php" class="btn-back">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="19" y1="12" x2="5" y2="12" />
+                                <polyline points="12 19 5 12 12 5" />
+                            </svg>
+                            Back to Cart
+                        </a>
+                    </div>
                 </div>
-                <div class="sum-row">
-                    <span>Shipping (10%)</span>
-                    <strong><?= money($livraison) ?></strong>
-                </div>
-                <div class="sum-divider"></div>
-                <div class="sum-row grand">
-                    <span>Total</span>
-                    <strong><?= money($totaux) ?></strong>
-                </div>
-            </div>
 
-            <div class="summary-footer">
-                <button type="submit" name="confirm_order" class="btn-confirm">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                         style="margin-right:6px;vertical-align:middle;">
-                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-                        <line x1="1" y1="10" x2="23" y2="10"/>
-                    </svg>
-                    Pay with PayPal — <?= money($totaux) ?>
-                </button>
-                <a href="cart.php" class="btn-back">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
-                    </svg>
-                    Back to Cart
-                </a>
-            </div>
-        </div>
+            </div><!-- /col-summary -->
 
-    </div><!-- /col-summary -->
-
-</div><!-- /page-wrapper -->
-</form>
+        </div><!-- /page-wrapper -->
+    </form>
 
 </body>
+<script>
+    const btn = document.getElementById('applyCouponBtn');
+    if (btn) {
+        btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            btn.textContent = 'Application...';
+
+            const original = parseFloat(btn.dataset.original);
+            const discount = parseFloat(btn.dataset.discount);
+            const finalTotal = Math.max(0, original - discount).toFixed(2);
+
+            try {
+                const res = await fetch('api/applyDiscount.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        order_id: <?= $cartOrderId ?>,
+                        final_total: finalTotal,
+                        csrf: '<?= csrf_get() ?>'
+                    })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    // Update UI
+                    document.getElementById('grandTotal').textContent = data.new_total_formatted;
+                    document.getElementById('paypalBtnAmount').textContent = data.new_total_formatted;
+                    document.getElementById('couponAppliedInput').value = '1';
+                    document.getElementById('finalTotalInput').value = finalTotal;
+
+                    document.getElementById('couponSuccess').style.display = 'block';
+                    btn.style.display = 'none';
+                } else {
+                    btn.disabled = false;
+                    btn.textContent = 'Utiliser mes points';
+                    alert(data.error ?? 'Une erreur est survenue.');
+                }
+            } catch (e) {
+                btn.disabled = false;
+                btn.textContent = 'Utiliser mes points';
+            }
+        });
+    }
+</script>
+
 </html>

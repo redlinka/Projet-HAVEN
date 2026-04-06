@@ -291,6 +291,58 @@ html, body {
 }
 .btn-back:hover { border-color: var(--brown-lt); color: var(--brown); }
 
+
+/*Discount managment */
+
+.coupon-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem 0;
+}
+
+.coupon-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+.coupon-label {
+    color: #666;
+}
+
+.btn-coupon {
+    margin-top: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: var(--main-brown, #A26547);
+    color: #fff;
+    border: none;
+    border-radius: 0.6em;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.btn-coupon:hover:not(:disabled) {
+    filter: brightness(1.1);
+}
+
+.btn-coupon:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.coupon-success {
+    color: #2e7d32;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-align: center;
+    padding: 0.4rem 0;
+}
+
 /* ═══════════════════════════════════════════
    RESPONSIVE — tablet ≤ 760px: stack
 ═══════════════════════════════════════════ */

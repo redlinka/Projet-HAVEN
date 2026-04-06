@@ -1,4 +1,3 @@
-<?php include_once("matomo_tag.php"); ?>
 <?php
 session_start();
 global $cnx;
@@ -165,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="style/downscale.css" rel="stylesheet">
     <link href="style/all.css" rel="stylesheet">
-
+    <?php include_once("matomo_tag.php"); ?>
 </head>
 
 <body>

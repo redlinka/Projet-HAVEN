@@ -1,4 +1,3 @@
-<?php include_once("matomo_tag.php"); ?>
 <?php
 session_start();
 global $cnx;
@@ -270,6 +269,7 @@ $user = [
         }
     </style>
     <link rel="stylesheet" href="style/all.css">
+    <?php include_once("matomo_tag.php"); ?>
 </head>
 
 <body>

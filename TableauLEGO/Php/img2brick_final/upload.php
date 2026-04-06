@@ -1,4 +1,3 @@
-<?php include_once("matomo_tag.php"); ?>
 <?php
 session_start();
 global $cnx;
@@ -157,6 +156,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="./style/all.css">
     <link rel="stylesheet" href="./style/upload.css">
+    <?php include_once("matomo_tag.php"); ?>
     <style>
         /* Error List Styling */
         .error-list {

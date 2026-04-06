@@ -1,7 +1,6 @@
-<?php include_once("matomo_tag.php"); ?>
 <?php
-ob_start();
 session_start();
+ob_start();
 global $cnx;
 include("./config/cnx.php");
 require_once __DIR__ . '/includes/i18n.php';
@@ -339,6 +338,7 @@ if ($generated) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style/tiling_selection.css">
     <link rel="stylesheet" href="style/all.css">
+    <?php include_once("matomo_tag.php"); ?>
 </head>
 <body>
 

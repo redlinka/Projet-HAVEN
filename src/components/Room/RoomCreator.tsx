@@ -6,7 +6,7 @@ import { useParams } from "react-router-dom";
 
 interface RoomCreatorProps {
   /** Appelé quand le salon est créé avec succès */
-  onRoomCreated: (userName: string, roomId: string) => void;
+  onRoomCreated: (userName: string, roomId: string, gameId: string) => void;
   /** Appelé en cas d'erreur de connexion */
   onError: (error: string) => void;
   /** Appelé au moment où la requête part (pour afficher un état de chargement global) */
@@ -29,7 +29,7 @@ export default function RoomCreator({
 
     try {
       const roomId = await roomService.createRoom(name, gameId || "");
-      onRoomCreated(name, roomId);
+      onRoomCreated(name, roomId, gameId ?? "");
     } catch (err) {
       const message =
         err instanceof Error

@@ -80,6 +80,19 @@ export interface RoomService {
    */
   leaveRoom(): void;
 
+  rejoinRoom(
+    userName: string,
+    roomId: string,
+    gameId: string,
+  ): Promise<{
+    users: string[];
+    isAdmin: boolean;
+    gameStarted: boolean;
+    difficulty: { cols: number; rows: number } | null;
+  }>;
+
+  setUserRejoiningListener(listener: (userName: string) => void): void;
+
   sendWebRTCOffer(sdp: RTCSessionDescriptionInit): void;
   sendWebRTCAnswer(sdp: RTCSessionDescriptionInit): void;
   sendWebRTCIceCandidate(candidate: RTCIceCandidateInit): void;

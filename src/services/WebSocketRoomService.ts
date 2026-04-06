@@ -28,6 +28,13 @@ export class WebSocketRoomService implements RoomService {
     | ((candidate: RTCIceCandidateInit) => void)
     | null = null;
   private webRTCReadyListener: (() => void) | null = null;
+  private gameEndScoreListener:
+    | ((data: {
+        opponentScore: number;
+        game: string;
+        difficulty: string;
+      }) => void)
+    | null = null;
 
   private currentUsers: string[] = [];
   private _messages: Message[] = [];
@@ -75,6 +82,15 @@ export class WebSocketRoomService implements RoomService {
   }
   setWebRTCReadyListener(l: () => void) {
     this.webRTCReadyListener = l;
+  }
+  setGameEndScoreListener(
+    listener: (data: {
+      opponentScore: number;
+      game: string;
+      difficulty: string;
+    }) => void,
+  ): void {
+    this.gameEndScoreListener = listener;
   }
   // ─── Connexion ─────────────────────────────────────────────────
   async createRoom(userName: string, gameId: string): Promise<string> {
@@ -197,6 +213,13 @@ export class WebSocketRoomService implements RoomService {
       case "webrtc_ready":
         this.webRTCReadyListener?.();
         break;
+      case "game_end_score":
+        this.gameEndScoreListener?.({
+          opponentScore: data.score as number,
+          game: data.game as string,
+          difficulty: data.difficulty as string,
+        });
+        break;
       case "error":
         console.error("[WebSocketChatManager] Erreur serveur :", data.message);
         break;
@@ -297,6 +320,23 @@ export class WebSocketRoomService implements RoomService {
   startGame(): void {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ kind: "start_game" }));
+    }
+  }
+
+  sendGameEndScore(score: number, game: string, difficulty: string): void {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.send(
+        JSON.stringify({
+          kind: "game_end_score",
+          score,
+          game,
+          difficulty,
+        }),
+      );
+    } else {
+      console.warn(
+        "[WebSocketRoomService] sendGameEndScore: connexion non ouverte",
+      );
     }
   }
 

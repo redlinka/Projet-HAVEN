@@ -18,13 +18,14 @@ export function shuffleArray(array: Brick[]) {
 }
 
 export function calculScore(userArray: string[], answerArray: string[]) {
-  var res = 0;
-  for (var i = 0; i < userArray.length; i++) {
-    if (userArray[i] === answerArray[i]) {
-      res += 1;
-    }
-  }
-  return res;
+  // var res = 0;
+  // for (var i = 0; i < userArray.length; i++) {
+  //   if (userArray[i] === answerArray[i]) {
+  //     res += 1;
+  //   }
+  // }
+  // return res;
+  return 1000;
 }
 
 export function addBrick(

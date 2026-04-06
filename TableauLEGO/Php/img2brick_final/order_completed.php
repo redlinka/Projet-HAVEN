@@ -132,6 +132,17 @@ try {
                                     </table>
                                 </td>
                             </tr>
+                            ' . ($discountAmount > 0 ? '
+                            <tr>
+                                <td style="padding:10px 0;border-bottom:1px solid #e0d5c8;">
+                                    <table width="100%" cellpadding="0" cellspacing="0">
+                                        <tr>
+                                            <td style="font-size:14px;color:#2e7d32;">Discount (points)</td>
+                                            <td align="right" style="font-size:14px;color:#2e7d32;font-weight:600;">- ' . number_format($discountAmount, 2, '.', ' ') . ' EUR</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>' : '') . '
                             <tr>
                                 <td style="padding:14px 0 0;">
                                     <table width="100%" cellpadding="0" cellspacing="0">

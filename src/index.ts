@@ -12,7 +12,6 @@ import connectDB from './db';
 import { initWebSocketServer } from './ws/roomManager'
 import playerRouter from './routes/player';
 import endgameRouter from './routes/endgame';
-import mergeRouter from './routes/merge';
 import historyRouter from './routes/history';
 import statsRouter from './routes/stats';
 import usePointsRouter from './routes/usePoints';
@@ -33,7 +32,6 @@ async function main() {
   // we define routes of our app
   app.use('/api-node/player', playerRouter);
   app.use('/api-node/endgame', endgameRouter);
-  app.use('/api-node/merge', mergeRouter);
   app.use('/api-node/history', historyRouter);
   app.use('/api-node/stats', statsRouter);
   app.use('/api-node/use-points', usePointsRouter);

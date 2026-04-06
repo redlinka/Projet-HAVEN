@@ -15,6 +15,7 @@ import endgameRouter from './routes/endgame';
 import mergeRouter from './routes/merge';
 import historyRouter from './routes/history';
 import statsRouter from './routes/stats';
+import usePointsRouter from './routes/usePoints';
 
 const PORT = parseInt(process.env.PORT ?? '2025', 10);
 
@@ -35,6 +36,7 @@ async function main() {
   app.use('/api-node/merge', mergeRouter);
   app.use('/api-node/history', historyRouter);
   app.use('/api-node/stats', statsRouter);
+  app.use('/api-node/use-points', usePointsRouter);
 
 
 

@@ -107,4 +107,20 @@ export interface RoomService {
   ): void;
   sendWebRTCReady(): void;
   setWebRTCReadyListener(listener: () => void): void;
+
+  /**
+   * Envoie le score de fin de partie aux autres joueurs
+   */
+  sendGameEndScore(score: number, game: string, difficulty: string): void;
+
+  /**
+   * Reçoit le score de fin de partie d'un autre joueur
+   */
+  setGameEndScoreListener(
+    listener: (data: {
+      opponentScore: number;
+      game: string;
+      difficulty: string;
+    }) => void,
+  ): void;
 }

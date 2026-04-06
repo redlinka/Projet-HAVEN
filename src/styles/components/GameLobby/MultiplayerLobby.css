@@ -8,53 +8,6 @@
   --chatter-accent: #f59e0b;
 }
 
-.lobby-chat-wrapper .chatter {
-  background: #1c0b3a;
-  border: 2px solid #3d1a7a;
-  box-shadow: 0 0 30px rgba(124, 58, 237, 0.15) inset;
-  min-height: 520px;
-}
-
-.lobby-chat-wrapper .chatter-header {
-  background: #12082a;
-  border-bottom-color: #3d1a7a;
-}
-
-.lobby-chat-wrapper .chatter-footer {
-  background: #12082a;
-  border-top-color: #3d1a7a;
-}
-
-.lobby-chat-wrapper .chatter-user-badge {
-  background: rgba(245, 158, 11, 0.1);
-  border-color: rgba(245, 158, 11, 0.35);
-  color: #f59e0b;
-  font-family: "Press Start 2P", "Courier New", monospace;
-  font-size: 0.55rem;
-}
-
-.lobby-chat-wrapper .chatter-code-value {
-  background: #12082a;
-  border-color: #3d1a7a;
-  font-family: "Press Start 2P", "Courier New", monospace;
-  font-size: 0.9rem;
-  color: #f59e0b;
-  letter-spacing: 0.25em;
-}
-
-.lobby-chat-wrapper .chatter-start-btn--ready {
-  font-family: "Press Start 2P", "Courier New", monospace;
-  font-size: 0.6rem;
-  border-color: #f59e0b;
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.08);
-}
-
-.lobby-chat-wrapper .chatter-lobby {
-  background: transparent;
-  padding: 0;
-}
-
 .lobby-chat-wrapper .room-creator,
 .lobby-chat-wrapper .room-joiner {
   background-color: transparent;

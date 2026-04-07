@@ -6,6 +6,7 @@
   flex-wrap: wrap;
   padding: clamp(10px, 2vw, 20px);
   gap: clamp(10px, 2vw, 20px);
+  user-select: none;
 }
 
 .game-container .game-container-left,

@@ -1,50 +1,75 @@
 import { useCanvasStream } from "../hooks/useCanvasStream";
 import { useRoom } from "../contexts/RoomContext";
 import "../styles/components/OpponentScreen.css";
-import { useRef, useState, useCallback } from "react";
+import { useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 
 export default function OpponentScreen() {
   const { id: gameId } = useParams();
-  const { isAdmin } = useRoom();
+  const { isAdmin, connectedUsers } = useRoom();
   const { remoteVideoRef } = useCanvasStream(isAdmin, gameId);
+  const opponentLeft = connectedUsers.length < 2;
 
-  const [position, setPosition] = useState({ x: 12, y: 12 });
-  const [dragging, setDragging] = useState(false);
-  const offsetRef = useRef({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const pos = useRef({ x: 12, y: 12 });
+  const offset = useRef({ x: 0, y: 0 });
+  const dragging = useRef(false);
 
-  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    e.currentTarget.setPointerCapture(e.pointerId);
-    offsetRef.current = { x: e.clientX - position.x, y: e.clientY - position.y };
-    setDragging(true);
-  }, [position]);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
 
-  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (!dragging) return;
-    setPosition({
-      x: e.clientX - offsetRef.current.x,
-      y: e.clientY - offsetRef.current.y,
-    });
-  }, [dragging]);
+    const onPointerDown = (e: PointerEvent) => {
+      el.setPointerCapture(e.pointerId);
+      offset.current = { x: e.clientX - pos.current.x, y: e.clientY - pos.current.y };
+      dragging.current = true;
+      el.style.cursor = "grabbing";
+    };
 
-  const handlePointerUp = useCallback(() => {
-    setDragging(false);
+    const onPointerMove = (e: PointerEvent) => {
+      if (!dragging.current) return;
+      pos.current = {
+        x: e.clientX - offset.current.x,
+        y: e.clientY - offset.current.y,
+      };
+      el.style.transform = `translate(${pos.current.x}px, ${pos.current.y}px)`;
+    };
+
+    const onPointerUp = () => {
+      dragging.current = false;
+      el.style.cursor = "grab";
+    };
+
+    el.style.transform = `translate(${pos.current.x}px, ${pos.current.y}px)`;
+
+    el.addEventListener("pointerdown", onPointerDown);
+    el.addEventListener("pointermove", onPointerMove);
+    el.addEventListener("pointerup", onPointerUp);
+
+    return () => {
+      el.removeEventListener("pointerdown", onPointerDown);
+      el.removeEventListener("pointermove", onPointerMove);
+      el.removeEventListener("pointerup", onPointerUp);
+    };
   }, []);
 
   return (
     <div
+      ref={containerRef}
       className="opponent-screen"
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      style={{
-        position: "fixed",
-        left: position.x,
-        top: position.y,
-        cursor: dragging ? "grabbing" : "grab",
-      }}
     >
-      <video ref={remoteVideoRef} autoPlay playsInline muted />
+      <video
+        ref={remoteVideoRef}
+        autoPlay
+        playsInline
+        muted
+        style={{ display: opponentLeft ? "none" : undefined }}
+      />
+      {opponentLeft && (
+        <div className="opponent-disconnected">
+          Opponent disconnected
+        </div>
+      )}
     </div>
   );
 }

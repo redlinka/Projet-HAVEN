@@ -81,8 +81,14 @@ export const Scene = () => {
       nextPieces: [],
     };
 
+    // When entering multiplayer, always start with a clean slate
+    // so that leftover solo game state doesn't carry over
+    if (isMultiplayer) {
+      useGameStore.setState(resetState);
+    }
+
     const handleBeforeUnload = () => {
-      if (useGameStore.getState().isGameOver) {
+      if (isMultiplayer || useGameStore.getState().isGameOver) {
         useGameStore.setState(resetState);
       }
     };

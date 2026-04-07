@@ -64,7 +64,8 @@ const GlobalEffects = () => {
 
 //main scene
 export const Scene = () => {
-  const { setIsCanvasReady, canvasRefs } = useRoom();
+  const { setIsCanvasReady, canvasRefs, connectedUsers } = useRoom();
+  const isMultiplayer = connectedUsers.length >= 2;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
       toggleBGM(`${import.meta.env.BASE_URL}sounds/brickblast/background.mp3`, 0.25);
@@ -91,9 +92,11 @@ export const Scene = () => {
     return () => {
       stopBGM();
       window.removeEventListener("beforeunload", handleBeforeUnload);
-      useGameStore.setState(resetState);
+      if (isMultiplayer || useGameStore.getState().isGameOver) {
+        useGameStore.setState(resetState);
+      }
     };
-  }, []);
+  }, [isMultiplayer]);
 
   return (
     <div

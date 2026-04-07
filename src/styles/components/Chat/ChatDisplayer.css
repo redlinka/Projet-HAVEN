@@ -1,12 +1,10 @@
 .chat-message-displayer {
-  width: 100%;
+  position: absolute;
+  inset: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  flex: 1;
-  max-height: 360px;
   display: flex;
   flex-direction: column-reverse;
-  margin-top: auto;
   padding: 0.75rem 1rem;
   scrollbar-width: thin;
   scrollbar-color: rgba(160, 88, 190, 0.3) transparent;

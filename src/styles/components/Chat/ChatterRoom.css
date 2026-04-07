@@ -135,10 +135,7 @@
 
 .chatter-body {
   flex: 1;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+  min-height: 0;
   position: relative;
 }
 

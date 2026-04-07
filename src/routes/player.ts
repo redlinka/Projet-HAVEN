@@ -75,8 +75,8 @@ router.get('/', async (req, res) => {
     // GUEST CASE (no SQL_id)
     else if (token) {
       const result = await Player.aggregate([
-        { $match: { sessionToken: token } },
-        { $project: { SQL_id: 1, sessionToken: 1, games: 1, lastConnectedAt: 1 } }
+        { $match: { sessionToken: token, SQL_id: -1 } },
+        { $project: { SQL_id: 1, sessionToken: 1, games: 1, lastConnectedAt: 1 }}
       ]);
       player = result[0] ?? null;
     }

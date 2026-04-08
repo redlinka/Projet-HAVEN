@@ -12,6 +12,7 @@ import {
   calculateScoreTransfer,
   determineWinner,
 } from "../../utils/scoreTransfer.ts";
+import { useNavigate } from "react-router-dom";
 
 export const CameraController = () => {
   const { size } = useThree();
@@ -114,7 +115,8 @@ export const GameOverScreen = () => {
 
   const score = useGameStore((state) => state.score);
   const { user, setUser } = useUser();
-  const { connectedUsers } = useRoom();
+  const { connectedUsers, setGameStarted } = useRoom();
+  const navigate = useNavigate();
   const roomService = useRoomService();
   const isMultiplayer = connectedUsers.length >= 2;
 
@@ -256,7 +258,8 @@ export const GameOverScreen = () => {
   };
 
   const handleQuit = () => {
-    window.location.href = "/games/game/1/lobby";
+    setGameStarted(false);
+    navigate("/game/1/lobby");
   };
 
   return (
@@ -288,23 +291,27 @@ export const GameOverScreen = () => {
         GAME OVER
       </Text>
 
-      <MenuButton
-        position={isPortrait ? [0, 0, 0] : [-25, -15, 0]}
-        size={isPortrait ? 18 : 22}
-        imageSrc={`${import.meta.env.BASE_URL}img/brickblast/replay.png`}
-        musicSrc={`${import.meta.env.BASE_URL}sounds/brickblast/nice.mp3`}
-        onClick={handleRetry}
-        color="none"
-      />
+      {isMultiplayer && (
+        <MenuButton
+          position={isPortrait ? [0, 0, 0] : [-25, -15, 0]}
+          size={isPortrait ? 18 : 22}
+          imageSrc={`${import.meta.env.BASE_URL}img/brickblast/replay.png`}
+          musicSrc={`${import.meta.env.BASE_URL}sounds/brickblast/nice.mp3`}
+          onClick={handleRetry}
+          color="none"
+        />
+      )}
 
-      <MenuButton
-        position={isPortrait ? [0, -25, 0] : [25, -15, 0]}
-        size={isPortrait ? 20 : 25}
-        imageSrc={`${import.meta.env.BASE_URL}img/brickblast/exit.png`}
-        musicSrc={`${import.meta.env.BASE_URL}sounds/brickblast/nice.mp3`}
-        onClick={handleQuit}
-        color="none"
-      />
+      {isMultiplayer && (
+        <MenuButton
+          position={isPortrait ? [0, -25, 0] : [25, -15, 0]}
+          size={isPortrait ? 20 : 25}
+          imageSrc={`${import.meta.env.BASE_URL}img/brickblast/exit.png`}
+          musicSrc={`${import.meta.env.BASE_URL}sounds/brickblast/nice.mp3`}
+          onClick={handleQuit}
+          color="none"
+        />
+      )}
     </group>
   );
 };
@@ -378,6 +385,7 @@ const MenuButton = ({
 };
 
 export const TopBarControls = () => {
+  const { roomId } = useRoom();
   const { size } = useThree();
   const isPortrait = size.width * ASPECT_COEFF < size.height;
 
@@ -428,13 +436,15 @@ export const TopBarControls = () => {
   return (
     // Group anchors the Y and Z axes globally for all 3 buttons
     <group position={[0, startY, 5]}>
-      <MenuButton
-        {...commonProps}
-        position={[startX, 0, 0]}
-        imageSrc={`${import.meta.env.BASE_URL}img/brickblast/replay.png`}
-        hoverTint="orange"
-        onClick={handleRestart}
-      />
+      {!roomId && (
+        <MenuButton
+          {...commonProps}
+          position={[startX, 0, 0]}
+          imageSrc={`${import.meta.env.BASE_URL}img/brickblast/replay.png`}
+          hoverTint="orange"
+          onClick={handleRestart}
+        />
+      )}
 
       <MenuButton
         {...commonProps}
@@ -448,13 +458,15 @@ export const TopBarControls = () => {
         onClick={handleToggleMusic}
       />
 
-      <MenuButton
-        {...commonProps}
-        position={[startX + gap * 2, 0, 0]}
-        imageSrc={`${import.meta.env.BASE_URL}img/brickblast/exit.png`}
-        hoverTint="red"
-        onClick={handleQuit}
-      />
+      {!roomId && (
+        <MenuButton
+          {...commonProps}
+          position={[startX + gap * 2, 0, 0]}
+          imageSrc={`${import.meta.env.BASE_URL}img/brickblast/exit.png`}
+          hoverTint="red"
+          onClick={handleQuit}
+        />
+      )}
     </group>
   );
 };

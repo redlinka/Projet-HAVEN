@@ -30,9 +30,13 @@ function RoomCodeDisplay() {
         title="Copier le code"
       >
         {codeCopied ? (
-          <><Check size={11} /> Copié</>
+          <>
+            <Check size={11} /> Copié
+          </>
         ) : (
-          <><Copy size={11} /> Copier</>
+          <>
+            <Copy size={11} /> Copier
+          </>
         )}
       </button>
     </div>
@@ -123,7 +127,11 @@ export default function ChatterRoom() {
         </div>
         <div className="chatter-header-right">
           <RoomCodeDisplay />
-          <button className="chatter-quit-btn" onClick={handleDisconnect} title="Quitter la partie">
+          <button
+            className="chatter-quit-btn"
+            onClick={handleDisconnect}
+            title="Quitter la partie"
+          >
             <LogOut size={13} />
             Quitter
           </button>

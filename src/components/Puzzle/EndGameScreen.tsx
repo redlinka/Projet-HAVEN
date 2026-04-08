@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useUser } from "../../contexts/UserContext";
 import { useRoom } from "../../contexts/RoomContext";
 import { useRoomService } from "../../contexts/RoomServiceContext";
@@ -7,6 +7,7 @@ import {
   determineWinner,
 } from "../../utils/scoreTransfer";
 import "../../styles/components/Puzzle/EndGameScreen.css";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
   score: number;
@@ -21,9 +22,9 @@ export default function EndGameScreen({
   mode,
   onModeMenu,
 }: Props) {
+  const navigate = useNavigate();
   const perfect = score === difficulty.cols * difficulty.rows;
   const reason = localStorage.getItem("reason");
-  console.log("la raison est " + reason);
   const diff =
     difficulty.cols === 16
       ? "easy"
@@ -31,7 +32,7 @@ export default function EndGameScreen({
         ? "medium"
         : "hard";
   const { user, setUser } = useUser();
-  const { connectedUsers } = useRoom();
+  const { connectedUsers, isAdmin, handleStartGame, gameId } = useRoom();
   const roomService = useRoomService();
   const isMultiplayer = connectedUsers.length >= 2;
 
@@ -39,56 +40,72 @@ export default function EndGameScreen({
   const [opponentScore, setOpponentScore] = useState<number | null>(null);
   const [resultMessage, setResultMessage] = useState<string>("");
   const [hasCalculated, setHasCalculated] = useState(false);
+  const hasSentScoreRef = useRef(false);
 
-  // Étape 1: Envoyer notre score et attendre le score adverse
+  const onRestartGame = () => {
+    if (isAdmin) {
+      navigate(`/game/${gameId}`);
+    }
+  };
+
+  // Étape 1 & 2: Envoyer notre score et écouter l'adversaire
   useEffect(() => {
-    if (!isMultiplayer || hasCalculated) return;
+    if (!isMultiplayer || hasSentScoreRef.current) return;
+    hasSentScoreRef.current = true;
 
-    // Envoyer notre score
+    console.log("[Puzzle EndGameScreen] Envoi du score:", score);
     roomService.sendGameEndScore(score, "PUZZLE", diff);
 
-    // Écouter le score adverse
+    // Enregistrer le listener pour l'adversaire
+    const timeoutId = setTimeout(() => {
+      // Adversaire hors ligne après 12s
+      setFinalScore(score);
+      setResultMessage("Adversaire hors ligne");
+      setHasCalculated(true);
+    }, 12000);
+
     const handleOpponentScore = (data: {
       opponentScore: number;
       game: string;
       difficulty: string;
     }) => {
-      console.log("[Puzzle EndGameScreen] Score adverse:", data.opponentScore);
-      setOpponentScore(data.opponentScore);
+      clearTimeout(timeoutId);
+      console.log("[EndGame] Score adverse reçu:", data.opponentScore);
 
-      // Calculer le transfert
-      const { winner, loser } = determineWinner(score, data.opponentScore);
-      const { winner: finalWinner, loser: finalLoser } = calculateScoreTransfer(
-        winner,
-        loser,
-        0.25,
+      const { winner, loser, draw } = determineWinner(
+        score,
+        data.opponentScore,
       );
 
-      // Déterminer si nous avons gagné
-      if (score === winner) {
-        setFinalScore(finalWinner);
-        setResultMessage(
-          `VICTOIRE! +${finalWinner - score} points reçus du perdant`,
-        );
-      } else if (score === loser) {
-        setFinalScore(finalLoser);
-        setResultMessage(
-          `DÉFAITE... -${score - finalLoser} points perdus au gagnant`,
-        );
-      }
+      if (draw) {
+        setFinalScore(score);
+        setOpponentScore(data.opponentScore);
+        setResultMessage("ÉGALITÉ - Pas de transfert de points");
+      } else {
+        const { winner: finalWinner, loser: finalLoser } =
+          calculateScoreTransfer(winner, loser);
 
+        if (score === winner) {
+          setFinalScore(finalWinner);
+          setResultMessage(`VICTOIRE! +${finalWinner - score} points`);
+        } else {
+          setFinalScore(finalLoser);
+          setResultMessage(`DÉFAITE... -${score - finalLoser} points`);
+        }
+        setOpponentScore(data.opponentScore);
+      }
       setHasCalculated(true);
     };
 
     roomService.setGameEndScoreListener(handleOpponentScore);
-  }, [isMultiplayer, hasCalculated, score, diff]);
+  }, []);
 
-  // Étape 2: Envoyer le score final au serveur
+  // Étape 3: Envoyer le score final au serveur
   useEffect(() => {
-    // Attendre que le calcul soit terminal pour les multijoueur, ou de suite pour solo
+    // Attendre que le calcul soit fait en multijoueur, ou direct en solo
     const readyToSend =
       !isMultiplayer ||
-      (isMultiplayer && hasCalculated && opponentScore !== null);
+      (isMultiplayer && hasSentScoreRef.current && hasCalculated);
 
     if (!readyToSend) return;
 
@@ -121,7 +138,7 @@ export default function EndGameScreen({
         });
       })
       .catch((err) => console.error("Error saving score:", err));
-  }, [finalScore, isMultiplayer, hasCalculated, opponentScore, diff]);
+  }, [finalScore, isMultiplayer, hasCalculated, diff, user]);
 
   return (
     <div className="ending-overlay">
@@ -185,11 +202,20 @@ export default function EndGameScreen({
             </div>
           </div>
 
-          <div className="ending-footer">
-            <button className="retry-btn" onClick={onModeMenu}>
-              <span className="btn-cursor">▮</span>MAIN MENU
-            </button>
-          </div>
+          {isAdmin && (
+            <div className="ending-footer">
+              <button
+                className="retry-btn"
+                onClick={
+                  isMultiplayer
+                    ? onModeMenu
+                    : () => handleStartGame(onRestartGame)
+                }
+              >
+                <span className="btn-cursor">▮</span>MAIN MENU
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

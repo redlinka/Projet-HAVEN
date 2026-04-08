@@ -3,12 +3,12 @@ import { useEffect, useRef, useState } from "react";
 import type { Brick } from "../Brick";
 
 import {
-  getGameData,
   addBrick,
   checkPlacementValid,
+  calculScore,
+  getGameData,
   shuffleArray,
   initPuzzleBoard,
-  calculScore,
 } from "../utils/puzzleEngine";
 import {
   LS_ANSWER,
@@ -22,7 +22,7 @@ import {
   lsGet,
   lsSet,
 } from "../utils/puzzleStorage";
-import { useRoom } from "../../../contexts/RoomContext";
+import { useRoomService } from "../../../contexts/RoomServiceContext";
 
 // INTERFACES
 
@@ -68,35 +68,72 @@ export function usePuzzle({
   playOnDrop,
   playWrongPlacement,
 }: UsePuzzleOptions): PuzzleState {
-  
-  const {roomId} = useRoom();
+  const roomService = useRoomService();
+  const isMultiplayer = roomService.isInRoom;
 
-  const savedMod =lsGet<{ cols: number; rows: number }>(LS_MOD) ?? { cols: 0, rows: 0 } ;
-
-  const [mod, setMod] = useState(!roomId ? savedMod : { cols: 0, rows: 0 });
-  const [loading, setLoading] = useState(false);
-  const [allBricks, setAllBricks] = useState<Brick[]>(!roomId ? lsGet<Brick[]>(LS_BRICKS) ?? [] : []);
-  const [currentBrick, setCurrentBrick] = useState<Brick | null>(
-    lsGet<Brick>(LS_CURRENT_BRICK),
-  );
-
-  const [board, setBoard] = useState<string[]>(!roomId ? lsGet<string[]>(LS_BOARD) ?? [] : []);
-  const [answerBoard, setAnswerBoard] = useState<string[]>(!roomId ? lsGet<string[]>(LS_ANSWER) ?? [] : []);
   const [score, setScore] = useState(0);
-
-  const [imagePath, setImagePath] = useState<string>(!roomId ? lsGet<string>(LS_IMAGE) ?? "" : "",);
+  const [loading, setLoading] = useState(true);
+  const [board, setBoard] = useState<string[]>([]);
+  const [nbPieces, setNbPieces] = useState<number>(0);
+  const [mod, setMod] = useState({ cols: 0, rows: 0 });
   const [imageZoomed, setImageZoomed] = useState(false);
-
-  const [nbPieces, setNbPieces] = useState<number>(!roomId ? lsGet<number>(LS_NB_PIECES) ?? 0 : 0);
+  const [imagePath, setImagePath] = useState<string>("");
+  const [allBricks, setAllBricks] = useState<Brick[]>([]);
+  const [answerBoard, setAnswerBoard] = useState<string[]>([]);
+  const [currentBrick, setCurrentBrick] = useState<Brick | null>(null);
 
   // DRAG STATE
   const [activeBrick, setActiveBrick] = useState<Brick | null>(null);
   const draggingBrickRef = useRef<Brick | null>(null);
   const modRef = useRef(mod);
+  const hasLoadedRef = useRef(false);
 
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
-  const [isOnBoard, setIsOnBoard] = useState(false);
   const [endGame, setEndGame] = useState<boolean>(false);
+  const [isOnBoard, setIsOnBoard] = useState(false);
+
+  const handlePointerDown = (brick: Brick, e: React.PointerEvent) => {
+    playOnDrag();
+    draggingBrickRef.current = brick;
+    setActiveBrick(brick);
+    setDragPos({ x: e.clientX, y: e.clientY });
+    (e.currentTarget as Element).setPointerCapture(e.pointerId);
+  };
+
+  const handleModeMenu = () => {
+    setEndGame(false);
+    lsClear();
+    setMod({ cols: 0, rows: 0 });
+  };
+
+  useEffect(() => {
+    if (hasLoadedRef.current) return; // Data already loaded
+    hasLoadedRef.current = true;
+
+    try {
+      if (!isMultiplayer && mod.cols !== 0 && mod.rows !== 0) {
+        //console.log("[usePuzzle] Loading local storage", isMultiplayer);
+        const savedMod = lsGet<{ cols: number; rows: number }>(LS_MOD);
+        const savedCurrent = lsGet<Brick>(LS_CURRENT_BRICK);
+        const savedAnswer = lsGet<string[]>(LS_ANSWER);
+        const savedBricks = lsGet<Brick[]>(LS_BRICKS);
+        const savedBoard = lsGet<string[]>(LS_BOARD);
+        const savedNb = lsGet<number>(LS_NB_PIECES);
+        const savedImage = lsGet<string>(LS_IMAGE);
+
+        if (savedMod) setMod(savedMod);
+        if (savedNb) setNbPieces(savedNb);
+        if (savedBoard) setBoard(savedBoard);
+        if (savedImage) setImagePath(savedImage);
+        if (savedBricks) setAllBricks(savedBricks);
+        if (savedAnswer) setAnswerBoard(savedAnswer);
+        if (savedCurrent) setCurrentBrick(savedCurrent);
+      }
+    } catch (err) {
+      console.log("Error loading game :", err);
+    }
+    setLoading(false);
+  }, [isMultiplayer, mod, hasLoadedRef.current]);
 
   useEffect(() => {
     modRef.current = mod;
@@ -167,7 +204,7 @@ export function usePuzzle({
               const remaining = prevBricks.slice(1);
               const next = prevBricks[0] ?? null;
 
-              setCurrentBrick(next); 
+              setCurrentBrick(next);
 
               lsSet(LS_BRICKS, remaining);
               lsSet(LS_CURRENT_BRICK, next);
@@ -176,8 +213,13 @@ export function usePuzzle({
                 localStorage.setItem("reason", "ALL PIECES PLACED");
                 setEndGame(true);
                 lsClear();
-              } else if (!checkPlacementValid(updatedBoard, modRef.current.cols, next)) {
-                localStorage.setItem("reason", "PIECE CANNOT FIT THE BOARD. GAME OVER!");
+              } else if (
+                !checkPlacementValid(updatedBoard, modRef.current.cols, next)
+              ) {
+                localStorage.setItem(
+                  "reason",
+                  "PIECE CANNOT FIT THE BOARD. GAME OVER!",
+                );
                 setEndGame(true);
                 lsClear();
               }
@@ -208,33 +250,24 @@ export function usePuzzle({
     };
   }, [playOnDrop, playWrongPlacement]);
 
-  const handlePointerDown = (brick: Brick, e: React.PointerEvent) => {
-    playOnDrag();
-    draggingBrickRef.current = brick;
-    setActiveBrick(brick);
-    setDragPos({ x: e.clientX, y: e.clientY });
-    (e.currentTarget as Element).setPointerCapture(e.pointerId);
-  };
-
-  const handleModeMenu = () => {
-    setEndGame(false);
-    lsClear();
-    setMod({ cols: 0, rows: 0 });
-  };
-
-  // GAME LOADING
+  // Create game solo / multi
   useEffect(() => {
     if (!mod.cols || !mod.rows) return;
 
-    const savedBoard = lsGet<string[]>(LS_BOARD);
-    const savedModLS = lsGet<{ cols: number; rows: number }>(LS_MOD);
-    const isResume =
-      savedBoard &&
-      savedBoard.length > 0 &&
-      savedModLS?.cols === mod.cols &&
-      savedModLS?.rows === mod.rows;
+    if (!isMultiplayer) {
+      const savedBoard = lsGet<string[]>(LS_BOARD);
+      const savedModLS = lsGet<{ cols: number; rows: number }>(LS_MOD);
+      const isResume =
+        savedBoard &&
+        savedBoard.length > 0 &&
+        savedModLS?.cols === mod.cols &&
+        savedModLS?.rows === mod.rows;
 
-    if (isResume) return;
+      if (isResume) {
+        hasLoadedRef.current = false;
+        return;
+      }
+    }
 
     const loadGame = async () => {
       setLoading(true);
@@ -283,22 +316,22 @@ export function usePuzzle({
 
   return {
     mod,
-    setMod,
-    loading,
-    allBricks,
-    currentBrick,
     board,
-    answerBoard,
     score,
-    nbPieces,
-    imagePath,
-    imageZoomed,
-    setImageZoomed,
+    setMod,
     endGame,
-    handleModeMenu,
-    activeBrick,
     dragPos,
+    loading,
+    nbPieces,
     isOnBoard,
+    allBricks,
+    imagePath,
+    answerBoard,
+    activeBrick,
+    imageZoomed,
+    currentBrick,
+    handleModeMenu,
+    setImageZoomed,
     handlePointerDown,
   };
 }

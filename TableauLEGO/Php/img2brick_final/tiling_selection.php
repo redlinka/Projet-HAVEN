@@ -42,7 +42,7 @@ $PRESETS = [
         'algo_label'  => 'Quadtree · T=1k',
     ],
     'balanced' => [
-        'name'        => 'Balanced',
+        'name'        => 'Most Popular',
         'description' => 'The sweet spot between detail and affordability. Recommended for most images and budgets.',
         'method'      => 'quadtree',
         'mode'        => 'relax',

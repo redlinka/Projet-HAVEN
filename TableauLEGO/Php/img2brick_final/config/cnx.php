@@ -373,3 +373,66 @@ function getOriginalImage($cnx, $imageId)
         return null;
     }
 }
+
+/**
+ * Auto-login functionality for Android app persistence
+ * Checks if android_token cookie exists and auto-creates session if no active session
+ * Called automatically when cnx.php is included (after session_start)
+ * 
+ * Flow:
+ * 1. If user already has active session, skip this
+ * 2. If android_token cookie exists, validate it in USER table
+ * 3. If valid, create session automatically (app just restarted)
+ * 4. If invalid/expired, do nothing (user needs to login again)
+ */
+function attemptAutoLoginFromAndroidToken($cnx)
+{
+    // Only process if no active session
+    if (isset($_SESSION['userId'])) {
+        return; // Already logged in, skip auto-login
+    }
+
+    // Check if android_token cookie exists
+    if (!isset($_COOKIE['android_token'])) {
+        return; // No token, normal login required
+    }
+
+    try {
+        $androidToken = $_COOKIE['android_token'];
+        
+        // Validate token exists in USER table
+        $stmt = $cnx->prepare("SELECT user_id, username, email FROM USER WHERE android_token = ? LIMIT 1");
+        $stmt->execute([$androidToken]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$user) {
+            // Token invalid/not found, clear the cookie
+            setcookie('android_token', '', [
+                'expires' => time() - 3600,
+                'path' => '/',
+                'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443,
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]);
+            return; // Auto-login failed, continue to normal page
+        }
+
+        // Create session automatically if token is valid 
+        session_regenerate_id(true);
+        $_SESSION['userId'] = $user['user_id'];
+        $_SESSION['username'] = $user['username'];
+        $_SESSION['email'] = $user['email'];
+        
+        // Log this auto-login event
+        addLog($cnx, "USER", "AUTO_LOGIN", "android_token");
+        
+    } catch (PDOException $e) {
+        // Database error, skip auto-login silently
+        error_log("Auto-login error: " . $e->getMessage());
+    }
+}
+
+// Attempt auto-login if session was started and cnx.php is included
+if (session_status() === PHP_SESSION_ACTIVE) {
+    attemptAutoLoginFromAndroidToken($cnx);
+}

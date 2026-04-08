@@ -32,17 +32,27 @@ if ($method === 'email' && !isset($_SESSION['2fa_mail_sent'])) {
         $cnx->prepare("INSERT INTO 2FA (user_id, verification_token, token_expire_at) VALUES (?,?,?)")
             ->execute([$pendingUserId, $token, $expireAt]);
         $protocol = ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-        $link     = $protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/verify_connexion.php?token=' . $token;
+        // Construct magic links
+        // For Android: Route through a redirect page that can open the app
+        // (Custom scheme bricksy:// won't work in email clients because they don't recognize it)
+        $linkApp  = $protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/android_verify.php?token=' . $token;
+        $linkWeb  = $protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/verify_connexion.php?token=' . $token;
         $emailBody = "
             <div style='font-family:Arial,sans-serif;padding:20px;border:1px solid #e0e0e0;border-radius:8px;max-width:600px;'>
                 <h2 style='color:#A26547;'>Your Bricksy login link</h2>
                 <p>Click the button below to complete your login. This link expires in <strong>1 minute</strong>.</p>
                 <p style='text-align:center;'>
-                    <a href='{$link}' style='display:inline-block;background:#A26547;color:white;padding:12px 28px;text-decoration:none;border-radius:6px;font-weight:bold;'>
-                        Log In to Bricksy
+                    <a href='{$linkApp}' style='display:inline-block;background:#28a745;color:white;padding:12px 28px;text-decoration:none;border-radius:6px;font-weight:bold;'>
+                        📱 Open in Bricksy App
                     </a>
                 </p>
-                <p style='color:#9a8a7a;font-size:12px;margin-top:20px;'>Or copy this link: {$link}</p>
+                <p style='color:#9a8a7a;font-size:12px;margin:10px 0;'>(If Bricksy App is installed)</p>
+                <p style='text-align:center; border-top: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0; padding: 15px 0;'>
+                    <a href='{$linkWeb}' style='display:inline-block;background:#A26547;color:white;padding:12px 28px;text-decoration:none;border-radius:6px;font-weight:bold;'>
+                        💻 Continue in Browser
+                    </a>
+                </p>
+                <p style='color:#9a8a7a;font-size:12px;margin:10px 0;'>(Fallback option)</p>
             </div>";
         sendMail($user['email'], 'Your Bricksy login link', $emailBody);
         $_SESSION['2fa_mail_sent'] = true;

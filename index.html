@@ -22,7 +22,7 @@
     <nav class="nav-links" id="nav-links">
         <a href="#about">À propos</a>
         <a href="#skills">Compétences</a>
-        <a href="#solution">Projet</a>
+        <a href="#solution">Projets</a>
         <a href="#expertise">Expertise</a>
         <a href="#contact" class="nav-cta">Nous contacter</a>
     </nav>
@@ -40,7 +40,7 @@
         les entreprises qui veulent aller plus loin.
     </p>
     <div class="hero-actions">
-        <a href="#solution" class="btn btn-primary">Découvrir notre projet</a>
+        <a href="#solution" class="btn btn-primary">Découvrir un de nos projets</a>
         <a href="#expertise" class="btn btn-ghost">Notre expertise →</a>
     </div>
     <div class="hero-scroll-hint">
@@ -97,6 +97,16 @@
             Des compétences concrètes, forgées sur un projet de production réel,
             couvrant l'ensemble du cycle de développement logiciel moderne.
         </p>
+
+        <div class="transition-banner">
+            <div class="transition-glow"></div>
+            <span class="transition-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                </svg>
+            </span>
+            <span class="transition-text">Partenaire de votre <strong>transition numérique</strong></span>
+        </div>
 
         <div class="skills-tabs">
             <button class="tab-btn active" data-tab="technique">
@@ -341,8 +351,8 @@
 <!-- ========== SOLUTION ========== -->
 <section class="solution section" id="solution">
     <div class="container">
-        <span class="section-tag center">NOTRE PROJET PHARE</span>
-        <h2 class="section-title center">TableauLEGO</h2>
+        <span class="section-tag center">UN DE NOS PROJETS</span>
+        <h2 class="section-title center">Bricksy</h2>
 
         <div class="solution-layout">
             <!-- Floating visual -->
@@ -482,59 +492,26 @@
                 </div>
             </div>
 
-            <!-- Steps -->
-            <div class="solution-steps">
-                <h3>Comment ça marche ?</h3>
-                <div class="steps">
-                    <div class="step">
-                        <div class="step-num">01</div>
-                        <div class="step-body">
-                            <h4>Upload de votre image</h4>
-                            <p>
-                                L'utilisateur importe sa photo personnelle directement sur
-                                la plateforme.
-                            </p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-num">02</div>
-                        <div class="step-body">
-                            <h4>Choix des dimensions</h4>
-                            <p>Sélection du format souhaité pour le tableau final.</p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-num">03</div>
-                        <div class="step-body">
-                            <h4>Traitement automatique</h4>
-                            <p>
-                                Notre pipeline Java/C abaisse la résolution et calcule 4
-                                pavages LEGO distincts selon différents critères
-                                d'optimisation.
-                            </p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-num">04</div>
-                        <div class="step-body">
-                            <h4>Sélection & Commande</h4>
-                            <p>
-                                Le client choisit son pavage, applique ses coupons de
-                                réduction et passe commande depuis son panier.
-                            </p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-num">05</div>
-                        <div class="step-body">
-                            <h4>Mini-jeux & Fidélité</h4>
-                            <p>
-                                Application mobile/Site de jeu (HAVEN Game) intégrant des
-                                mini-jeux pour remporter des coupons et fidéliser la
-                                clientèle.
-                            </p>
-                        </div>
-                    </div>
+            <!-- Presentation -->
+            <div class="solution-present">
+                <h3>Transformez vos images en tableaux de briques</h3>
+                <p class="solution-desc">
+                    Bricksy est une plateforme e-commerce qui transforme n'importe quelle
+                    photo en mosaïque de briques constructible. Upload, traitement
+                    algorithmique, choix du pavage et commande — tout est automatisé.
+                    Le projet intègre aussi <strong>Haven Games</strong>, un espace de
+                    mini-jeux connecté où les clients gagnent des réductions et
+                    restent engagés.
+                </p>
+                <div class="solution-screens">
+                    <a href="https://adam.nachnouchi.com" target="_blank" rel="noopener" class="screen-card">
+                        <img src="bricksy_screenshot.png" alt="Bricksy — Plateforme e-commerce" />
+                        <span class="screen-link">Voir Bricksy →</span>
+                    </a>
+                    <a href="https://adam.nachnouchi.com/games" target="_blank" rel="noopener" class="screen-card">
+                        <img src="games_screenshot.png" alt="Haven Games — Mini-jeux" />
+                        <span class="screen-link">Voir Haven Games →</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -554,151 +531,171 @@
             production.
         </p>
 
+        <p class="flip-global-hint">Cliquez sur une carte pour découvrir un exemple concret</p>
         <div class="expertise-grid">
-            <div class="expertise-card">
-                <div class="exp-icon">
-                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-                        <circle
-                                cx="16"
-                                cy="16"
-                                r="14"
-                                stroke="#D698F0"
-                                stroke-width="1.5"
-                        />
-                        <path
-                                d="M10 16h12M16 10v12"
-                                stroke="#D698F0"
-                                stroke-width="1.5"
-                                stroke-linecap="round"
-                        />
-                    </svg>
+            <div class="expertise-card" onclick="this.classList.toggle('flipped')">
+                <div class="card-inner">
+                    <div class="card-front">
+                        <div class="exp-icon">
+                            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                                <circle cx="16" cy="16" r="14" stroke="#D698F0" stroke-width="1.5"/>
+                                <path d="M10 16h12M16 10v12" stroke="#D698F0" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <h3>Audit & Conseil</h3>
+                        <p>
+                            Analyse de votre existant technique, identification des points de
+                            friction et recommandations architecturales adaptées à votre
+                            contexte métier.
+                        </p>
+                        <span class="flip-hint">En savoir plus ↗</span>
+                    </div>
+                    <div class="card-back">
+                        <h3>En clair</h3>
+                        <p>
+                            On examine comment vos outils numériques fonctionnent, on repère
+                            ce qui coince, et on vous dit concrètement quoi améliorer — comme
+                            un diagnostic chez le médecin, mais pour votre informatique.
+                        </p>
+                        <span class="flip-hint">↩ Retourner</span>
+                    </div>
                 </div>
-                <h3>Audit & Conseil</h3>
-                <p>
-                    Analyse de votre existant technique, identification des points de
-                    friction et recommandations architecturales adaptées à votre
-                    contexte métier.
-                </p>
             </div>
-            <div class="expertise-card highlight">
-                <div class="exp-icon">
-                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-                        <rect
-                                x="4"
-                                y="4"
-                                width="24"
-                                height="24"
-                                rx="4"
-                                stroke="#0d0d0d"
-                                stroke-width="1.5"
-                        />
-                        <path
-                                d="M10 16l4 4 8-8"
-                                stroke="#0d0d0d"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                        />
-                    </svg>
+            <div class="expertise-card highlight" onclick="this.classList.toggle('flipped')">
+                <div class="card-inner">
+                    <div class="card-front">
+                        <div class="exp-icon">
+                            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                                <rect x="4" y="4" width="24" height="24" rx="4" stroke="#0d0d0d" stroke-width="1.5"/>
+                                <path d="M10 16l4 4 8-8" stroke="#0d0d0d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <h3>Développement sur-mesure</h3>
+                        <p>
+                            Conception et livraison de solutions complètes (web, mobile,
+                            traitement de données etc) avec une maîtrise de bout en bout de la
+                            stack technique.
+                        </p>
+                        <span class="flip-hint">En savoir plus ↗</span>
+                    </div>
+                    <div class="card-back">
+                        <h3>En clair</h3>
+                        <p>
+                            Besoin d'un site web, d'une application mobile ou d'un outil
+                            interne ? On le construit intégralement pour vous, adapté
+                            à vos besoins exacts — de la première maquette à la mise en ligne.
+                        </p>
+                        <span class="flip-hint">↩ Retourner</span>
+                    </div>
                 </div>
-                <h3>Développement sur-mesure</h3>
-                <p>
-                    Conception et livraison de solutions complètes (web, mobile,
-                    traitement de données etc) avec une maîtrise de bout en bout de la
-                    stack technique.
-                </p>
             </div>
-            <div class="expertise-card">
-                <div class="exp-icon">
-                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-                        <path
-                                d="M6 26V18M12 26V12M18 26V16M24 26V8"
-                                stroke="#D698F0"
-                                stroke-width="1.5"
-                                stroke-linecap="round"
-                        />
-                    </svg>
+            <div class="expertise-card" onclick="this.classList.toggle('flipped')">
+                <div class="card-inner">
+                    <div class="card-front">
+                        <div class="exp-icon">
+                            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                                <path d="M6 26V18M12 26V12M18 26V16M24 26V8" stroke="#D698F0" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <h3>Accompagnement Agile</h3>
+                        <p>
+                            Mise en place de méthodologies Scrum adaptées à vos équipes pour
+                            livrer plus vite, avec plus de visibilité et moins de risques.
+                        </p>
+                        <span class="flip-hint">En savoir plus ↗</span>
+                    </div>
+                    <div class="card-back">
+                        <h3>En clair</h3>
+                        <p>
+                            On organise le travail en cycles courts pour que vous voyiez
+                            les progrès chaque semaine et puissiez réajuster les priorités
+                            à tout moment — fini les effets tunnel.
+                        </p>
+                        <span class="flip-hint">↩ Retourner</span>
+                    </div>
                 </div>
-                <h3>Accompagnement Agile</h3>
-                <p>
-                    Mise en place de méthodologies Scrum adaptées à vos équipes pour
-                    livrer plus vite, avec plus de visibilité et moins de risques.
-                </p>
             </div>
-            <div class="expertise-card">
-                <div class="exp-icon">
-                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-                        <circle
-                                cx="12"
-                                cy="12"
-                                r="5"
-                                stroke="#D698F0"
-                                stroke-width="1.5"
-                        />
-                        <circle
-                                cx="22"
-                                cy="20"
-                                r="5"
-                                stroke="#D698F0"
-                                stroke-width="1.5"
-                        />
-                        <path
-                                d="M16 12h2a4 4 0 014 4v0"
-                                stroke="#D698F0"
-                                stroke-width="1.5"
-                                stroke-linecap="round"
-                        />
-                    </svg>
+            <div class="expertise-card" onclick="this.classList.toggle('flipped')">
+                <div class="card-inner">
+                    <div class="card-front">
+                        <div class="exp-icon">
+                            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                                <circle cx="12" cy="12" r="5" stroke="#D698F0" stroke-width="1.5"/>
+                                <circle cx="22" cy="20" r="5" stroke="#D698F0" stroke-width="1.5"/>
+                                <path d="M16 12h2a4 4 0 014 4v0" stroke="#D698F0" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <h3>Intégration de systèmes</h3>
+                        <p>
+                            Connexion de vos outils existants pour créer un écosystème digital
+                            fluide et cohérent.
+                        </p>
+                        <span class="flip-hint">En savoir plus ↗</span>
+                    </div>
+                    <div class="card-back">
+                        <h3>En clair</h3>
+                        <p>
+                            Votre logiciel de gestion ne communique pas avec votre site ?
+                            On crée les passerelles pour que tout fonctionne ensemble,
+                            automatiquement — plus de ressaisie manuelle.
+                        </p>
+                        <span class="flip-hint">↩ Retourner</span>
+                    </div>
                 </div>
-                <h3>Intégration de systèmes</h3>
-                <p>
-                    Connexion de vos outils existants pour créer un écosystème digital
-                    fluide et cohérent.
-                </p>
             </div>
-            <div class="expertise-card">
-                <div class="exp-icon">
-                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-                        <path
-                                d="M16 4l3 9h9l-7.5 5.5 3 9L16 22l-7.5 5.5 3-9L4 13h9z"
-                                stroke="#D698F0"
-                                stroke-width="1.5"
-                                stroke-linejoin="round"
-                        />
-                    </svg>
+            <div class="expertise-card" onclick="this.classList.toggle('flipped')">
+                <div class="card-inner">
+                    <div class="card-front">
+                        <div class="exp-icon">
+                            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                                <path d="M16 4l3 9h9l-7.5 5.5 3 9L16 22l-7.5 5.5 3-9L4 13h9z" stroke="#D698F0" stroke-width="1.5" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <h3>UX & Design produit</h3>
+                        <p>
+                            Création d'expériences utilisateur mémorables, centrées sur les
+                            besoins réels et les meilleures pratiques d'ergonomie digitale.
+                        </p>
+                        <span class="flip-hint">En savoir plus ↗</span>
+                    </div>
+                    <div class="card-back">
+                        <h3>En clair</h3>
+                        <p>
+                            On conçoit des interfaces intuitives où vos utilisateurs trouvent
+                            ce qu'ils cherchent sans se perdre — comme un magasin bien agencé,
+                            version numérique.
+                        </p>
+                        <span class="flip-hint">↩ Retourner</span>
+                    </div>
                 </div>
-                <h3>UX & Design produit</h3>
-                <p>
-                    Création d'expériences utilisateur mémorables, centrées sur les
-                    besoins réels et les meilleures pratiques d'ergonomie digitale.
-                </p>
             </div>
-            <div class="expertise-card">
-                <div class="exp-icon">
-                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-                        <rect
-                                x="4"
-                                y="8"
-                                width="24"
-                                height="16"
-                                rx="2"
-                                stroke="#D698F0"
-                                stroke-width="1.5"
-                        />
-                        <path
-                                d="M10 14h12M10 18h8"
-                                stroke="#D698F0"
-                                stroke-width="1.5"
-                                stroke-linecap="round"
-                        />
-                    </svg>
+            <div class="expertise-card" onclick="this.classList.toggle('flipped')">
+                <div class="card-inner">
+                    <div class="card-front">
+                        <div class="exp-icon">
+                            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                                <rect x="4" y="8" width="24" height="16" rx="2" stroke="#D698F0" stroke-width="1.5"/>
+                                <path d="M10 14h12M10 18h8" stroke="#D698F0" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <h3>Formation & Transfert</h3>
+                        <p>
+                            Montée en compétences de vos équipes sur les technologies et
+                            méthodes que nous maîtrisons, avec des supports concrets et
+                            adaptés.
+                        </p>
+                        <span class="flip-hint">En savoir plus ↗</span>
+                    </div>
+                    <div class="card-back">
+                        <h3>En clair</h3>
+                        <p>
+                            On vous apprend à utiliser et faire évoluer les outils qu'on a
+                            créés, pour que vous soyez autonomes — pas de dépendance,
+                            juste du savoir transmis.
+                        </p>
+                        <span class="flip-hint">↩ Retourner</span>
+                    </div>
                 </div>
-                <h3>Formation & Transfert</h3>
-                <p>
-                    Montée en compétences de vos équipes sur les technologies et
-                    méthodes que nous maîtrisons, avec des supports concrets et
-                    adaptés.
-                </p>
             </div>
         </div>
 
@@ -710,17 +707,26 @@
 </section>
 
 <!-- ========== CONTACT ========== -->
-<section class="contact section" id="contact">
-    <div class="container contact-inner">
-        <div class="bracket-frame small">
-            <div class="bracket tl"></div>
-            <div class="bracket tr"></div>
-            <div class="bracket bl"></div>
-            <div class="bracket br"></div>
-            <span class="section-tag center">NOUS RETROUVER</span>
-            <h2 class="section-title center">Le projet en open source</h2>
+<section class="values section" id="contact">
+    <div class="container">
+        <span class="section-tag center">NOS VALEURS</span>
+        <h2 class="section-title center">Code pour tous</h2>
+        <p class="section-intro">
+            Nous croyons qu'un code de qualité doit être accessible, lisible et
+            partagé. Cette philosophie guide chacun de nos projets et reflète notre
+            engagement envers la transparence et la collaboration ouverte.
+        </p>
+
+        <div class="contact-inner">
+            <div class="bracket-frame small">
+                <div class="bracket tl"></div>
+                <div class="bracket tr"></div>
+                <div class="bracket bl"></div>
+                <div class="bracket br"></div>
+                <span class="section-tag center">OPEN SOURCE</span>
+                <h2 class="section-title center" style="font-size: clamp(1.3rem, 2.5vw, 1.8rem);">Le projet en open source</h2>
             <p class="section-intro" style="margin-bottom: 40px">
-                Retrouvez l'intégralité du code source de TableauLEGO sur GitHub.
+                Retrouvez l'intégralité du code source de Bricksy sur GitHub.
                 Architecture, pipeline de traitement, calcul de pavages, e-commerce,
                 tout est disponible et documenté.
             </p>
@@ -758,6 +764,7 @@
                     Projet SAE · IUT · PHP · Java · C · E-Commerce
                 </p>
             </div>
+            </div>
         </div>
     </div>
 </section>
@@ -790,7 +797,7 @@
             <nav class="footer-nav">
                 <a href="#about">À propos</a>
                 <a href="#skills">Compétences</a>
-                <a href="#solution">Notre projet</a>
+                <a href="#solution">Un de nos projets</a>
                 <a href="#expertise">Expertise</a>
                 <a href="#contact">Contact</a>
             </nav>
@@ -862,7 +869,7 @@
 
     // ---- Scroll reveal ----
     const revealEls = document.querySelectorAll(
-        ".skill-card, .step, .expertise-card, .team-pill",
+        ".skill-card, .expertise-card, .team-pill, .screen-card",
     );
     const observer = new IntersectionObserver(
         (entries) => {

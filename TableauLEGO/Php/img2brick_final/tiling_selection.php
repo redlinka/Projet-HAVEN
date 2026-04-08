@@ -6,7 +6,12 @@ include("./config/cnx.php");
 require_once __DIR__ . '/includes/i18n.php';
 
 // ── Prerequisites ──────────────────────────────────────────────────────────
-if (!isset($_SESSION['step3_image_id'])) { session_write_close(); ob_end_clean(); header("Location: index.php"); exit; }
+if (!isset($_SESSION['step3_image_id'])) {
+    session_write_close();
+    ob_end_clean();
+    header("Location: index.php");
+    exit;
+}
 
 $parentId  = $_SESSION['step3_image_id'];
 $_SESSION['redirect_after_login'] = 'tiling_selection.php';
@@ -43,9 +48,10 @@ $PRESETS = [
         'mode'        => 'relax',
         'threshold'   => 2000,
         'quality'     => 70,
-        'badge'       => 'Recommended',
+        'badge'       => 'Most Popular',
         'badge_class' => 'recommended',
         'algo_label'  => 'Quadtree · T=2k',
+        'discount'    => 5,
     ],
     'classic_brick' => [
         'name'        => 'Classic Brick',
@@ -84,7 +90,8 @@ $PRESETS = [
 ];
 
 // ── Helper: run one TileAndDraw command ────────────────────────────────────
-function runPreset(string $key, array $preset, string $sourceFile, int $parentId, $cnx, int $userId = 0): array {
+function runPreset(string $key, array $preset, string $sourceFile, int $parentId, $cnx, int $userId = 0): array
+{
     global $imgFolder, $tilingFolder;
 
     // Return cached result if PNG still exists
@@ -111,9 +118,16 @@ function runPreset(string $key, array $preset, string $sourceFile, int $parentId
 
     $cmdArgs = [];
     switch ($preset['method']) {
-        case 'quadtree': $cmdArgs[] = $preset['threshold']; break;
-        case 'tile':     $cmdArgs[] = $preset['tileWidth']; $cmdArgs[] = $preset['tileHeight']; $cmdArgs[] = $preset['threshold']; break;
-        default: break; // 1x1 — no extra args
+        case 'quadtree':
+            $cmdArgs[] = $preset['threshold'];
+            break;
+        case 'tile':
+            $cmdArgs[] = $preset['tileWidth'];
+            $cmdArgs[] = $preset['tileHeight'];
+            $cmdArgs[] = $preset['threshold'];
+            break;
+        default:
+            break; // 1x1 — no extra args
     }
 
     $cmd = sprintf(
@@ -163,7 +177,7 @@ function runPreset(string $key, array $preset, string $sourceFile, int $parentId
 
     return [
         'failed'    => false,
-        'preset_key'=> $key,
+        'preset_key' => $key,
         'image_id'  => $imageId,
         'png'       => $finalPngName . '.png',
         'txt_name'  => $finalTxtName,
@@ -193,7 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        // ADD SELECTED TO CART — insertion directe multi-pavages
+        // ADD SELECTED TO CART
         if ($action === 'add_to_cart') {
             $selected = $_POST['selected_presets'] ?? [];
             if (empty($selected)) {
@@ -211,7 +225,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $errors[] = 'Selected tilings are not available. Please regenerate.';
                 } else {
                     $userId = (int)($_SESSION['userId'] ?? 0);
-                    if (!$userId) { session_write_close(); ob_end_clean(); header("Location: auth.php"); exit; }
+                    if (!$userId) {
+                        session_write_close();
+                        ob_end_clean();
+                        header("Location: auth.php");
+                        exit;
+                    }
 
                     try {
                         $cnx->beginTransaction();
@@ -243,6 +262,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $storedPrice   = (int)($stats['price']   ?? 0);
                             $storedQuality = (float)($stats['quality'] ?? 0);
 
+                            // Apply discount if exists
+                            $presetDiscount = $PRESETS[$key]['discount'] ?? 0;
+                            if ($presetDiscount > 0) {
+                                $storedPrice = (int)round($storedPrice * (1 - $presetDiscount / 100));
+                            }
                             // Check if this image_id already has a TILLING row
                             $stmt = $cnx->prepare("SELECT pavage_id FROM TILLING WHERE image_id = ? LIMIT 1");
                             $stmt->execute([$imageId]);
@@ -281,7 +305,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ob_end_clean();
                         header("Location: cart.php");
                         exit;
-
                     } catch (PDOException $e) {
                         if ($cnx->inTransaction()) $cnx->rollBack();
                         error_log("Cart multi-insert error: " . $e->getMessage());
@@ -328,6 +351,7 @@ if ($generated) {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -340,282 +364,302 @@ if ($generated) {
     <link rel="stylesheet" href="style/all.css">
     <?php include_once("matomo_tag.php"); ?>
 </head>
+
 <body>
 
-<?php include("./includes/navbar.php"); ?>
+    <?php include("./includes/navbar.php"); ?>
 
-<!-- ═══ LOADING OVERLAY (cosmetic animation while server runs) ═══ -->
-<div class="page-loading-overlay" id="loadingOverlay">
-    <div class="loading-spinner"></div>
-    <p class="loading-title">Generating your tilings…</p>
-    <div class="loading-steps" id="loadingSteps">
-        <?php foreach ($PRESETS as $key => $preset): ?>
-        <div class="loading-step" id="lstep-<?= $key ?>">
-            <span class="step-dot"></span>
-            <?= htmlspecialchars($preset['name']) ?>
+    <!-- ═══ LOADING OVERLAY (cosmetic animation while server runs) ═══ -->
+    <div class="page-loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <p class="loading-title">Generating your tilings…</p>
+        <div class="loading-steps" id="loadingSteps">
+            <?php foreach ($PRESETS as $key => $preset): ?>
+                <div class="loading-step" id="lstep-<?= $key ?>">
+                    <span class="step-dot"></span>
+                    <?= htmlspecialchars($preset['name']) ?>
+                </div>
+            <?php endforeach; ?>
         </div>
-        <?php endforeach; ?>
     </div>
-</div>
 
-<!-- ═══ ZOOM MODAL ═══ -->
-<div class="zoom-modal" id="zoomModal" onclick="closeZoom()">
-    <button class="zoom-close" onclick="closeZoom()">✕</button>
-    <img id="zoomImg" src="" alt="Tiling zoom">
-</div>
+    <!-- ═══ ZOOM MODAL ═══ -->
+    <div class="zoom-modal" id="zoomModal" onclick="closeZoom()">
+        <button class="zoom-close" onclick="closeZoom()">✕</button>
+        <img id="zoomImg" src="" alt="Tiling zoom">
+    </div>
 
-<div class="page-wrapper">
+    <div class="page-wrapper">
 
-    <!-- ── TOP BAR ── -->
-    <div class="top-bar">
-        <div class="top-bar-left">
-            <?php if ($sourceFile): ?>
-            <img src="<?= htmlspecialchars($imgFolder . $sourceFile) ?>" class="source-thumb" alt="Source">
-            <?php endif; ?>
-            <div class="top-bar-title">
-                <p class="page-title">Choose Your Tiling</p>
-                <p class="page-subtitle">
-                    <?= $generated
-                        ? count(array_filter($generated, fn($t) => !($t['failed'] ?? true))) . ' / ' . count($PRESETS) . ' presets generated'
-                        : 'Generate 5 styles and pick your favourite' ?>
-                </p>
+        <!-- ── TOP BAR ── -->
+        <div class="top-bar">
+            <div class="top-bar-left">
+                <?php if ($sourceFile): ?>
+                    <img src="<?= htmlspecialchars($imgFolder . $sourceFile) ?>" class="source-thumb" alt="Source">
+                <?php endif; ?>
+                <div class="top-bar-title">
+                    <p class="page-title">Choose Your Tiling</p>
+                    <p class="page-subtitle">
+                        <?= $generated
+                            ? count(array_filter($generated, fn($t) => !($t['failed'] ?? true))) . ' / ' . count($PRESETS) . ' presets generated'
+                            : 'Generate 5 styles and pick your favourite' ?>
+                    </p>
+                </div>
+            </div>
+            <div class="top-bar-actions">
+                <a href="filter_selection.php" class="btn btn-ghost">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12" />
+                        <polyline points="12 19 5 12 12 5" />
+                    </svg>
+                    Back
+                </a>
+                <?php if ($generated): ?>
+                    <form method="POST" style="display:inline;">
+                        <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_get()) ?>">
+                        <input type="hidden" name="action" value="regenerate">
+                        <button type="submit" class="btn btn-ghost">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="23 4 23 10 17 10" />
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                            </svg>
+                            Regenerate
+                        </button>
+                    </form>
+                <?php endif; ?>
             </div>
         </div>
-        <div class="top-bar-actions">
-            <a href="filter_selection.php" class="btn btn-ghost">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
-                </svg>
-                Back
-            </a>
-            <?php if ($generated): ?>
-            <form method="POST" style="display:inline;">
-                <input type="hidden" name="csrf"   value="<?= htmlspecialchars(csrf_get()) ?>">
-                <input type="hidden" name="action" value="regenerate">
-                <button type="submit" class="btn btn-ghost">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-                    </svg>
-                    Regenerate
-                </button>
+
+        <!-- ── ERRORS ── -->
+        <?php if (!empty($errors)): ?>
+            <div class="error-banner">
+                <ul><?php foreach ($errors as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?></ul>
+            </div>
+        <?php endif; ?>
+
+        <?php if (!$generated): ?>
+
+            <!-- Hidden form auto-submitted on DOMContentLoaded -->
+            <form method="POST" id="autoGenerateForm" style="display:none;">
+                <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_get()) ?>">
+                <input type="hidden" name="action" value="generate">
             </form>
-            <?php endif; ?>
-        </div>
-    </div>
 
-    <!-- ── ERRORS ── -->
-    <?php if (!empty($errors)): ?>
-    <div class="error-banner">
-        <ul><?php foreach ($errors as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?></ul>
-    </div>
-    <?php endif; ?>
+        <?php else: ?>
 
-    <!-- ═══════════════════════════════
-         STATE A — AUTO-GENERATE ON LOAD
-    ═══════════════════════════════ -->
-    <?php if (!$generated): ?>
+            <form method="POST" id="cartForm">
+                <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_get()) ?>">
+                <input type="hidden" name="action" value="add_to_cart">
 
-    <!-- Hidden form auto-submitted on DOMContentLoaded -->
-    <form method="POST" id="autoGenerateForm" style="display:none;">
-        <input type="hidden" name="csrf"   value="<?= htmlspecialchars(csrf_get()) ?>">
-        <input type="hidden" name="action" value="generate">
-    </form>
+                <div class="presets-grid">
+                    <?php foreach ($PRESETS as $key => $preset):
+                        $t       = $generated[$key] ?? ['failed' => true];
+                        $failed  = $t['failed'] ?? true;
+                        $stats   = $statsCache[$key] ?? null;
+                        $rawPrice    = $stats ? (float)$stats['price'] / 100 : null;
+                        $discountPct = $preset['discount'] ?? 0;
+                        $finalPrice  = $rawPrice !== null ? $rawPrice * (1 - $discountPct / 100) : null;
+                        $price       = $finalPrice !== null ? number_format($finalPrice, 2, '.', ' ') . ' €' : null;
+                        $quality = $preset['quality']; // Qualité visuelle du preset, plus représentative que la couverture C tiler
+                        $pngPath = !$failed ? __DIR__ . '/' . $imgFolder . $t['png'] : null;
+                        $pngSrc  = ($pngPath && file_exists($pngPath))
+                            ? $imgFolder . $t['png'] . '?t=' . filemtime($pngPath)
+                            : null;
+                    ?>
+                        <div class="preset-card <?= $failed ? 'failed' : '' ?> <?= $key === 'balanced' && !$failed ? 'selected' : '' ?>"
+                            id="card-<?= $key ?>"
+                            onclick="<?= !$failed ? "toggleCard('$key')" : '' ?>">
 
-    <!-- ═══════════════════════════════
-         STATE B — GRID OF CARDS
-    ═══════════════════════════════ -->
-    <?php else: ?>
+                            <!-- Checkbox (only if not failed) -->
+                            <?php if (!$failed): ?>
+                                <div class="card-checkbox-wrap" onclick="event.stopPropagation()">
+                                    <input type="checkbox"
+                                        class="card-checkbox"
+                                        name="selected_presets[]"
+                                        value="<?= $key ?>"
+                                        id="chk-<?= $key ?>"
+                                        <?= $key === 'balanced' ? 'checked' : '' ?>
+                                        onchange="syncCard('<?= $key ?>')">
+                                </div>
+                            <?php endif; ?>
 
-    <form method="POST" id="cartForm">
-        <input type="hidden" name="csrf"   value="<?= htmlspecialchars(csrf_get()) ?>">
-        <input type="hidden" name="action" value="add_to_cart">
+                            <!-- Badge -->
+                            <span class="card-badge <?= htmlspecialchars($preset['badge_class']) ?>">
+                                <?= htmlspecialchars($preset['badge']) ?>
+                            </span>
 
-        <div class="presets-grid">
-        <?php foreach ($PRESETS as $key => $preset):
-            $t       = $generated[$key] ?? ['failed' => true];
-            $failed  = $t['failed'] ?? true;
-            $stats   = $statsCache[$key] ?? null;
-            $price   = $stats ? number_format((float)$stats['price'] / 100, 2, '.', ' ') . ' €' : null;
-            $quality = $preset['quality']; // Qualité visuelle du preset, plus représentative que la couverture C tiler
-            $pngPath = !$failed ? __DIR__ . '/' . $imgFolder . $t['png'] : null;
-            $pngSrc  = ($pngPath && file_exists($pngPath))
-                       ? $imgFolder . $t['png'] . '?t=' . filemtime($pngPath)
-                       : null;
-        ?>
-        <div class="preset-card <?= $failed ? 'failed' : '' ?> <?= $key === 'balanced' && !$failed ? 'selected' : '' ?>"
-             id="card-<?= $key ?>"
-             onclick="<?= !$failed ? "toggleCard('$key')" : '' ?>">
+                            <!-- Preview image -->
+                            <div class="card-preview">
+                                <?php if ($pngSrc): ?>
+                                    <img src="<?= htmlspecialchars($pngSrc) ?>"
+                                        alt="<?= htmlspecialchars($preset['name']) ?>"
+                                        onclick="event.stopPropagation(); openZoom('<?= htmlspecialchars($pngSrc) ?>')">
+                                <?php else: ?>
+                                    <div class="card-preview-placeholder">
+                                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                            <circle cx="12" cy="12" r="10" />
+                                            <line x1="12" y1="8" x2="12" y2="12" />
+                                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                                        </svg>
+                                        <?= $failed ? 'Generation failed' : 'Loading…' ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
 
-            <!-- Checkbox (only if not failed) -->
-            <?php if (!$failed): ?>
-            <div class="card-checkbox-wrap" onclick="event.stopPropagation()">
-                <input type="checkbox"
-                       class="card-checkbox"
-                       name="selected_presets[]"
-                       value="<?= $key ?>"
-                       id="chk-<?= $key ?>"
-                       <?= $key === 'balanced' ? 'checked' : '' ?>
-                       onchange="syncCard('<?= $key ?>')">
-            </div>
-            <?php endif; ?>
+                            <!-- Card info -->
+                            <div class="card-info">
+                                <p class="card-name"><?= htmlspecialchars($preset['name']) ?></p>
+                                <p class="card-desc"><?= htmlspecialchars($preset['description']) ?></p>
 
-            <!-- Badge -->
-            <span class="card-badge <?= htmlspecialchars($preset['badge_class']) ?>">
-                <?= htmlspecialchars($preset['badge']) ?>
-            </span>
+                                <span class="card-algo-tag">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="16 18 22 12 16 6" />
+                                        <polyline points="8 6 2 12 8 18" />
+                                    </svg>
+                                    <?= htmlspecialchars($preset['algo_label']) ?>
+                                </span>
 
-            <!-- Preview image -->
-            <div class="card-preview">
-                <?php if ($pngSrc): ?>
-                <img src="<?= htmlspecialchars($pngSrc) ?>"
-                     alt="<?= htmlspecialchars($preset['name']) ?>"
-                     onclick="event.stopPropagation(); openZoom('<?= htmlspecialchars($pngSrc) ?>')">
-                <?php else: ?>
-                <div class="card-preview-placeholder">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="12" y1="8" x2="12" y2="12"/>
-                        <line x1="12" y1="16" x2="12.01" y2="16"/>
-                    </svg>
-                    <?= $failed ? 'Generation failed' : 'Loading…' ?>
-                </div>
-                <?php endif; ?>
-            </div>
+                                <div class="quality-row">
+                                    <span class="quality-label">Quality</span>
+                                    <div class="quality-bar">
+                                        <div class="quality-fill" style="width:<?= $quality ?>%"></div>
+                                    </div>
+                                    <span class="quality-label"><?= $quality ?>%</span>
+                                </div>
 
-            <!-- Card info -->
-            <div class="card-info">
-                <p class="card-name"><?= htmlspecialchars($preset['name']) ?></p>
-                <p class="card-desc"><?= htmlspecialchars($preset['description']) ?></p>
+                                <?php if (!$failed && $price): ?>
+                                    <?php if ($discountPct > 0): ?>
+                                        <p class="card-price" style="text-decoration:line-through; color:#999; font-size:0.8em; margin-bottom:2px;">
+                                            <?= number_format($rawPrice, 2, '.', ' ') ?> €
+                                        </p>
+                                        <p class="card-price" style="display:flex; align-items:center; gap:6px;">
+                                            <?= $price ?>
+                                            <span style="background:#e8f5e9; color:#2e7d32; font-size:0.72em; font-weight:700; padding:2px 6px; border-radius:4px;">
+                                                -<?= $discountPct ?>%
+                                            </span>
+                                        </p>
+                                    <?php else: ?>
+                                        <p class="card-price"><?= $price ?></p>
+                                    <?php endif; ?>
+                                <?php elseif ($failed): ?>
+                                    <p class="card-price computing">Unavailable</p>
+                                <?php else: ?>
+                                    <p class="card-price computing">Computing…</p>
+                                <?php endif; ?>
+                            </div>
 
-                <span class="card-algo-tag">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
-                    </svg>
-                    <?= htmlspecialchars($preset['algo_label']) ?>
-                </span>
+                        </div><!-- /preset-card -->
+                    <?php endforeach; ?>
+                </div><!-- /presets-grid -->
 
-                <div class="quality-row">
-                    <span class="quality-label">Quality</span>
-                    <div class="quality-bar">
-                        <div class="quality-fill" style="width:<?= $quality ?>%"></div>
-                    </div>
-                    <span class="quality-label"><?= $quality ?>%</span>
-                </div>
-
-                <?php if (!$failed && $price): ?>
-                    <p class="card-price"><?= $price ?></p>
-                <?php elseif ($failed): ?>
-                    <p class="card-price computing">Unavailable</p>
-                <?php else: ?>
-                    <p class="card-price computing">Computing…</p>
-                <?php endif; ?>
-            </div>
-
-        </div><!-- /preset-card -->
-        <?php endforeach; ?>
-        </div><!-- /presets-grid -->
-
-        <!-- ── PAGE FOOTER ── -->
-        <div class="page-footer">
-            <p class="selection-info" id="selInfo">
-                <strong id="selCount">1</strong> tiling selected
-            </p>
-            <button type="submit" class="btn btn-success" id="addToCartBtn" 
-            onclick="
+                <!-- ── PAGE FOOTER ── -->
+                <div class="page-footer">
+                    <p class="selection-info" id="selInfo">
+                        <strong id="selCount">1</strong> tiling selected
+                    </p>
+                    <button type="submit" class="btn btn-success" id="addToCartBtn"
+                        onclick="
                 document.querySelectorAll('.card-checkbox:checked').forEach(chk => {
                 _paq.push(['trackEvent', 'Pavage', 'Ajout panier', chk.value]);
                 });
             ">
-                Add to basket
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-                    <line x1="3" y1="6" x2="21" y2="6"/>
-                    <path d="M16 10a4 4 0 0 1-8 0"/>
-                </svg>
-            </button>
-        </div>
+                        Add to basket
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                            <line x1="3" y1="6" x2="21" y2="6" />
+                            <path d="M16 10a4 4 0 0 1-8 0" />
+                        </svg>
+                    </button>
+                </div>
 
-    </form>
-    <?php endif; ?>
+            </form>
+        <?php endif; ?>
 
-</div><!-- /page-wrapper -->
+    </div><!-- /page-wrapper -->
 
-<script>
-// ── Loading overlay (cosmetic step animation) ──
-function showLoading() {
-    document.getElementById('loadingOverlay').classList.add('visible');
-    const steps = <?= json_encode(array_keys($PRESETS)) ?>;
-    let i = 0;
-    (function nextStep() {
-        if (i > 0) {
-            const prev = document.getElementById('lstep-' + steps[i - 1]);
-            if (prev) { prev.classList.remove('active'); prev.classList.add('done'); }
+    <script>
+        // ── Loading overlay (cosmetic step animation) ──
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.add('visible');
+            const steps = <?= json_encode(array_keys($PRESETS)) ?>;
+            let i = 0;
+            (function nextStep() {
+                if (i > 0) {
+                    const prev = document.getElementById('lstep-' + steps[i - 1]);
+                    if (prev) {
+                        prev.classList.remove('active');
+                        prev.classList.add('done');
+                    }
+                }
+                if (i < steps.length) {
+                    const cur = document.getElementById('lstep-' + steps[i]);
+                    if (cur) cur.classList.add('active');
+                    i++;
+                    setTimeout(nextStep, 1600);
+                }
+            })();
         }
-        if (i < steps.length) {
-            const cur = document.getElementById('lstep-' + steps[i]);
-            if (cur) cur.classList.add('active');
-            i++;
-            setTimeout(nextStep, 1600);
+
+        // ── Card toggle ──
+        function toggleCard(key) {
+            const chk = document.getElementById('chk-' + key);
+            if (!chk) return;
+            chk.checked = !chk.checked;
+            document.getElementById('card-' + key).classList.toggle('selected', chk.checked);
+            // Matomo : sélection ou désélection d'un pavage
+            _paq.push(['trackEvent', 'Pavage', chk.checked ? 'Selection' : 'Deselection', key]);
+            updateCount();
         }
-    })();
-}
 
-// ── Card toggle ──
-function toggleCard(key) {
-    const chk = document.getElementById('chk-' + key);
-    if (!chk) return;
-    chk.checked = !chk.checked;
-    document.getElementById('card-' + key).classList.toggle('selected', chk.checked);
-    // Matomo : sélection ou désélection d'un pavage
-    _paq.push(['trackEvent', 'Pavage', chk.checked ? 'Selection' : 'Deselection', key]);
-    updateCount();
-}
+        function syncCard(key) {
+            const chk = document.getElementById('chk-' + key);
+            document.getElementById('card-' + key).classList.toggle('selected', chk.checked);
+            // Matomo : sélection ou désélection d'un pavage
+            _paq.push(['trackEvent', 'Pavage', chk.checked ? 'Selection' : 'Deselection', key]);
+            updateCount();
+        }
 
-function syncCard(key) {
-    const chk = document.getElementById('chk-' + key);
-    document.getElementById('card-' + key).classList.toggle('selected', chk.checked);
-    // Matomo : sélection ou désélection d'un pavage
-    _paq.push(['trackEvent', 'Pavage', chk.checked ? 'Selection' : 'Deselection', key]);
-    updateCount();
-}
+        function updateCount() {
+            const n = document.querySelectorAll('.card-checkbox:checked').length;
+            const cnt = document.getElementById('selCount');
+            if (cnt) cnt.textContent = n;
+            const inf = document.getElementById('selInfo');
+            if (inf) inf.innerHTML = '<strong>' + n + '</strong> tiling' + (n !== 1 ? 's' : '') + ' selected';
+            const btn = document.getElementById('addToCartBtn');
+            if (btn) {
+                btn.disabled = (n === 0);
+                btn.className = n > 0 ? 'btn btn-success' : 'btn btn-disabled';
+            }
+        }
 
-function updateCount() {
-    const n   = document.querySelectorAll('.card-checkbox:checked').length;
-    const cnt = document.getElementById('selCount');
-    if (cnt) cnt.textContent = n;
-    const inf = document.getElementById('selInfo');
-    if (inf) inf.innerHTML = '<strong>' + n + '</strong> tiling' + (n !== 1 ? 's' : '') + ' selected';
-    const btn = document.getElementById('addToCartBtn');
-    if (btn) {
-        btn.disabled  = (n === 0);
-        btn.className = n > 0 ? 'btn btn-success' : 'btn btn-disabled';
-    }
-}
+        // ── Zoom modal ──
+        function openZoom(src) {
+            document.getElementById('zoomImg').src = src;
+            document.getElementById('zoomModal').classList.add('open');
+        }
 
-// ── Zoom modal ──
-function openZoom(src) {
-    document.getElementById('zoomImg').src = src;
-    document.getElementById('zoomModal').classList.add('open');
-}
-function closeZoom() {
-    document.getElementById('zoomModal').classList.remove('open');
-}
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeZoom(); });
+        function closeZoom() {
+            document.getElementById('zoomModal').classList.remove('open');
+        }
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeZoom();
+        });
 
-document.addEventListener('DOMContentLoaded', () => {
-    updateCount();
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCount();
 
-    const autoForm = document.getElementById('autoGenerateForm');
-    if (autoForm) {
-        showLoading();
-        setTimeout(() => autoForm.submit(), 120);
-    } else {
-        // Page résultat — cache l'overlay
-        const overlay = document.getElementById('loadingOverlay');
-        if (overlay) overlay.style.display = 'none';
-    }
-});
-</script>
+            const autoForm = document.getElementById('autoGenerateForm');
+            if (autoForm) {
+                showLoading();
+                setTimeout(() => autoForm.submit(), 120);
+            } else {
+                // Page résultat — cache l'overlay
+                const overlay = document.getElementById('loadingOverlay');
+                if (overlay) overlay.style.display = 'none';
+            }
+        });
+    </script>
 
 </body>
+
 </html>

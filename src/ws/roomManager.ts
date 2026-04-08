@@ -11,6 +11,10 @@ interface Room {
   gameStarted: boolean;
   gameId: string;
   difficulty: { cols: number; rows: number } | null;
+  disconnectedMembers: Map<
+    string,
+    { isAdmin: boolean; timeout: NodeJS.Timeout }
+  >;
 }
 
 // ─── État global des rooms ────────────────────────────────────────────────────
@@ -38,31 +42,61 @@ function broadcast(room: Room, payload: object, excludeUser?: string): void {
   }
 }
 
-function removeFromRoom(room: Room, userName: string): void {
+function removeFromRoom(
+  room: Room,
+  userName: string,
+  voluntary: boolean,
+): void {
   const wasAdmin = room.adminUserName === userName;
-  console.log(`[ws] "${userName}" quitte la room ${room.id}`);
+  console.log(
+    `[ws] "${userName}" quitte la room ${room.id} (${voluntary ? "volontaire" : "involontaire"})`,
+  );
   room.members.delete(userName);
 
-  if (room.members.size === 0) {
+  if (room.members.size === 0 && room.disconnectedMembers.size === 0) {
     rooms.delete(room.id);
     console.log(`[ws] Room ${room.id} supprimée (vide)`);
     return;
   }
 
-  if (wasAdmin) {
-    // Fermer la room si l'admin quitte
+  if (wasAdmin && voluntary) {
+    // Fermer la room si l'admin quitte et que c'est volontaire
     broadcast(room, { kind: "room_closed" });
     for (const ws of room.members.values()) {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.close();
-      }
+      if (ws.readyState === WebSocket.OPEN) ws.close();
+    }
+    for (const { timeout } of room.disconnectedMembers.values()) {
+      clearTimeout(timeout);
     }
     rooms.delete(room.id);
-    console.log(`[ws] Room ${room.id} fermée car l'admin a quitté`);
+    console.log(
+      `[ws] Room ${room.id} fermée car l'admin a quitté volontairement`,
+    );
     return;
   }
 
-  broadcast(room, { kind: "user_left", user_name: userName });
+  if (voluntary) {
+    broadcast(room, { kind: "user_left", user_name: userName });
+  } else {
+    // Notifie que le joueur est en train de se reconnecter
+    broadcast(room, { kind: "user_reconnecting", user_name: userName });
+
+    // Donne 30s pour revenir
+    const timeout = setTimeout(() => {
+      room.disconnectedMembers.delete(userName);
+      broadcast(room, { kind: "user_left", user_name: userName });
+      console.log(`[ws] "${userName}" n'a pas réintégré la room à temps`);
+
+      if (room.members.size === 0 && room.disconnectedMembers.size === 0) {
+        rooms.delete(room.id);
+      }
+    }, 30_000);
+
+    room.disconnectedMembers.set(userName, { isAdmin: wasAdmin, timeout });
+    console.log(
+      `[ws] "${userName}" déconnecté involontairement, 30s pour revenir`,
+    );
+  }
 }
 
 // ─── Initialisation du serveur WebSocket ─────────────────────────────────────
@@ -80,6 +114,7 @@ export function initWebSocketServer(httpServer: Server): void {
     let currentRoom: Room | null = null;
     let currentUserName: string | null = null;
     let initialized = false;
+    let voluntaryDisconnect = false;
 
     ws.on("message", (rawMessage: Buffer) => {
       let data: Record<string, unknown>;
@@ -108,6 +143,7 @@ export function initWebSocketServer(httpServer: Server): void {
             gameStarted: false,
             gameId: String(data.game_id ?? "").trim(),
             difficulty: null,
+            disconnectedMembers: new Map(),
           };
           rooms.set(roomId, room);
           currentRoom = room;
@@ -189,6 +225,62 @@ export function initWebSocketServer(httpServer: Server): void {
             userName,
           );
           console.log(`[ws] "${userName}" a rejoint la room ${roomId}`);
+        } else if (data.kind === "rejoin_room") {
+          const userName = String(data.user_name ?? "").trim();
+          const roomId = String(data.room_id ?? "")
+            .trim()
+            .toUpperCase();
+          const gameId = String(data.game_id ?? "").trim();
+
+          const room = rooms.get(roomId);
+
+          if (!room) {
+            send(ws, { kind: "error", message: "Room introuvable ou expirée" });
+            ws.close();
+            return;
+          }
+
+          if (room.gameId !== gameId) {
+            send(ws, { kind: "error", message: "Room invalide pour ce jeu" });
+            ws.close();
+            return;
+          }
+
+          // Vérifie que ce membre était bien dans la room
+          const disconnected = room.disconnectedMembers.get(userName);
+          if (!disconnected) {
+            send(ws, { kind: "error", message: "Session expirée" });
+            ws.close();
+            return;
+          }
+
+          // Annule le timeout de destruction
+          clearTimeout(disconnected.timeout);
+          room.disconnectedMembers.delete(userName);
+
+          // Réintègre le membre
+          room.members.set(userName, ws);
+          currentRoom = room;
+          currentUserName = userName;
+          initialized = true;
+
+          const existingUsers = [...room.members.keys()].filter(
+            (u) => u !== userName,
+          );
+          send(ws, {
+            kind: "room_rejoined",
+            users: existingUsers,
+            is_admin: disconnected.isAdmin,
+            game_started: room.gameStarted,
+            difficulty: room.difficulty,
+          });
+
+          broadcast(
+            room,
+            { kind: "user_rejoined", user_name: userName },
+            userName,
+          );
+          console.log(`[ws] "${userName}" a réintégré la room ${roomId}`);
         } else {
           send(ws, {
             kind: "error",
@@ -266,8 +358,22 @@ export function initWebSocketServer(httpServer: Server): void {
           );
           break;
         }
+        case "game_end_score":
+          broadcast(
+            currentRoom,
+            {
+              kind: "game_end_score",
+              score: data.score,
+              game: data.game,
+              difficulty: data.difficulty,
+            },
+            currentUserName,
+          );
+          break;
+
         case "disconnect": {
-          removeFromRoom(currentRoom, currentUserName);
+          voluntaryDisconnect = true;
+          removeFromRoom(currentRoom, currentUserName, true);
           ws.close();
           currentRoom = null;
           currentUserName = null;
@@ -323,10 +429,11 @@ export function initWebSocketServer(httpServer: Server): void {
 
     ws.on("close", () => {
       if (currentRoom && currentUserName) {
+        if (voluntaryDisconnect) return;
         console.log(
           `[ws] Déconnexion de "${currentUserName}" (room ${currentRoom.id})`,
         );
-        removeFromRoom(currentRoom, currentUserName);
+        removeFromRoom(currentRoom, currentUserName, false);
       }
     });
 
@@ -336,7 +443,7 @@ export function initWebSocketServer(httpServer: Server): void {
         error.message,
       );
       if (currentRoom && currentUserName)
-        removeFromRoom(currentRoom, currentUserName);
+        removeFromRoom(currentRoom, currentUserName, true);
     });
   });
 

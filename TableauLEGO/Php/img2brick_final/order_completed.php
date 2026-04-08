@@ -355,6 +355,16 @@ function money($v)
             if (e.key === 'Escape') closeZoom();
         });
     </script>
+        <script>
+        (function () {
+            var orderId = <?= (int)$orderBill['order_id'] ?>;
+            var total   = "<?= number_format($totaux, 2, '.', ' ') ?> EUR";
+ 
+            if (window.Android && typeof window.Android.notifyOrderPlaced === 'function') {
+                window.Android.notifyOrderPlaced(orderId, total);
+            }
+        })();
+    </script>
 </body>
 
 </html>

@@ -69,7 +69,6 @@ export function checkPlacementValid(
   brick: Brick,
 ): boolean {
   for (let i = 0; i < board.length; i++) {
-
     const startCol = i % cols;
 
     if (startCol + brick.w > cols) continue;
@@ -85,7 +84,7 @@ export function checkPlacementValid(
           break;
         }
       }
-      if (!fits){
+      if (!fits) {
         break;
       }
     }
@@ -135,7 +134,7 @@ export async function readBrickFile(filePath: string): Promise<Brick[]> {
       });
     }
   });
-  console.log(bricksArray);
+  //console.log(bricksArray);
   return bricksArray;
 }
 

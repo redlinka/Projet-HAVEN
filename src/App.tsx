@@ -45,7 +45,6 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [chatManager] = useState(() => new WebSocketRoomService());
 
-  useEffect(() => {
   const initUser = async () => {
     try {
       const phpData = await getSession();
@@ -74,7 +73,6 @@ function App() {
         return;
       }
 
-
       // IF PLAYER DATA EXISTS, we save token and set user
       if (playerData.sessionToken) {
         localStorage.setItem("sessionToken", playerData.sessionToken);
@@ -93,8 +91,20 @@ function App() {
     }
   };
 
-  initUser();
-}, []);
+  useEffect(() => {
+    initUser();
+  }, []);
+
+  // BROADCAST CHANNEL TO LISTEN login/logout on bricksy
+  useEffect(() => {
+    const bc = new BroadcastChannel("bricksy_session");
+    bc.onmessage = (e) => {
+      if (e.data.bricksy_id !== user?.id) {
+        initUser();
+      }
+    };
+    return () => bc.close();
+  }, [user?.id]);
 
   useEffect(() => {
     if (user) {

@@ -9,19 +9,22 @@ if (!file_exists('fpdf.php')) {
 }
 require('fpdf.php');
 
-class MosaicPDF extends FPDF {
+class MosaicPDF extends FPDF
+{
     public $titleHeader = "";
     public $subHeader = "";
     public $isCustomPage = false;
 
-    function SetTextRenderingMode($mode) {
+    function SetTextRenderingMode($mode)
+    {
         $this->_out($mode . ' Tr');
     }
 
-    function SetFillColorHex($hex) {
+    function SetFillColorHex($hex)
+    {
         $hex = ltrim($hex, '#');
-        if(strlen($hex) == 3) {
-            $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+        if (strlen($hex) == 3) {
+            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
         }
         $r = hexdec(substr($hex, 0, 2));
         $g = hexdec(substr($hex, 2, 2));
@@ -29,7 +32,8 @@ class MosaicPDF extends FPDF {
         $this->SetFillColor($r, $g, $b);
     }
 
-    function Header() {
+    function Header()
+    {
         if ($this->isCustomPage) {
             // Minimal Header for the big plan
             $this->SetY(5);
@@ -63,7 +67,8 @@ class MosaicPDF extends FPDF {
         }
     }
 
-    function Footer() {
+    function Footer()
+    {
         // Place footer 15mm from bottom of CURRENT page height
         $this->SetY(-15);
         $this->SetTextColor(0);
@@ -72,7 +77,8 @@ class MosaicPDF extends FPDF {
     }
 }
 
-function generateMosaicManual($filepath) {
+function generateMosaicManual($filepath)
+{
     if (!file_exists($filepath)) {
         die("Error: File not found.");
     }
@@ -80,7 +86,8 @@ function generateMosaicManual($filepath) {
     // --- Parse Data ---
     $lines = file($filepath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     $bricks = [];
-    $maxX = 0; $maxY = 0;
+    $maxX = 0;
+    $maxY = 0;
     $legend = [];
 
     foreach ($lines as $line) {
@@ -103,8 +110,11 @@ function generateMosaicManual($filepath) {
         $finalH = $isVertical ? $origW : $origH;
 
         $bricks[] = [
-            'w' => $finalW, 'h' => $finalH,
-            'hex' => $hex, 'x' => $x, 'y' => $y,
+            'w' => $finalW,
+            'h' => $finalH,
+            'hex' => $hex,
+            'x' => $x,
+            'y' => $y,
             'type_key' => $origW . '-' . $origH . '-' . $hex
         ];
 
@@ -114,16 +124,23 @@ function generateMosaicManual($filepath) {
         $key = $origW . '-' . $origH . '-' . $hex;
         if (!isset($legend[$key])) {
             $legend[$key] = [
-                'w' => $origW, 'h' => $origH, 'hex' => $hex,
-                'count' => 0, 'id' => 0
+                'w' => $origW,
+                'h' => $origH,
+                'hex' => $hex,
+                'count' => 0,
+                'id' => 0
             ];
         }
         $legend[$key]['count']++;
     }
 
     $idCounter = 1;
-    foreach ($legend as $k => $v) { $legend[$k]['id'] = $idCounter++; }
-    foreach ($bricks as &$b) { $b['legend_id'] = $legend[$b['type_key']]['id']; }
+    foreach ($legend as $k => $v) {
+        $legend[$k]['id'] = $idCounter++;
+    }
+    foreach ($bricks as &$b) {
+        $b['legend_id'] = $legend[$b['type_key']]['id'];
+    }
     unset($b);
 
     // --- Setup PDF ---
@@ -155,7 +172,10 @@ function generateMosaicManual($filepath) {
     $pdf->SetXY($x1, $y1);
     for ($i = 0; $i < strlen($title1); $i++) {
         $char = $title1[$i];
-        if ($char == ' ') { $pdf->Cell($pdf->GetStringWidth(' '), 15, ' ', 0, 0); continue; }
+        if ($char == ' ') {
+            $pdf->Cell($pdf->GetStringWidth(' '), 15, ' ', 0, 0);
+            continue;
+        }
         $rgb = $colors[$cIdx % count($colors)];
         $pdf->SetFillColor($rgb[0], $rgb[1], $rgb[2]);
         $pdf->Cell($pdf->GetStringWidth($char), 15, $char, 0, 0);
@@ -171,7 +191,10 @@ function generateMosaicManual($filepath) {
     $pdf->SetXY($x2, $y2);
     for ($i = 0; $i < strlen($title2); $i++) {
         $char = $title2[$i];
-        if ($char == ' ') { $pdf->Cell($pdf->GetStringWidth(' '), 15, ' ', 0, 0); continue; }
+        if ($char == ' ') {
+            $pdf->Cell($pdf->GetStringWidth(' '), 15, ' ', 0, 0);
+            continue;
+        }
         $rgb = $colors[$cIdx % count($colors)];
         $pdf->SetFillColor($rgb[0], $rgb[1], $rgb[2]);
         $pdf->Cell($pdf->GetStringWidth($char), 15, $char, 0, 0);
@@ -184,11 +207,15 @@ function generateMosaicManual($filepath) {
     $pdf->subHeader = "Total Size: $maxX x $maxY studs | Total Parts: " . count($bricks);
     $pdf->AddPage();
 
-    $colWidth = 65; $rowHeight = 22; $colsPerPage = 4;
+    $colWidth = 65;
+    $rowHeight = 22;
+    $colsPerPage = 4;
     $tableWidth = $colsPerPage * $colWidth;
     $startX = (297 - $tableWidth) / 2;
     $startY = $pdf->GetY();
-    $currentCol = 0; $currentX = $startX; $currentY = $startY;
+    $currentCol = 0;
+    $currentX = $startX;
+    $currentY = $startY;
 
     foreach ($legend as $type) {
         if ($currentY + $rowHeight > 180) {
@@ -207,7 +234,8 @@ function generateMosaicManual($filepath) {
         $pdf->SetXY($currentX, $currentY);
         $pdf->Cell(12, $rowHeight, "#" . $type['id'], 0, 0, 'C');
 
-        $iconBoxW = 25; $iconBoxH = 16;
+        $iconBoxW = 25;
+        $iconBoxH = 16;
         $iconX = $currentX + 12;
         $iconY = $currentY + ($rowHeight - $iconBoxH) / 2;
 
@@ -235,7 +263,8 @@ function generateMosaicManual($filepath) {
         $currentCol++;
         if ($currentCol >= $colsPerPage) {
             $currentCol = 0;
-            $currentX = $startX; $currentY += $rowHeight;
+            $currentX = $startX;
+            $currentY += $rowHeight;
         } else {
             $currentX += $colWidth;
         }
@@ -296,13 +325,21 @@ function generateMosaicManual($filepath) {
             $textH = $fontSize / 2.5;
 
             if ($textW < ($w * 0.95)) {
-                $pdf->SetXY($centerX - ($textW/2), $centerY - ($textH));
-                $pdf->Cell($textW, $textH*2, $b['legend_id'], 0, 0, 'C');
+                $pdf->SetXY($centerX - ($textW / 2), $centerY - ($textH));
+                $pdf->Cell($textW, $textH * 2, $b['legend_id'], 0, 0, 'C');
             }
         }
     }
 
-    $pdf->Output('I', 'Mosaic_Full_Manual.pdf');
+    ob_end_clean();
+
+    header('Content-Type: application/pdf');
+    header('Content-Disposition: attachment; filename="Mosaic_Full_Manual.pdf"');
+    header('Cache-Control: public, must-revalidate, max-age=0');
+    header('Pragma: public');
+
+    $pdf->Output('D', 'Mosaic_Full_Manual.pdf');
+    exit;
 }
 
 // --- Execution ---
@@ -314,4 +351,3 @@ if (isset($_GET['file'])) {
 } else {
     echo "No file specified.";
 }
-?>

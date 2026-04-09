@@ -4,6 +4,7 @@ session_start();
 global $cnx;
 include("./config/cnx.php");
 require_once __DIR__ . '/includes/i18n.php';
+require_once __DIR__ . '/includes/process_pending_cart.php';
 
 // Validate input Ensure token presence
 if (!isset($_GET['token'])) {
@@ -81,9 +82,9 @@ try {
     }
 
     // Rotate CSRF
+    processPendingCart($cnx, (int)$result['user_id']);
     csrf_rotate();
     addLog($cnx, "USER", "LOG", "in");
-
     // Send HTML page with JavaScript bridge (smart detection for Android vs Browser)
     // The JavaScript will attempt to call Android.saveAuthToken() if in Android WebView, otherwise it will redirect to a browser page.
 ?>

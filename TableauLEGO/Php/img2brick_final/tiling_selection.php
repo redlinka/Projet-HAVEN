@@ -201,6 +201,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $currentUserId = (int)($_SESSION['userId'] ?? 0);
                 $_SESSION['tilings_generated'][$key] = runPreset($key, $preset, $sourceFile, $parentId, $cnx, $currentUserId);
             }
+            $_SESSION['tilings_parent_id'] = $parentId;
             session_write_close();
             ob_end_clean();
             header("Location: tiling_selection.php");
@@ -226,6 +227,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     $userId = (int)($_SESSION['userId'] ?? 0);
                     if (!$userId) {
+                        // Save pending cart articles (with pre-calculed prices)
+                        // To insert them as soon as the user is connected
+                        $_SESSION['pending_cart_items']   = $cartItems;
+                        $_SESSION['redirect_after_login'] = 'cart.php';
                         session_write_close();
                         ob_end_clean();
                         header("Location: auth.php");
@@ -261,6 +266,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $stats         = getTilingStats($txtName);
                             $storedPrice   = (int)($stats['price']   ?? 0);
                             $storedQuality = (float)($stats['quality'] ?? 0);
+                            $item['stored_price']   = $storedPrice;
+                            $item['stored_quality'] = $storedQuality;
 
                             // Apply discount if exists
                             $presetDiscount = $PRESETS[$key]['discount'] ?? 0;
@@ -326,7 +333,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // ── Load stats for display ─────────────────────────────────────────────────
-$generated  = $_SESSION['tilings_generated'] ?? null;
+$generated = $_SESSION['tilings_generated'] ?? null;
+
+// Invalide le cache si l'image source a changé
+if ($generated && ($_SESSION['tilings_parent_id'] ?? null) !== $parentId) {
+    unset($_SESSION['tilings_generated']);
+    $generated = null;
+}
+
 if ($generated) {
     $anyValid = false;
     foreach ($generated as $key => $t) {
@@ -336,8 +350,7 @@ if ($generated) {
         }
     }
     if (!$anyValid) {
-        unset($_SESSION['tilings_generated']);
-        $generated = null;
+        // Ne pas effacer — garder pour afficher les cartes en erreur
     }
 }
 $statsCache = [];

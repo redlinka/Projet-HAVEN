@@ -32,9 +32,9 @@ export default function EndGameScreen({
         ? "medium"
         : "hard";
   const { user, setUser } = useUser();
-  const { connectedUsers, isAdmin, handleStartGame, gameId } = useRoom();
+  const { roomId, isAdmin, handleStartGame, gameId } = useRoom();
   const roomService = useRoomService();
-  const isMultiplayer = connectedUsers.length >= 2;
+  const isMultiplayer = roomId;
 
   const [finalScore, setFinalScore] = useState(score);
   const [opponentScore, setOpponentScore] = useState<number | null>(null);
@@ -56,20 +56,11 @@ export default function EndGameScreen({
     console.log("[Puzzle EndGameScreen] Envoi du score:", score);
     roomService.sendGameEndScore(score, "PUZZLE", diff);
 
-    // Enregistrer le listener pour l'adversaire
-    const timeoutId = setTimeout(() => {
-      // Adversaire hors ligne après 12s
-      setFinalScore(score);
-      setResultMessage("Adversaire hors ligne");
-      setHasCalculated(true);
-    }, 12000);
-
     const handleOpponentScore = (data: {
       opponentScore: number;
       game: string;
       difficulty: string;
     }) => {
-      clearTimeout(timeoutId);
       console.log("[EndGame] Score adverse reçu:", data.opponentScore);
 
       const { winner, loser, draw } = determineWinner(
@@ -138,7 +129,8 @@ export default function EndGameScreen({
         });
       })
       .catch((err) => console.error("Error saving score:", err));
-  }, [finalScore, isMultiplayer, hasCalculated, diff, user]);
+    console.log("Set score");
+  }, [finalScore, isMultiplayer, hasCalculated, diff]);
 
   return (
     <div className="ending-overlay">
@@ -202,12 +194,12 @@ export default function EndGameScreen({
             </div>
           </div>
 
-          {isAdmin && (
+          {(!isMultiplayer || isAdmin) && (
             <div className="ending-footer">
               <button
                 className="retry-btn"
                 onClick={
-                  isMultiplayer
+                  !isMultiplayer
                     ? onModeMenu
                     : () => handleStartGame(onRestartGame)
                 }

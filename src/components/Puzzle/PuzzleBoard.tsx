@@ -44,7 +44,7 @@ export default function PuzzleBoard({
   function drawGridLines(ctx: CanvasRenderingContext2D, size: number) {
     const cellSize = size / Math.max(cols, rows);
 
-    ctx.strokeStyle = "#000000";
+    ctx.strokeStyle = "#4a3a70";
     ctx.lineWidth = 0.5;
 
     ctx.beginPath();

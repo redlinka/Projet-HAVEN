@@ -6,8 +6,7 @@ import { useRoom } from "../contexts/RoomContext";
 
 export function useRoomReconnect() {
   const roomService = useRoomService();
-  const { handleRoomJoined, setIsAdmin, setDifficulty, setGameId, setState } =
-    useRoom();
+  const { handleRoomJoined, setIsAdmin, setDifficulty, setGameId } = useRoom();
   const navigate = useNavigate();
 
   useEffect(() => {

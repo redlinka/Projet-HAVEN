@@ -30,7 +30,7 @@ router.get('/', async (req, res) => {
 
       if (sqlPlayer) {
         // Merge guest games into SQL player if guest exists and is different from sqlPlayer
-        if (guestPlayer && guestPlayer._id.toString() !== sqlPlayer._id.toString()) {
+        if (guestPlayer && guestPlayer._id.toString() !== sqlPlayer._id.toString() && guestPlayer.SQL_id === -1) {
           const mergedGamesMap = new Map<string, any>();
 
           sqlPlayer.games.forEach((game: any) => mergedGamesMap.set(game._id.toString(), game));
@@ -62,7 +62,7 @@ router.get('/', async (req, res) => {
 
         player = sqlPlayer;
 
-      } else if (guestPlayer) {
+      } else if (guestPlayer && guestPlayer.SQL_id === -1) {
         // No SQL player exists on MongoDB but connected to Bricksy, we promote guest to SQL player
         await Player.updateOne(
           { _id: guestPlayer._id },

@@ -77,6 +77,13 @@ session_destroy();
                 // Android app detected: Clear stored auth token from SharedPreferences
                 Android.clearAuthData();
             }
+            //Notify React app of session change
+            const bc = new BroadcastChannel("bricksy_session");
+            bc.postMessage({
+                bricksy_id: -1
+            });
+            bc.close();
+
             // Redirect after a short delay
             setTimeout(function() {
                 window.location.href = 'index.php';

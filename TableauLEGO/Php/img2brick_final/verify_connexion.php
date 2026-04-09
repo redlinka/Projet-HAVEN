@@ -130,6 +130,12 @@ try {
             // console.log("typeof Android:", typeof Android);
 
             window.addEventListener('load', function() {
+                //Notify React App of session change
+                const bc = new BroadcastChannel("bricksy_session");
+                bc.postMessage({
+                    bricksy_id: userId
+                });
+                bc.close();
                 // console.log("=== WINDOW LOAD EVENT ===");
                 // console.log("typeof Android:", typeof Android);
 

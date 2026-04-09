@@ -311,27 +311,23 @@ export const GameOverScreen = () => {
         </Text>
       )}
 
-      {isMultiplayer && (
-        <MenuButton
-          position={isPortrait ? [0, -8, 0] : [-25, -20, 0]}
-          size={isPortrait ? 18 : 22}
-          imageSrc={`${import.meta.env.BASE_URL}img/brickblast/replay.png`}
-          musicSrc={`${import.meta.env.BASE_URL}sounds/brickblast/nice.mp3`}
-          onClick={handleRetry}
-          color="none"
-        />
-      )}
+      <MenuButton
+        position={isPortrait ? [0, -8, 0] : [-25, -20, 0]}
+        size={isPortrait ? 18 : 22}
+        imageSrc={`${import.meta.env.BASE_URL}img/brickblast/replay.png`}
+        musicSrc={`${import.meta.env.BASE_URL}sounds/brickblast/nice.mp3`}
+        onClick={handleRetry}
+        color="none"
+      />
 
-      {isMultiplayer && (
-        <MenuButton
-          position={isPortrait ? [0, -33, 0] : [25, -20, 0]}
-          size={isPortrait ? 20 : 25}
-          imageSrc={`${import.meta.env.BASE_URL}img/brickblast/exit.png`}
-          musicSrc={`${import.meta.env.BASE_URL}sounds/brickblast/nice.mp3`}
-          onClick={handleQuit}
-          color="none"
-        />
-      )}
+      <MenuButton
+        position={isPortrait ? [0, -33, 0] : [25, -20, 0]}
+        size={isPortrait ? 20 : 25}
+        imageSrc={`${import.meta.env.BASE_URL}img/brickblast/exit.png`}
+        musicSrc={`${import.meta.env.BASE_URL}sounds/brickblast/nice.mp3`}
+        onClick={handleQuit}
+        color="none"
+      />
     </group>
   );
 };

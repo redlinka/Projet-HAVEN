@@ -45,64 +45,70 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [chatManager] = useState(() => new WebSocketRoomService());
 
-  useEffect(() => {
   const initUser = async () => {
-    try {
-      const phpData = await getSession();
-      const localToken = localStorage.getItem("sessionToken");
+      try {
+        const phpData = await getSession();
+        const localToken = localStorage.getItem("sessionToken");
 
-      let url = "/api-node/player";
-      let options: RequestInit = {};
+        let url = "/api-node/player";
+        let options: RequestInit = {};
 
-      if (localToken) {
-        options.headers = { Authorization: `Bearer ${localToken}` };
-      }
+        if (localToken) {
+          options.headers = { Authorization: `Bearer ${localToken}` };
+        }
 
-      // USER CONNECTED IN BRICKSY
-      if (phpData?.id && phpData.id !== -1) {
-        url += `?SQLid=${phpData.id}`;
-      }
+        if (phpData?.id && phpData.id !== -1) {
+          url += `?SQLid=${phpData.id}`;
+        }
 
-      const response = await fetch(url, options);
-      const playerData = await response.json();
+        const response = await fetch(url, options);
+        const playerData = await response.json();
 
-      // IF NO PLAYER DATA, we clear everything
-      if (!playerData) {
-        localStorage.removeItem("sessionToken");
-        localStorage.removeItem("user");
+        if (!playerData) {
+          localStorage.removeItem("sessionToken");
+          localStorage.removeItem("user");
+          setUser({ id: -1, SQL_id: -1, sessionToken: null, games: [] });
+          return;
+        }
+
+        if (playerData.sessionToken) {
+          localStorage.setItem("sessionToken", playerData.sessionToken);
+        }
+
+        setUser({
+          id: phpData?.id ?? -1,
+          SQL_id: playerData.SQL_id ?? (phpData?.id ?? -1),
+          sessionToken: playerData.sessionToken ?? localToken,
+          games: playerData.games ?? [],
+        });
+
+      } catch (err) {
+        console.error("Error initializing user:", err);
         setUser({ id: -1, SQL_id: -1, sessionToken: null, games: [] });
-        return;
       }
+    };
 
+    useEffect(() => {
+      initUser();
+    }, []);
 
-      // IF PLAYER DATA EXISTS, we save token and set user
-      if (playerData.sessionToken) {
-        localStorage.setItem("sessionToken", playerData.sessionToken);
+    useEffect(() => {
+      const bc = new BroadcastChannel("bricksy_session");
+      bc.onmessage = (e) => {
+        if (e.data.bricksy_id !== user?.id) {
+          initUser();
+        }
+      };
+      return () => bc.close();
+    }, [user?.id]);
+
+    useEffect(() => {
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
+      } else {
+        localStorage.removeItem("user");
       }
-
-      setUser({
-        id: phpData?.id ?? -1,
-        SQL_id: playerData.SQL_id ?? (phpData?.id ?? -1),
-        sessionToken: playerData.sessionToken ?? localToken,
-        games: playerData.games ?? [],
-      });
-
-    } catch (err) {
-      console.error("Error initializing user:", err);
-      setUser({ id: -1, SQL_id: -1, sessionToken: null, games: [] });
-    }
-  };
-
-  initUser();
-}, []);
-
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem("user", JSON.stringify(user));
-    } else {
-      localStorage.removeItem("user");
-    }
-  }, [user]);
+    }, [user]);
 
   return (
     <UserContext.Provider value={{ user, setUser }}>

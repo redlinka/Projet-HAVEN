@@ -82,7 +82,7 @@ if ($method === 'totp' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['email']    = $user['email'];
             unset($_SESSION['2fa_pending_user_id'], $_SESSION['2fa_mail_sent']);
             addLog($cnx, "USER", "LOGIN", "totp_2fa");
-            header("Location: index.php");
+            header("Location: cart.php");
             exit;
         }
     }

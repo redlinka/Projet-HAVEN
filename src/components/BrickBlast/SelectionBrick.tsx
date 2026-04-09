@@ -213,6 +213,7 @@ export const SelectionBrick = ({
                     // 5. If all 3 slots are empty, fetch a brand new batch
                     if (updatedPieces.every(p => p === null)) {
                         const newBatch = Array.from({ length: 3 }).map(() => ({
+                            id: Math.random().toString(36).slice(2),
                             color: getRandomColor(),
                             shape: getRandomPiece(),
                         }));
@@ -293,6 +294,7 @@ export default function BlocksGeneration() {
     useMemo(() => {
         if (nextPieces.length === 0) {
             const initialPieces = Array.from({ length: 3 }).map(() => ({
+                id: Math.random().toString(36).slice(2),
                 color: getRandomColor(),
                 shape: getRandomPiece(),
             }));
@@ -306,7 +308,7 @@ export default function BlocksGeneration() {
                 const piece = nextPieces[i];
                 if (!piece) return null;
 
-                const uniqueKey = `piece-${i}-${piece.color}-${JSON.stringify(piece.shape)}`;
+                const uniqueKey = piece.id ? `piece-${i}-${piece.id}` : `piece-${i}-${piece.color}-${JSON.stringify(piece.shape)}`;
 
                 return (
                     <SelectionBrick

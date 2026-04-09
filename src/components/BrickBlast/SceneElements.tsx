@@ -281,15 +281,35 @@ export const GameOverScreen = () => {
         fontSize={isPortrait ? 14 : 22}
         font={`${import.meta.env.BASE_URL}font/silkscreen/Silkscreen.ttf`}
         color="#ff2222"
-        position={[0, 25, 0]}
+        position={[0, 30, 0]}
         outlineWidth={0}
         outlineColor="black"
       >
         GAME OVER
       </Text>
 
+      <Text
+        fontSize={isPortrait ? 8 : 12}
+        font={`${import.meta.env.BASE_URL}font/silkscreen/Silkscreen.ttf`}
+        color="#ff8c00"
+        position={[0, isPortrait ? 14 : 10, 0]}
+      >
+        {`${finalScore} pts`}
+      </Text>
+
+      {resultMessage && (
+        <Text
+          fontSize={isPortrait ? 5 : 7}
+          font={`${import.meta.env.BASE_URL}font/silkscreen/Silkscreen.ttf`}
+          color={resultMessage.startsWith("VICTOIRE") ? "#44ff44" : "#ff4455"}
+          position={[0, isPortrait ? 5 : 0, 0]}
+        >
+          {resultMessage}
+        </Text>
+      )}
+
       <MenuButton
-        position={isPortrait ? [0, 0, 0] : [-25, -15, 0]}
+        position={isPortrait ? [0, -8, 0] : [-25, -20, 0]}
         size={isPortrait ? 18 : 22}
         imageSrc={`${import.meta.env.BASE_URL}img/brickblast/replay.png`}
         musicSrc={`${import.meta.env.BASE_URL}sounds/brickblast/nice.mp3`}
@@ -298,7 +318,7 @@ export const GameOverScreen = () => {
       />
 
       <MenuButton
-        position={isPortrait ? [0, -25, 0] : [25, -15, 0]}
+        position={isPortrait ? [0, -33, 0] : [25, -20, 0]}
         size={isPortrait ? 20 : 25}
         imageSrc={`${import.meta.env.BASE_URL}img/brickblast/exit.png`}
         musicSrc={`${import.meta.env.BASE_URL}sounds/brickblast/nice.mp3`}

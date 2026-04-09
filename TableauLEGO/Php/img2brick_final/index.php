@@ -72,7 +72,7 @@ require_once __DIR__ . '/includes/i18n.php';
       </div>
     </div>
     <div class="action-buttons">
-      <a href="#" class="btn-outline">
+      <a href="./downloads/BricksyApp.apk" class="btn-outline">
         DOWNLOAD APP
         <img src="assets/arrow.svg" alt="">
       </a>

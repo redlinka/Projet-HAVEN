@@ -1,8 +1,8 @@
 <?php
 /**
  * api/check_loyalty.php
- * Appelé quotidiennement par LoyaltyWorker.
- * Reçoit android_token, retourne si une notification de fidélisation doit s'afficher.
+ * daily called by the Android app to check if the loyalty notification should be shown.
+ * receives android_token, returns if a loyalty notification should be shown.
  */
 
 header('Content-Type: application/json');
@@ -17,7 +17,7 @@ if (empty($token)) {
     exit;
 }
 
-// Récupérer l'utilisateur via le token
+// get user by token
 $stmt = $cnx->prepare("SELECT user_id FROM USER WHERE android_token = :token LIMIT 1");
 $stmt->execute(['token' => $token]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -29,7 +29,7 @@ if (!$user) {
 
 $userId = (int) $user['user_id'];
 
-// Vérifier la dernière commande
+// verify last order date
 $stmt = $cnx->prepare("
     SELECT MAX(created_at) AS last_order
     FROM ORDER_BILL

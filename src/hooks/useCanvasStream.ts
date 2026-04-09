@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRoomService } from "../contexts/RoomServiceContext";
 import { useRoom } from "../contexts/RoomContext";
 
@@ -10,6 +10,8 @@ export function useCanvasStream(isAdmin: boolean, gameId: string | undefined) {
   const peerRef = useRef<RTCPeerConnection | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const animFrameId = useRef<number>(0);
+  let stopRender = false;
+  const [rerender, setRerender] = useState(false);
 
   useEffect(() => {
     if (!isCanvasReady) {
@@ -35,6 +37,29 @@ export function useCanvasStream(isAdmin: boolean, gameId: string | undefined) {
         if (gameId === "1") {
           canvas = canvasRefs.current[0] ?? null;
         } else {
+          // const bricks = canvasRefs.current[1] ?? null;
+
+          // if (!bricks) {
+          //   console.warn("3) [useCanvasStream] bricks canvas introuvable");
+          //   return;
+          // }
+
+          // await new Promise<void>((resolve) => {
+          //   const check = () => {
+          //     if (bricks.width > 0 && bricks.height > 0) resolve();
+          //     else requestAnimationFrame(check);
+          //   };
+          //   check();
+          // });
+
+          // console.log(
+          //   "32) [useCanvasStream] Puzzle - board:",
+          //   bricks.width,
+          //   bricks.height,
+          // );
+
+          // canvas = bricks;
+
           const board = canvasRefs.current[0] ?? null;
           const bricks = canvasRefs.current[1] ?? null;
 
@@ -57,6 +82,7 @@ export function useCanvasStream(isAdmin: boolean, gameId: string | undefined) {
               };
               check();
             });
+
             const finalCanvas = document.createElement("canvas");
             const ctx = finalCanvas.getContext("2d");
 
@@ -64,12 +90,13 @@ export function useCanvasStream(isAdmin: boolean, gameId: string | undefined) {
             finalCanvas.height = board.height;
 
             const render = () => {
-              if (!ctx) return;
+              if (stopRender || !ctx) return;
+
               ctx.clearRect(0, 0, finalCanvas.width, finalCanvas.height);
 
               ctx.drawImage(board, 0, 0);
               ctx.drawImage(bricks, 0, 0);
-
+              console.log("[useConvasStream] canvas render");
               animFrameId.current = requestAnimationFrame(render);
             };
 
@@ -106,6 +133,13 @@ export function useCanvasStream(isAdmin: boolean, gameId: string | undefined) {
         console.log(
           "5) [useCanvasStream] Stream capturé et tracks ajoutés au PeerConnection",
         );
+
+        if (!rerender && gameId === "0") {
+          setTimeout(() => {
+            setRerender(true);
+            //console.log("4 seconde");
+          }, 4000);
+        }
 
         roomService.setWebRTCOfferListener(async (sdp) => {
           console.log("[WebRTC] Offer reçu");
@@ -151,10 +185,11 @@ export function useCanvasStream(isAdmin: boolean, gameId: string | undefined) {
     })();
 
     return () => {
+      stopRender = true;
       cancelAnimationFrame(animFrameId.current);
       peerRef.current?.close();
     };
-  }, [isCanvasReady, canvasRefs]);
+  }, [isCanvasReady, rerender]);
 
   return { remoteVideoRef };
 }

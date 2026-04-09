@@ -78,10 +78,10 @@ export default function EndGameScreen({
 
         if (score === winner) {
           setFinalScore(finalWinner);
-          setResultMessage(`VICTOIRE! +${finalWinner - score} points`);
+          setResultMessage(`VICTORY! +${finalWinner - score} points`);
         } else {
           setFinalScore(finalLoser);
-          setResultMessage(`DÉFAITE... -${score - finalLoser} points`);
+          setResultMessage(`LOSE... -${score - finalLoser} points`);
         }
         setOpponentScore(data.opponentScore);
       }
@@ -109,7 +109,7 @@ export default function EndGameScreen({
         token: token,
         SQLid: user?.SQL_id ?? -1,
         game: "PUZZLE",
-        mode: isMultiplayer ? "MULTIPLAYER" : "SOLO",
+        mode: isMultiplayer ? "DUPLICATE" : "SOLO",
         difficulty: diff,
         points: finalScore,
       }),

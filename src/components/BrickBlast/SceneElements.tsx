@@ -163,10 +163,10 @@ export const GameOverScreen = () => {
         // Déterminer si nous avons gagné
         if (gameScore === winner) {
           setFinalScore(finalWinner);
-          setResultMessage(`VICTOIRE! +${finalWinner - gameScore} points`);
+          setResultMessage(`VICTORY! +${finalWinner - gameScore} points`);
         } else if (gameScore === loser) {
           setFinalScore(finalLoser);
-          setResultMessage(`DÉFAITE... -${gameScore - finalLoser} points`);
+          setResultMessage(`LOSE... -${gameScore - finalLoser} points`);
         }
 
         setHasCalculated(true);
@@ -199,7 +199,7 @@ export const GameOverScreen = () => {
         token: token,
         SQLid: user?.SQL_id ?? -1,
         game: "BRICKBLAST",
-        mode: isMultiplayer ? "MULTIPLAYER" : "SOLO",
+        mode: isMultiplayer ? "DUPLICATE" : "SOLO",
         difficulty: "NORMAL",
         points: finalScore,
       }),

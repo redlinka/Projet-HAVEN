@@ -35,6 +35,7 @@ interface RoomContextValue {
   setIsCanvasReady: (ready: boolean) => void; // ← Appelé quand le canvas est initialisé
   setIsAdmin: (isAdmin: boolean) => void; // ← Appelé à la reconnexion pour rétablir les droits admin
   setDifficulty: (difficulty: { cols: number; rows: number }) => void;
+  setGameStarted: (b: boolean) => void;
 
   // ── Handlers ─────────────────────────────────────────────────
   handleRoomCreated: (userName: string, id: string, gameId: string) => void;
@@ -167,7 +168,6 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
     setGameStarted(false);
     setRoomClosed(false);
     setDifficulty({ cols: 0, rows: 0 });
-    setGameStarted(false);
     setIsCanvasReady(false);
     setUserName(null);
     canvasRefs.current = [];
@@ -228,6 +228,7 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
         setGameId,
         setIsAdmin,
         setDifficulty,
+        setGameStarted,
         setIsCanvasReady,
         handleRoomCreated,
         handleRoomJoined,

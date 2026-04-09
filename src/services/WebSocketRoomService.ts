@@ -39,6 +39,11 @@ export class WebSocketRoomService implements RoomService {
   private currentUsers: string[] = [];
   private _messages: Message[] = [];
   private _roomId: string | null = null;
+  private _pendingOpponentScore: {
+    opponentScore: number;
+    game: string;
+    difficulty: string;
+  } | null = null;
 
   get messages() {
     return this._messages;
@@ -91,6 +96,10 @@ export class WebSocketRoomService implements RoomService {
     }) => void,
   ): void {
     this.gameEndScoreListener = listener;
+    if (listener && this._pendingOpponentScore) {
+      listener(this._pendingOpponentScore);
+      this._pendingOpponentScore = null;
+    }
   }
   // ─── Connexion ─────────────────────────────────────────────────
   async createRoom(userName: string, gameId: string): Promise<string> {
@@ -214,11 +223,18 @@ export class WebSocketRoomService implements RoomService {
         this.webRTCReadyListener?.();
         break;
       case "game_end_score":
-        this.gameEndScoreListener?.({
+        const scoreData = {
           opponentScore: data.score as number,
           game: data.game as string,
           difficulty: data.difficulty as string,
-        });
+        };
+
+        // Toujours stocker le score pour le deuxième joueur
+        this._pendingOpponentScore = scoreData;
+
+        if (this.gameEndScoreListener) {
+          this.gameEndScoreListener(scoreData); // listener déjà enregistré
+        }
         break;
       case "error":
         console.error("[WebSocketChatManager] Erreur serveur :", data.message);
@@ -286,6 +302,9 @@ export class WebSocketRoomService implements RoomService {
     this.currentUsers = [];
     this._roomId = null;
     this._messages = [];
+    // Nettoyer aussi les données de fin de partie
+    this.gameEndScoreListener = null;
+    this._pendingOpponentScore = null;
   }
 
   // ─── Actions ───────────────────────────────────────────────────
@@ -318,6 +337,10 @@ export class WebSocketRoomService implements RoomService {
   }
 
   startGame(): void {
+    // Réinitialiser les données de fin de partie avant de commencer
+    this.gameEndScoreListener = null;
+    this._pendingOpponentScore = null;
+
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ kind: "start_game" }));
     }
@@ -349,6 +372,9 @@ export class WebSocketRoomService implements RoomService {
     this.currentUsers = [];
     this._messages = [];
     this._roomId = null;
+    // Nettoyer les données de fin de partie
+    this.gameEndScoreListener = null;
+    this._pendingOpponentScore = null;
   }
 
   async rejoinRoom(userName: string, roomId: string, gameId: string) {

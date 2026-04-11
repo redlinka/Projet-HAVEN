@@ -50,7 +50,7 @@ export default function PuzzleGame() {
     handlePointerDown,
   } = usePuzzle({ playOnDrag, playOnDrop, playWrongPlacement });
 
-  // Reset le display quand on change de mode ou qu'on charge
+  // Reset the display when changing mode or loading
   useEffect(() => {
     if (!loading && mod.cols > 0) {
       const timer = setTimeout(() => setDisplay(true), 10);
@@ -60,7 +60,7 @@ export default function PuzzleGame() {
     }
   }, [loading, mod.cols]);
 
-  // Sync Multiplayer
+  // Multiplayer sync
   useEffect(() => {
     if (difficulty) {
       setMod(difficulty);

@@ -27,15 +27,15 @@ function RoomCodeDisplay() {
       <button
         className={`chatter-copy-btn ${codeCopied ? "chatter-copy-btn--copied" : ""}`}
         onClick={handleCopyCode}
-        title="Copier le code"
+        title="Copy the code"
       >
         {codeCopied ? (
           <>
-            <Check size={11} /> Copié
+            <Check size={11} /> Copied
           </>
         ) : (
           <>
-            <Copy size={11} /> Copier
+            <Copy size={11} /> Copy
           </>
         )}
       </button>
@@ -55,7 +55,7 @@ function UsersList() {
       ))}
       {connectedUsers.length < 2 && (
         <span className="chatter-user-badge chatter-user-badge--waiting">
-          En attente...
+          Waiting ...
         </span>
       )}
     </div>
@@ -81,9 +81,9 @@ function StartGameButton() {
       className={`chatter-start-btn ${canStart ? "chatter-start-btn--ready" : ""}`}
       onClick={() => handleStartGame(onStartGame)}
       disabled={!canStart}
-      title={canStart ? "Lancer la partie" : "En attente du 2ème joueur"}
+      title={canStart ? "Start Game" : "Waiting for second player"}
     >
-      {canStart ? "🎮 Lancer" : "⏳ En attente..."}
+      {canStart ? "🎮 Start Game" : "⏳ Waiting..."}
     </button>
   );
 }
@@ -122,7 +122,7 @@ export default function ChatterRoom() {
     <div className="chatter">
       <header className="chatter-header">
         <div className="chatter-header-left">
-          <span className="chatter-label">Joueurs</span>
+          <span className="chatter-label">Players</span>
           <UsersList />
         </div>
         <div className="chatter-header-right">
@@ -130,10 +130,10 @@ export default function ChatterRoom() {
           <button
             className="chatter-quit-btn"
             onClick={handleDisconnect}
-            title="Quitter la partie"
+            title="Leave the game"
           >
             <LogOut size={13} />
-            Quitter
+            Leave
           </button>
         </div>
       </header>

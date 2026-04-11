@@ -5,18 +5,18 @@ import "../../styles/components/Room/RoomJoiner.css";
 import { useParams } from "react-router-dom";
 
 interface RoomJoinerProps {
-  /** Appelé quand le salon est rejoint avec succès ; users = joueurs déjà présents */
+  /** Called when room is joined successfully, users = players already in the room**/
   onRoomJoined: (
     userName: string,
     users: string[],
     gameId: string,
     isAdmin: boolean | false,
   ) => void;
-  /** Appelé en cas d'erreur */
+  /** Called in case of error */
   onError: (error: string) => void;
-  /** Appelé au départ de la requête */
+  /** Called when the request starts */
   onConnecting: () => void;
-  /** Pré-remplissage du code (ex : transmis via URL) */
+  /** Pre-fill the code (eg: transmitted via URL) */
   initialRoomId?: string;
 }
 
@@ -51,7 +51,7 @@ export default function RoomJoiner({
       onRoomJoined(name, existingUsers, gameId ?? "", false);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Impossible de rejoindre le salon";
+        err instanceof Error ? err.message : "Impossible to join the room";
       onError(message);
       setIsLoading(false);
     }
@@ -60,16 +60,16 @@ export default function RoomJoiner({
   return (
     <div className="room-joiner">
       <RoomForm
-        title="Rejoindre une partie"
+        title="Join a room"
         icon="🎯"
-        description="Entrez le code transmis par votre adversaire"
+        description="Enter the code provided by your opponent"
         userName={userName}
         onUserNameChange={setUserName}
         roomCode={roomId}
         onRoomCodeChange={setRoomId}
         isLoading={isLoading}
         onSubmit={handleSubmit}
-        submitButtonText="Rejoindre la partie"
+        submitButtonText="Join the room"
         showRoomCode
       />
     </div>

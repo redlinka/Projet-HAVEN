@@ -1,82 +1,82 @@
 import type { Message } from "../components/Chat/ChatDisplayer";
 
 /**
- * Interface définissant le contrat d'un gestionnaire de chat.
- * Toute implémentation (WebSocket, Mock, etc.) doit respecter ce contrat.
+ * Interface defining the contract for a chat manager.
+ * Any implementation (WebSocket, Mock, etc.) must respect this contract.
  */
 export interface RoomService {
-  // ── État ──────────────────────────────────────────────────────
-  /** Messages accumulés depuis le début de la session */
+  // State
+  /** Messages accumulated since the beginning of the session */
   readonly messages: Message[];
-  /** Identifiant du salon actif, null si non connecté */
+  /** ID of the active room, null if not connected */
   readonly roomId: string | null;
-  /** True si l'utilisateur est actuellement dans un salon */
+  /** True if the user is currently in a room */
   readonly isInRoom: boolean;
 
   /**
-   * Crée un nouveau salon et retourne son identifiant.
-   * Met à jour roomId et isInRoom en cas de succès.
-   * Lance une exception en cas d'échec de connexion.
+   * Creates a new room and returns its identifier.
+   * Updates roomId and isInRoom on success.
+   * Throws an exception on connection failure.
    */
   createRoom(userName: string, gameId: string): Promise<string>;
 
   /**
-   * Rejoint un salon existant via son identifiant.
-   * Retourne la liste des utilisateurs déjà connectés.
-   * Lance une exception si le salon est introuvable ou complet.
+   * Joins an existing room via its identifier.
+   * Returns the list of already connected users.
+   * Throws an exception if the room is not found or is full.
    */
   joinRoom(userName: string, roomId: string, gameId: string): Promise<string[]>;
 
   /**
-   * Définit le listener appelé à chaque message reçu (ou système).
+   * Sets the listener called for each received message (or system message).
    */
   setMessageListener(listener: (message: Message) => void | null): void;
 
   /**
-   * Définit le listener appelé quand la liste des joueurs change (join/leave).
+   * Sets the listener called when the player list changes (join/leave).
    */
   setRoomUpdateListener(listener: (users: string[]) => void): void;
 
   /**
-   * Définit le listener appelé quand l'admin ferme le salon.
+   * Sets the listener called when the admin closes the room.
    */
   setRoomClosedListener(listener: () => void): void;
 
   /**
-   * Définit le listener appelé quand la partie est lancée par l'admin.
+   * Sets the listener called when the game is started by the admin.
    */
   setGameStartedListener(listener: () => void): void;
 
   /**
-   * Définit le listener appelé quand l'admin sélectionne la difficulté de la partie.
+   * Sets the listener called when the admin selects the game difficulty.
    */
   setDifficultyListener(
     listener: (mod: { cols: number; rows: number }) => void,
   ): void;
 
   /**
-   * Envoie un message texte dans le salon.
+   * Sends a text message to the room.
    */
   sendMessage(content: string): void;
 
   /**
-   * Lance la partie (réservé à l'admin du salon).
+   * Starts the game (reserved for the room admin).
    */
   startGame(): void;
 
   /**
-   * Sélectionne le niveau de difficulté pour la partie.
+   * Selects the difficulty level for the game.
    */
   selectDifficulty(mod: { cols: number; rows: number }): void;
 
   /**
-   * Ferme proprement la connexion.
+   * Closes the connection cleanly.
    */
   close(): void;
 
   /**
-   * Quitte le salon actuel sans fermer la connexion WebSocket.
-   * Permet de rejoindre un autre salon ou d'en créer un nouveau.
+   * Leaves the current room without closing the WebSocket connection.
+   * Allows joining another room or creating a new one.
    */
   leaveRoom(): void;
 
@@ -109,12 +109,12 @@ export interface RoomService {
   setWebRTCReadyListener(listener: () => void): void;
 
   /**
-   * Envoie le score de fin de partie aux autres joueurs
+   * Sends the end-of-game score to other players
    */
   sendGameEndScore(score: number, game: string, difficulty: string): void;
 
   /**
-   * Reçoit le score de fin de partie d'un autre joueur
+   * Receives the end-of-game score from another player
    */
   setGameEndScoreListener(
     listener: (data: {

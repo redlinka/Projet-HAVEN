@@ -10,26 +10,26 @@ export function useRoomReconnect() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("[Reconnect] Vérification de session de room en cours...");
+    console.log("[Reconnect] Checking room session...");
     const session = RoomSessionService.load();
     if (!session) {
       console.log(
-        "[Reconnect] Aucune session trouvée, pas de reconnexion nécessaire",
+        "[Reconnect] No session found, reconnection not necessary",
       );
       return;
     }
 
-    console.log("[Reconnect] Session trouvée, tentative de reconnexion...");
+    console.log("[Reconnect] Session found, attempting reconnection...");
 
     roomService
       .rejoinRoom(session.userName, session.roomId, session.gameId)
       .then(({ users, isAdmin, gameStarted, difficulty }) => {
-        console.log("[Reconnect] Reconnexion réussie");
+        console.log("[Reconnect] Reconnection successful");
         setIsAdmin(isAdmin);
         if (difficulty) setDifficulty(difficulty);
         setGameId(session.gameId);
         handleRoomJoined(session.userName, users, session.gameId, isAdmin);
-        // Redirige vers la bonne page
+        // Redirect to the correct page
         if (gameStarted) {
           navigate(`/game/${session.gameId}`);
         } else {
@@ -37,8 +37,8 @@ export function useRoomReconnect() {
         }
       })
       .catch((err) => {
-        console.log("[Reconnect] Échec :", err.message);
-        RoomSessionService.clear(); // session invalide -> efface
+        console.log("[Reconnect] Failed:", err.message);
+        RoomSessionService.clear(); // invalid session -> clear
       });
   }, []);
 }

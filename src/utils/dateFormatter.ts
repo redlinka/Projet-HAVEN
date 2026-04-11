@@ -1,5 +1,5 @@
 /**
- * Formate une date au format : YYYY:MM:DD à HH:MM:SS
+ * Formats a date in the format: YYYY:MM:DD at HH:MM:SS
  */
 export function formatMessageDate(date: Date): string {
   const d = new Date(date);
@@ -11,5 +11,5 @@ export function formatMessageDate(date: Date): string {
   const minutes = String(d.getMinutes()).padStart(2, '0');
   const seconds = String(d.getSeconds()).padStart(2, '0');
 
-  return `${year}:${month}:${dayOfMonth} à ${hours}:${minutes}:${seconds}`;
+  return `${year}:${month}:${dayOfMonth} at ${hours}:${minutes}:${seconds}`;
 }

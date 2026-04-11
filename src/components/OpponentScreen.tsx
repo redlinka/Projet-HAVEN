@@ -11,7 +11,7 @@ export default function OpponentScreen() {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // On utilise des Refs pour TOUT le mouvement (zéro lag React)
+  // We use Refs for ALL movement (zero lag React)
   const pos = useRef({ x: 12, y: 12 });
   const offset = useRef({ x: 0, y: 0 });
   const isDragging = useRef(false);
@@ -51,20 +51,20 @@ export default function OpponentScreen() {
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     isDragging.current = true;
 
-    // On capture l'élément pour que les events arrivent même si on sort de la zone
+    // We capture the element so that events arrive even if we leave the zone
     const target = e.currentTarget;
     target.setPointerCapture(e.pointerId);
 
     const rect = target.getBoundingClientRect();
 
-    // On stocke l'endroit exact où on a cliqué dans la div
+    // We store the exact place where we clicked in the div
     offset.current = {
       x: e.pageX - rect.left,
       y: e.pageY - rect.top,
     };
 
     target.style.cursor = "grabbing";
-    target.style.transition = "none"; // CRITIQUE : tue toute latence CSS
+    target.style.transition = "none"; // CRITICAL: kills all CSS latency
   };
 
   return (

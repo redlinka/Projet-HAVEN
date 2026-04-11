@@ -1,12 +1,12 @@
 /**
- * Calcule le transfert de points en multijoueur
+ * Calculates the point transfer in multiplayer
  */
 export function calculateScoreTransfer(
   winnerScore: number,
   loserScore: number,
   transferPercentage: number = 0.25,
 ): { winner: number; loser: number } {
-  // Calculer le montant à transférer
+  // Calculate the amount to transfer
   const transferAmount = Math.floor(loserScore * transferPercentage);
 
   return {
@@ -16,7 +16,7 @@ export function calculateScoreTransfer(
 }
 
 /**
- * Détermine le gagnant et le perdant basé sur les scores
+ * Determines the winner and loser based on scores
  */
 export function determineWinner(
   score1: number,

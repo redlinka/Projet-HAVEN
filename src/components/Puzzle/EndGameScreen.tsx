@@ -48,12 +48,12 @@ export default function EndGameScreen({
     }
   };
 
-  // Étape 1 & 2: Envoyer notre score et écouter l'adversaire
+  // Step 1 & 2: Send our score and listen to the opponent
   useEffect(() => {
     if (!isMultiplayer || hasSentScoreRef.current) return;
     hasSentScoreRef.current = true;
 
-    console.log("[Puzzle EndGameScreen] Envoi du score:", score);
+    console.log("[Puzzle EndGameScreen] Sending score:", score);
     roomService.sendGameEndScore(score, "PUZZLE", diff);
 
     const handleOpponentScore = (data: {
@@ -61,7 +61,7 @@ export default function EndGameScreen({
       game: string;
       difficulty: string;
     }) => {
-      console.log("[EndGame] Score adverse reçu:", data.opponentScore);
+      console.log("[EndGame] Opponent score received:", data.opponentScore);
 
       const { winner, loser, draw } = determineWinner(
         score,
@@ -71,7 +71,7 @@ export default function EndGameScreen({
       if (draw) {
         setFinalScore(score);
         setOpponentScore(data.opponentScore);
-        setResultMessage("ÉGALITÉ - Pas de transfert de points");
+        setResultMessage("TIE - No point transfer");
       } else {
         const { winner: finalWinner, loser: finalLoser } =
           calculateScoreTransfer(winner, loser);
@@ -91,9 +91,9 @@ export default function EndGameScreen({
     roomService.setGameEndScoreListener(handleOpponentScore);
   }, []);
 
-  // Étape 3: Envoyer le score final au serveur
+  // Step 3: Send the final score to the server
   useEffect(() => {
-    // Attendre que le calcul soit fait en multijoueur, ou direct en solo
+    // Wait for the calculation to be done in multiplayer, or directly in solo
     const readyToSend =
       !isMultiplayer ||
       (isMultiplayer && hasSentScoreRef.current && hasCalculated);

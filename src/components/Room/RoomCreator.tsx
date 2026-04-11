@@ -5,11 +5,11 @@ import "../../styles/components/Room/RoomCreator.css";
 import { useParams } from "react-router-dom";
 
 interface RoomCreatorProps {
-  /** Appelé quand le salon est créé avec succès */
+  /** Called when the room is created successfully */
   onRoomCreated: (userName: string, roomId: string, gameId: string) => void;
-  /** Appelé en cas d'erreur de connexion */
+  /** Called in case of connection error */
   onError: (error: string) => void;
-  /** Appelé au moment où la requête part (pour afficher un état de chargement global) */
+  /** Called when the request starts (to display a global loading state) */
   onConnecting: () => void;
 }
 
@@ -43,14 +43,14 @@ export default function RoomCreator({
   return (
     <div className="room-creator">
       <RoomForm
-        title="Créer une partie"
+        title="Create a room"
         icon="👑"
-        description="Générez un code et invitez votre adversaire"
+        description="Generate a code & invite your opponents"
         userName={userName}
         onUserNameChange={setUserName}
         isLoading={isLoading}
         onSubmit={handleSubmit}
-        submitButtonText="Créer la partie"
+        submitButtonText="Create the room"
       />
     </div>
   );

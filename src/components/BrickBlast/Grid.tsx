@@ -19,7 +19,7 @@ export const Grid = () => {
 				position={[GRID_WORLD_X, GRID_WORLD_Y, 1]}
 				onPointerMove={(e) => {
 					let gridX = Math.floor(e.uv!.x * 9);
-					// Invert Y mapping so 0 is top (coherence with zustand array grid)
+					// Invert Y mapping so 0 is top (consistency with zustand array grid)
 					let gridY = Math.floor((1 - e.uv!.y) * 9);
 
 					// Safety clamp just in case the mouse hits the exact microscopic edge (1.0)

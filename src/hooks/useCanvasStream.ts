@@ -15,7 +15,7 @@ export function useCanvasStream(isAdmin: boolean, gameId: string | undefined) {
 
   useEffect(() => {
     if (!isCanvasReady) {
-      console.log("3) [useCanvasStream] Canvas non prêt: isCanvasReady=false");
+      console.log("3) [useCanvasStream] Canvas not ready: isCanvasReady=false");
       return;
     }
 
@@ -24,7 +24,7 @@ export function useCanvasStream(isAdmin: boolean, gameId: string | undefined) {
       canvasRefs.current.every((ref) => ref !== null && ref !== undefined);
 
     if (!validRefs) {
-      console.log("3) [useCanvasStream] Refs invalides:", {
+      console.log("3) [useCanvasStream] Invalid refs:", {
         refsCount: canvasRefs.current.length,
       });
       return;
@@ -40,7 +40,7 @@ export function useCanvasStream(isAdmin: boolean, gameId: string | undefined) {
           // const bricks = canvasRefs.current[1] ?? null;
 
           // if (!bricks) {
-          //   console.warn("3) [useCanvasStream] bricks canvas introuvable");
+          //   console.warn("3) [useCanvasStream] bricks canvas not found");
           //   return;
           // }
 
@@ -64,7 +64,7 @@ export function useCanvasStream(isAdmin: boolean, gameId: string | undefined) {
           const bricks = canvasRefs.current[1] ?? null;
 
           if (!board || !bricks) {
-            console.warn("3) [useCanvasStream] canvasRefs vides");
+            console.warn("3) [useCanvasStream] empty canvasRefs");
             return;
           }
 
@@ -105,9 +105,9 @@ export function useCanvasStream(isAdmin: boolean, gameId: string | undefined) {
           }
         }
 
-        console.log("4) [useCanvasStream] Canvas trouvé:", canvas);
+        console.log("4) [useCanvasStream] Canvas found:", canvas);
         if (!canvas) {
-          console.warn("5) [useCanvasStream] Aucun canvas trouvé");
+          console.warn("5) [useCanvasStream] No canvas found");
           return;
         }
 
@@ -131,7 +131,7 @@ export function useCanvasStream(isAdmin: boolean, gameId: string | undefined) {
         const stream = canvas.captureStream(40);
         stream.getTracks().forEach((track) => pc.addTrack(track, stream));
         console.log(
-          "5) [useCanvasStream] Stream capturé et tracks ajoutés au PeerConnection",
+          "5) [useCanvasStream] Stream captured and tracks added to PeerConnection",
         );
 
         if (!rerender && gameId === "0") {
@@ -142,7 +142,7 @@ export function useCanvasStream(isAdmin: boolean, gameId: string | undefined) {
         }
 
         roomService.setWebRTCOfferListener(async (sdp) => {
-          console.log("[WebRTC] Offer reçu");
+          console.log("[WebRTC] Offer received");
 
           await pc.setRemoteDescription(sdp);
           const answer = await pc.createAnswer();
@@ -151,23 +151,23 @@ export function useCanvasStream(isAdmin: boolean, gameId: string | undefined) {
         });
 
         roomService.setWebRTCAnswerListener(async (sdp) => {
-          console.log("[WebRTC] Answer reçu");
+          console.log("[WebRTC] Answer received");
 
           await pc.setRemoteDescription(sdp);
         });
 
         roomService.setWebRTCIceCandidateListener(async (candidate) => {
-          console.log("[WebRTC] ICE candidate reçu");
+          console.log("[WebRTC] ICE candidate received");
 
           await pc.addIceCandidate(candidate);
         });
 
         if (isAdmin) {
-          // Admin attend que le non-admin soit prêt
-          console.log("[WebRTC] Admin - enregistre ReadyListener");
+          // Admin waits for non-admin to be ready
+          console.log("[WebRTC] Admin - register ReadyListener");
 
           roomService.setWebRTCReadyListener(() => {
-            console.log("[WebRTC] Admin - ready reçu, envoi offer");
+            console.log("[WebRTC] Admin - ready received, sending offer");
 
             pc.createOffer().then(async (offer) => {
               await pc.setLocalDescription(offer);
@@ -175,8 +175,8 @@ export function useCanvasStream(isAdmin: boolean, gameId: string | undefined) {
             });
           });
         } else {
-          // Non-admin signale qu'il est prêt
-          console.log("[WebRTC] Non-admin - envoi ready");
+          // Non-admin signals that it is ready
+          console.log("[WebRTC] Non-admin - sending ready");
           roomService.sendWebRTCReady();
         }
       } catch (err) {

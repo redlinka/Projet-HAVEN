@@ -2,23 +2,23 @@ import { createContext, useContext } from "react";
 import type { RoomService } from "../services/RoomService";
 
 /**
- * Context permettant aux composants enfants (RoomCreator, RoomJoiner)
- * d'accéder au ChatManager sans passer par les props.
+ * Context allowing child components (RoomCreator, RoomJoiner)
+ * to access the ChatManager without passing through props.
  *
- * Usage dans un composant enfant :
+ * Usage in a child component:
  *   const chatManager = useChatManager();
  */
 export const RoomServiceContext = createContext<RoomService | null>(null);
 
 /**
- * Hook utilitaire pour consommer le RoomServiceContext.
- * Lance une erreur si utilisé hors d'un RoomServiceContext.Provider.
+ * Utility hook to consume the RoomServiceContext.
+ * Throws an error if used outside a RoomServiceContext.Provider.
  */
 export function useRoomService(): RoomService {
   const ctx = useContext(RoomServiceContext);
   if (!ctx) {
     throw new Error(
-      "useRoomService doit être utilisé à l'intérieur d'un <RoomServiceContext.Provider>",
+      "useRoomService must be used inside a <RoomServiceContext.Provider>",
     );
   }
   return ctx;

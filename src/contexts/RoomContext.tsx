@@ -13,7 +13,7 @@ import { RoomSessionService } from "../services/RoomSession";
 export type ConnectionState = "idle" | "connecting" | "connected";
 
 interface RoomContextValue {
-  // ── État (lecture seule) ──────────────────────────────────────
+  // State (read-only)
   state: ConnectionState;
   messages: Message[];
   connectedUsers: string[];
@@ -23,21 +23,21 @@ interface RoomContextValue {
   gameId: string;
   error: string | null;
   gameStarted: boolean; // ← GameLobbyPage écoute ce flag
-  roomClosed: boolean; // ← GamePage écoute ce flag
+  roomClosed: boolean; // GamePage listens to this flag
   difficulty: { cols: number; rows: number } | null;
-  isCanvasReady: boolean; // ← Canvas du jeu est prêt
+  isCanvasReady: boolean; // Game canvas is ready
   canvasRefs: React.MutableRefObject<HTMLCanvasElement[]>;
 
-  // ── Setters nécessaires à Chatter ────────────────────────────
+  // Setters required by Chatter
   setState: (s: ConnectionState) => void;
   setGameId: (s: string) => void;
   setError: (e: string | null) => void;
-  setIsCanvasReady: (ready: boolean) => void; // ← Appelé quand le canvas est initialisé
-  setIsAdmin: (isAdmin: boolean) => void; // ← Appelé à la reconnexion pour rétablir les droits admin
+  setIsCanvasReady: (ready: boolean) => void; // Called when canvas is initialized
+  setIsAdmin: (isAdmin: boolean) => void; // Called on reconnection to restore admin rights
   setDifficulty: (difficulty: { cols: number; rows: number }) => void;
   setGameStarted: (b: boolean) => void;
 
-  // ── Handlers ─────────────────────────────────────────────────
+  // Handlers
   handleRoomCreated: (userName: string, id: string, gameId: string) => void;
   handleRoomJoined: (
     userName: string,
@@ -76,7 +76,7 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
   } | null>({ cols: 0, rows: 0 });
   const [gameId, setGameId] = useState<string>("");
 
-  // ── Listeners — une seule fois au montage ─────────────────────
+  // Listeners — only once on mount
   useEffect(() => {
     roomService.setMessageListener((msg) => {
       setMessages((prev) => [...prev, msg]);

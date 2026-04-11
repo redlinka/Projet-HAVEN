@@ -51,17 +51,17 @@ export default function GamePage({ games }: { games: Game[] }) {
         </div>
       )}
 
-      {/* Bouton flottant - mobile uniquement, mode multijoueur */}
+      {/* Floating button - mobile only, multiplayer mode */}
       {isMultiplayer && window.innerWidth < 700 && (
         <button
           onClick={() => setShowChat((prev) => !prev)}
-          className="chat-button"
+          className=\"chat-button\"
         >
           {showChat ? <X /> : <MessageCircle />}
         </button>
       )}
 
-      {/* Popup chat mobile */}
+      {/* Mobile chat popup */}
       {isMultiplayer &&
         window.innerWidth < 700 &&
         showChat &&

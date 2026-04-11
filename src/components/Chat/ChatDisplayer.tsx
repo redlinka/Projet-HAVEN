@@ -29,7 +29,7 @@ function ChatMessage({ message }: ChatMessageProps) {
           <button
             className="message-copy-btn"
             onClick={handleCopyContent}
-            title="Copier le message"
+            title="Copy message"
           >
             copy
           </button>
@@ -39,7 +39,7 @@ function ChatMessage({ message }: ChatMessageProps) {
           <button
             className="message-copy-btn"
             onClick={handleCopyContent}
-            title="Copier le message"
+            title="Copy message"
           >
             copy
           </button>

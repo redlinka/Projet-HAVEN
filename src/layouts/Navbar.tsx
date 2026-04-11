@@ -35,7 +35,7 @@ export default function Navbar({ games }: { games: Game[] }) {
     };
   }, []);
 
-  // Use effect to calculate user points (valide uniquement)
+  // Use effect to calculate user points (valid only)
   useEffect(() => {
     if (user && user.games && Array.isArray(user.games)) {
       const now = new Date();

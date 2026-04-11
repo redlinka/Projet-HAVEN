@@ -41,7 +41,7 @@ export default function RoomForm({
     try {
       await onSubmit({ userName, roomCode });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Une erreur est survenue';
+      const message = err instanceof Error ? err.message : 'An error occurred';
       setError(message);
     }
   };
@@ -64,7 +64,7 @@ export default function RoomForm({
 
       <form onSubmit={handleSubmit} className="room-form">
         <div className="room-field">
-          <label htmlFor="room-username">Votre pseudo</label>
+          <label htmlFor="room-username">Your username</label>
           <input
             id="room-username"
             type="text"
@@ -80,7 +80,7 @@ export default function RoomForm({
 
         {showRoomCode && onRoomCodeChange && (
           <div className="room-field">
-            <label htmlFor="room-code">Code de la partie</label>
+            <label htmlFor="room-code">Room Code</label>
             <input
               id="room-code"
               type="text"
@@ -104,7 +104,7 @@ export default function RoomForm({
           {isLoading ? (
             <span className="room-btn-loading">
               <span className="room-spinner" />
-              {showRoomCode ? 'Connexion...' : 'Création...'}
+              {showRoomCode ? 'Connecting...' : 'Creating...'}
             </span>
           ) : (
             submitButtonText

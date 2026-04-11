@@ -110,7 +110,7 @@ export default function PuzzleBoard({
 
     if (canvasReady) {
       console.log(
-        "2) [PuzzleBoard] Canvas prêt, :",
+        "2) [PuzzleBoard] Canvas ready:",
         gridCanvasRef.current,
         brickCanvasRef.current,
       );
@@ -130,7 +130,7 @@ export default function PuzzleBoard({
     drawBricks();
   }, [board]);
 
-  // Cleanup uniquement au démontage
+  // Cleanup only on unmount
   // useEffect(() => {
   //   return () => {
   //     canvasRefs.current = [];

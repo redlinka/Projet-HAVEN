@@ -4,8 +4,8 @@ import type { Message } from "../components/Chat/ChatDisplayer";
 const WS_URL = import.meta.env.VITE_WS_URL ?? "ws://localhost:2025";
 
 /**
- * Implémentation de RoomService utilisant les WebSockets natives du navigateur.
- * Gère la connexion au serveur, la réception et l'envoi de messages.
+ * Implementation of RoomService using the browser's native WebSockets.
+ * Manages server connection, receiving and sending messages.
  */
 export class WebSocketRoomService implements RoomService {
   private ws: WebSocket | null = null;
@@ -55,7 +55,7 @@ export class WebSocketRoomService implements RoomService {
     return this._roomId !== null;
   }
 
-  // ─── Listeners ─────────────────────────────────────────────────
+  // Listeners
   setMessageListener(listener: (message: Message) => void | null): void {
     this.messageListener = listener;
   }
@@ -101,7 +101,7 @@ export class WebSocketRoomService implements RoomService {
       this._pendingOpponentScore = null;
     }
   }
-  // ─── Connexion ─────────────────────────────────────────────────
+  // Connection
   async createRoom(userName: string, gameId: string): Promise<string> {
     const data = await this.establishConnection(
       { kind: "create_room", user_name: userName, game_id: gameId },

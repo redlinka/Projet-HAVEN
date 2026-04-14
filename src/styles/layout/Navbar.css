@@ -1,0 +1,118 @@
+@import url("https://fonts.googleapis.com/css2?family=Michroma&display=swap");
+
+.navbar {
+  position: sticky;
+  inset: 0;
+  bottom: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px clamp(1rem, 4vw, 3rem);
+  height: 70px;
+  z-index: 100;
+}
+
+.navbar .main-title {
+  color: white;
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  font-family: "Michroma";
+  white-space: nowrap;
+}
+
+.navbar nav .drop-down button {
+  padding: 10px clamp(4px, 1vw, 10px);
+  color: white;
+  font-size: clamp(0.75rem, 1.5vw, 1rem);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: clamp(4px, 1vw, 10px);
+  white-space: nowrap;
+}
+
+.navbar nav .drop-down button .chevron-open {
+  transform: rotate(180deg);
+}
+
+.navbar nav .drop-down .options {
+  position: absolute;
+  z-index: 100;
+  backdrop-filter: blur(5px);
+  border: 1px solid var(--purple);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  animation: options 0.5s ease-in-out;
+}
+
+@keyframes options {
+  from {
+    opacity: 0;
+    transform: translateY(-10%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0%);
+  }
+}
+
+.navbar nav .drop-down .options .option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  color: white;
+  white-space: nowrap;
+}
+
+.navbar nav .drop-down .options .option:hover {
+  background-color: rgba(128, 128, 128, 0.315);
+}
+
+.navbar .user {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 2vw, 20px);
+  color: white;
+  font-family: "Michroma";
+
+}
+
+.user p:hover{
+  cursor: pointer;
+}
+
+.navbar .user .user-icon {
+  height: clamp(30px, 4vw, 40px);
+  width: clamp(30px, 4vw, 40px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: aquamarine;
+  border-radius: 30px;
+  padding: 10px;
+  color: black;
+  flex-shrink: 0;
+}
+
+.navbar .user .storefront-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar .user .storefront-link img {
+  height: clamp(22px, 2.5vw, 28px);
+  width: clamp(22px, 2.5vw, 28px);
+  transition: transform 0.2s ease;
+}
+
+.navbar .user .storefront-link:hover img {
+  transform: scale(1.1);
+}
+
+.history-link {
+  text-decoration: none; 
+  color: inherit;   
+  display: inline-block;
+}

@@ -1,0 +1,115 @@
+.chat-message-displayer {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column-reverse;
+  padding: 0.75rem 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(160, 88, 190, 0.3) transparent;
+}
+
+.chat-message-displayer::-webkit-scrollbar {
+  width: 4px;
+}
+.chat-message-displayer::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chat-message-displayer::-webkit-scrollbar-thumb {
+  background: rgba(160, 88, 190, 0.3);
+  border-radius: 4px;
+}
+
+.chat-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/*Message*/
+
+.message {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 75%;
+}
+
+.message-content {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  font-family: var(--text-font);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  padding: 0.5rem 0.85rem;
+  border-radius: 10px;
+}
+
+.message-sender {
+  font-family: var(--text-font);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--purple);
+  margin: 0;
+}
+
+/* Sended messages on the right */
+.send {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.send .message-content {
+  background: rgba(160, 88, 190, 0.22);
+  border: 1px solid rgba(160, 88, 190, 0.35);
+  color: var(--white);
+  border-bottom-right-radius: 3px;
+}
+
+/* Recieved messages on the left */
+.received {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.received .message-content {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(238, 238, 240, 0.9);
+  border-bottom-left-radius: 3px;
+}
+
+/*Footer*/
+
+.message-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.message-time {
+  font-size: 0.6rem;
+  color: rgba(238, 238, 240, 0.3);
+  font-family: var(--text-font);
+}
+
+.message-copy-btn {
+  font-family: var(--text-font);
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: rgba(238, 238, 240, 0.3);
+  letter-spacing: 0.04em;
+  transition: color 0.15s ease;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.message-copy-btn:hover {
+  color: var(--purple);
+}

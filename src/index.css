@@ -1,0 +1,56 @@
+@font-face {
+  font-family: "Inter";
+  /* Remove the leading slash to make it relative */
+  src: url("/font/inter/Inter-VariableFont.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Press Start 2P";
+  src: url("/font/Press_Start_2P/PressStart2P-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Gameria";
+  src: url("/font/gameria/GAMERIA.ttf") format("truetype");
+}
+
+:root {
+  --purple: #a058be;
+  --black: #000000;
+  --gray: #5e606a;
+  --white: #eeeef0;
+
+  --text-font: "Inter", sans-serif;
+  --title-font: "Gameria", sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  transition: all 0.3s ease-in;
+}
+
+body {
+  font-family: var(--text-font);
+  background-color: var(--black);
+  overflow-x: hidden;
+}
+
+ul {
+  list-style: none;
+}
+
+a {
+  text-decoration: none;
+}
+
+button {
+  border: none;
+  cursor: pointer;
+  background: none;
+}
+
+input:focus {
+  outline: none;
+}

@@ -1,0 +1,210 @@
+.room-creator,
+.room-joiner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.8rem;
+  padding: 1.5rem;
+  backdrop-filter: blur(5px);
+  min-width: 0;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.room-creator:hover,
+.room-joiner:hover {
+  border-color: rgba(160, 88, 190, 0.55);
+  box-shadow: 0 0 28px rgba(160, 88, 190, 0.12);
+}
+
+.room-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.8rem;
+  height: 100%;
+}
+.room-card-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.room-card-icon {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 0.25rem;
+  filter: drop-shadow(0 0 8px rgba(160, 88, 190, 0.6));
+}
+
+.room-card-header h3 {
+  margin: 0;
+  font-family: var(--title-font);
+  font-size: clamp(1.2rem, 3vw, 1.7rem);
+  letter-spacing: 0.06em;
+  color: var(--white);
+}
+
+.room-card-header p {
+  margin: 0;
+  font-family: var(--text-font);
+  font-size: clamp(0.72rem, 1.5vw, 0.82rem);
+  color: rgba(238, 238, 240, 0.5);
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+}
+
+.room-card-error {
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  background: rgba(220, 53, 69, 0.12);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  color: #ff8a98;
+  font-size: 0.8rem;
+  font-family: var(--text-font);
+}
+
+.room-card-error p {
+  margin: 0;
+}
+
+.room-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.room-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.room-field label {
+  font-family: var(--text-font);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(238, 238, 240, 0.5);
+}
+
+.room-field input {
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(160, 88, 190, 0.28);
+  background: rgba(0, 0, 0, 0.45);
+  color: var(--white);
+  font-family: var(--text-font);
+  font-size: 0.9rem;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.room-field input::placeholder {
+  color: rgba(238, 238, 240, 0.2);
+}
+
+.room-field input:focus {
+  border-color: var(--purple);
+  box-shadow:
+    0 0 0 3px rgba(160, 88, 190, 0.15),
+    0 0 12px rgba(160, 88, 190, 0.15);
+}
+
+.room-field input:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.room-code-input {
+  font-family: "Press Start 2P", sans-serif, monospace !important;
+  font-size: 0.65rem !important;
+  letter-spacing: 0.3em !important;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.room-btn {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border-radius: 9px;
+  font-family: var(--text-font);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid var(--purple);
+  background: rgba(160, 88, 190, 0.18);
+  color: var(--white);
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+  margin-top: auto;
+}
+
+.room-btn:not(:disabled):hover {
+  background: rgba(160, 88, 190, 0.35);
+  box-shadow: 0 0 20px rgba(160, 88, 190, 0.35);
+  transform: translateY(-1px);
+}
+
+.room-btn:not(:disabled):active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.room-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.room-btn-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.room-spinner {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(238, 238, 240, 0.35);
+  border-top-color: var(--white);
+  border-radius: 50%;
+  animation: roomSpin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes roomSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+
+@media (max-width: 680px) {
+  .room-creator,
+  .room-joiner {
+    padding: 1.8rem 1.4rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .room-creator,
+  .room-joiner {
+    padding: 1.5rem 1.1rem;
+  }
+}

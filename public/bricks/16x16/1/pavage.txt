@@ -1,0 +1,17 @@
+16 16
+fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac
+fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac
+fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac
+fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac
+fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac
+fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac
+05131d 05131d f4f4f4 f4f4f4 fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac f4f4f4 f4f4f4 05131d 05131d
+05131d 05131d f4f4f4 f4f4f4 fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac fc97ac f4f4f4 f4f4f4 05131d 05131d
+fc97ac fc97ac fc97ac fc97ac fecccf fecccf fecccf fecccf fecccf fecccf fecccf fecccf fc97ac fc97ac fc97ac fc97ac
+fc97ac fc97ac fc97ac fc97ac fecccf fecccf fecccf fecccf fecccf fecccf fecccf fecccf fc97ac fc97ac fc97ac fc97ac
+fc97ac fc97ac fc97ac fc97ac 7c503a 7c503a fc97ac fc97ac fc97ac fc97ac 945148 945148 fc97ac fc97ac fc97ac fc97ac
+fc97ac fc97ac fc97ac fc97ac 7c503a 7c503a fc97ac fc97ac fc97ac fc97ac 945148 945148 fc97ac fc97ac fc97ac fc97ac
+fc97ac fc97ac fc97ac fc97ac ff879c ff879c ff879c ff879c ff879c ff879c ff879c ff879c fc97ac fc97ac fc97ac fc97ac
+fc97ac fc97ac fc97ac fc97ac ff879c ff879c ff879c ff879c ff879c ff879c ff879c ff879c fc97ac fc97ac fc97ac fc97ac
+fc97ac fc97ac fc97ac fc97ac ff879c ff879c ff879c ff879c ff879c ff879c ff879c ff879c fc97ac fc97ac fc97ac fc97ac
+fc97ac fc97ac fc97ac fc97ac ff879c ff879c ff879c ff879c ff879c ff879c ff879c ff879c fc97ac fc97ac fc97ac fc97ac

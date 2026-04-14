@@ -1,0 +1,31 @@
+.chatter-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  min-height: 220px;
+  padding: 2rem;
+}
+
+.chatter-spinner {
+  width: 38px;
+  height: 38px;
+  border: 2px solid rgba(160, 88, 190, 0.15);
+  border-top-color: var(--purple);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.chatter-loading p,
+.chatter-loading span {
+  font-family: var(--text-font);
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(238, 238, 240, 0.4);
+}
